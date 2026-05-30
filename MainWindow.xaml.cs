@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Xml;
@@ -540,5 +540,21 @@ public partial class MainWindow : Window
     private void SelectAllMenuItem_Click(object sender, RoutedEventArgs e)
     {
         CodeTextBox.SelectAll();
+    }
+
+    private void ToggleDescriptionButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DescriptionRow.Height.Value > 0)
+        {
+            DescriptionTextBox.Visibility = Visibility.Collapsed;
+            DescriptionRow.Height = new GridLength(0);
+            ToggleDescriptionButton.Content = "▼ Развернуть";
+        }
+        else
+        {
+            DescriptionTextBox.Visibility = Visibility.Visible;
+            DescriptionRow.Height = new GridLength(1, GridUnitType.Star);
+            ToggleDescriptionButton.Content = "▲ Свернуть";
+        }
     }
 }
