@@ -586,7 +586,14 @@
                                Style="{StaticResource ToggleSwitchStyle}"
                               Foreground="#CCCCCC"
                               Margin="10,0,0,0"/>
-                </StackPanel>
+
+                     <TextBlock Text="Синтаксис:" VerticalAlignment="Center" Margin="15,0,5,0" Foreground="#CCCCCC"/>
+                     <ComboBox x:Name="SyntaxHighlightingComboBox"
+                               SelectionChanged="SyntaxHighlightingComboBox_SelectionChanged"
+                               Width="130"
+                               FontSize="14"
+                               Style="{StaticResource ComboBoxStyle}"/>
+                 </StackPanel>
             </Grid>
 
             <!-- Текстовый редактор кода (3/3 от высоты кода) -->

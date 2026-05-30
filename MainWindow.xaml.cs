@@ -31,14 +31,10 @@ public partial class MainWindow : Window
         _currentTheme = AppTheme.Dark;
         _appState = new AppState();
 
-        // Загружаем кастомную тему подсветки для тёмного режима
+        // Загружаем кастомную тему подсветки для тёмного и светлого режимов
         LoadCustomHighlighting();
 
-        // Устанавливаем подсветку синтаксиса C#
-        _lightCSharpHighlighting = HighlightingManager.Instance.GetDefinition("C#");
-        CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? _lightCSharpHighlighting;
-
-        // Инициализируем список шрифтов
+        // Инициализируем список шрифтов и настроек подсветки
         InitializeFontSettings();
 
         Loaded += MainWindow_Loaded;
@@ -50,10 +46,10 @@ public partial class MainWindow : Window
     {
         try
         {
-            var xshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkCSharp.xshd");
-            if (System.IO.File.Exists(xshdPath))
+            var darkXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkCSharp.xshd");
+            if (System.IO.File.Exists(darkXshdPath))
             {
-                using (var reader = new XmlTextReader(xshdPath))
+                using (var reader = new XmlTextReader(darkXshdPath))
                 {
                     _darkCSharpHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
                 }
@@ -61,8 +57,29 @@ public partial class MainWindow : Window
         }
         catch
         {
-            // Если не удалось загрузить кастомную тему, используем стандартную
             _darkCSharpHighlighting = null;
+        }
+
+        try
+        {
+            var lightXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LightCSharp.xshd");
+            if (System.IO.File.Exists(lightXshdPath))
+            {
+                using (var reader = new XmlTextReader(lightXshdPath))
+                {
+                    _lightCSharpHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                }
+            }
+        }
+        catch
+        {
+            _lightCSharpHighlighting = null;
+        }
+
+        // Если не удалось загрузить кастомную светлую тему, используем стандартную
+        if (_lightCSharpHighlighting == null)
+        {
+            _lightCSharpHighlighting = HighlightingManager.Instance.GetDefinition("C#");
         }
     }
 
@@ -172,6 +189,31 @@ public partial class MainWindow : Window
         FontSizeComboBox.SelectedItem = 12;
 
         WordWrapCheckBox.IsChecked = false;
+
+        // Варианты подсветки синтаксиса
+        SyntaxHighlightingComboBox.Items.Add("DarkCSharp");
+        SyntaxHighlightingComboBox.Items.Add("LightCSharp");
+        SyntaxHighlightingComboBox.Items.Add("Стандартная (C#)");
+        SyntaxHighlightingComboBox.SelectedIndex = 0; // По умолчанию DarkCSharp
+    }
+
+    private void SyntaxHighlightingComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CodeTextBox == null || SyntaxHighlightingComboBox?.SelectedItem == null) return;
+
+        var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
+        if (selected == "DarkCSharp")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
+        }
+        else if (selected == "LightCSharp")
+        {
+            CodeTextBox.SyntaxHighlighting = _lightCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
+        }
+        else
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
+        }
     }
 
     private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -265,8 +307,11 @@ public partial class MainWindow : Window
             CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextSecondary));
             CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
 
-            // Применяем тёмную схему подсветки синтаксиса
-            CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? _lightCSharpHighlighting;
+            // По умолчанию при темном режиме выбираем DarkCSharp
+            if (SyntaxHighlightingComboBox != null)
+            {
+                SyntaxHighlightingComboBox.SelectedIndex = 0; // DarkCSharp
+            }
         }
         else
         {
@@ -320,8 +365,11 @@ public partial class MainWindow : Window
             CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextSecondary));
             CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
 
-            // Применяем светлую схему подсветки синтаксиса
-            CodeTextBox.SyntaxHighlighting = _lightCSharpHighlighting;
+            // По умолчанию при светлом режиме выбираем LightCSharp
+            if (SyntaxHighlightingComboBox != null)
+            {
+                SyntaxHighlightingComboBox.SelectedIndex = 1; // LightCSharp
+            }
         }
     }
 
