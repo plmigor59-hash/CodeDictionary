@@ -1,0 +1,544 @@
+﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Xml;
+using CodeDictionary.Models;
+using CodeDictionary.Services;
+using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+
+namespace CodeDictionary;
+
+public partial class MainWindow : Window
+{
+    private readonly DataService _dataService;
+    private CodeDictionaryData _data;
+    private List<CodeEntry> _filteredEntries;
+    private CodeEntry? _currentEntry;
+    private bool _isInitialized;
+    private AppTheme _currentTheme;
+    private AppState _appState;
+    private IHighlightingDefinition? _darkCSharpHighlighting;
+    private IHighlightingDefinition? _lightCSharpHighlighting;
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        _dataService = new DataService();
+        _data = new CodeDictionaryData();
+        _filteredEntries = new List<CodeEntry>();
+        _isInitialized = false;
+        _currentTheme = AppTheme.Dark;
+        _appState = new AppState();
+
+        // Загружаем кастомную тему подсветки для тёмного режима
+        LoadCustomHighlighting();
+
+        // Устанавливаем подсветку синтаксиса C#
+        _lightCSharpHighlighting = HighlightingManager.Instance.GetDefinition("C#");
+        CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? _lightCSharpHighlighting;
+
+        // Инициализируем список шрифтов
+        InitializeFontSettings();
+
+        Loaded += MainWindow_Loaded;
+        Closing += MainWindow_Closing;
+        StateChanged += MainWindow_StateChanged;
+    }
+
+    private void LoadCustomHighlighting()
+    {
+        try
+        {
+            var xshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkCSharp.xshd");
+            if (System.IO.File.Exists(xshdPath))
+            {
+                using (var reader = new XmlTextReader(xshdPath))
+                {
+                    _darkCSharpHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                }
+            }
+        }
+        catch
+        {
+            // Если не удалось загрузить кастомную тему, используем стандартную
+            _darkCSharpHighlighting = null;
+        }
+    }
+
+    private void MainWindow_StateChanged(object? sender, EventArgs e)
+    {
+        // Обновляем иконку кнопки развертывания
+        if (WindowState == WindowState.Maximized)
+        {
+            MaximizeButton.Content = "❐";
+        }
+        else
+        {
+            MaximizeButton.Content = "□";
+        }
+    }
+
+    private void TitleBar_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2)
+        {
+            // Двойной клик - развернуть/свернуть
+            if (WindowState == WindowState.Maximized)
+                WindowState = WindowState.Normal;
+            else
+                WindowState = WindowState.Maximized;
+        }
+        else
+        {
+            // Одиночный клик - перетаскивание
+            DragMove();
+        }
+    }
+
+    private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void MaximizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (WindowState == WindowState.Maximized)
+            WindowState = WindowState.Normal;
+        else
+            WindowState = WindowState.Maximized;
+    }
+
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        _data = await _dataService.LoadDataAsync();
+        _appState = await _dataService.LoadStateAsync();
+
+        RefreshCategoryFilter();
+
+        // Восстанавливаем выбранную категорию
+        if (!string.IsNullOrEmpty(_appState.SelectedCategory))
+        {
+            for (int i = 0; i < CategoryFilter.Items.Count; i++)
+            {
+                if (CategoryFilter.Items[i]?.ToString() == _appState.SelectedCategory)
+                {
+                    CategoryFilter.SelectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        RefreshEntriesList();
+
+        // Восстанавливаем выбранную запись
+        if (_appState.SelectedEntryId.HasValue)
+        {
+            var entry = _filteredEntries.FirstOrDefault(e => e.Id == _appState.SelectedEntryId.Value);
+            if (entry != null)
+            {
+                EntriesListBox.SelectedItem = entry;
+            }
+        }
+
+        // Применяем сохраненную тему
+        ThemeCheckBox.IsChecked = _appState.IsLightTheme;
+        ApplyTheme(_appState.IsLightTheme ? AppTheme.Light : AppTheme.Dark);
+
+        _isInitialized = true;
+    }
+
+    private void InitializeFontSettings()
+    {
+        // Популярные моноширинные шрифты для кода
+        var monospaceFonts = new[] { "Consolas", "Courier New", "Lucida Console", "Cascadia Code", "Fira Code", "JetBrains Mono" };
+        foreach (var font in monospaceFonts)
+        {
+            FontFamilyComboBox.Items.Add(font);
+        }
+        FontFamilyComboBox.SelectedIndex = 0;
+
+        // Размеры шрифта
+        var fontSizes = new[] { 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24 };
+        foreach (var size in fontSizes)
+        {
+            FontSizeComboBox.Items.Add(size);
+        }
+        FontSizeComboBox.SelectedItem = 12;
+
+        WordWrapCheckBox.IsChecked = false;
+    }
+
+    private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (FontFamilyComboBox.SelectedItem != null)
+        {
+            CodeTextBox.FontFamily = new System.Windows.Media.FontFamily(FontFamilyComboBox.SelectedItem.ToString()!);
+        }
+    }
+
+    private void FontSizeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (FontSizeComboBox.SelectedItem != null)
+        {
+            CodeTextBox.FontSize = (int)FontSizeComboBox.SelectedItem;
+        }
+    }
+
+    private void WordWrapCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        CodeTextBox.WordWrap = WordWrapCheckBox.IsChecked == true;
+    }
+
+    private void ThemeCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!_isInitialized) return;
+
+        if (ThemeCheckBox.IsChecked == true)
+        {
+            ApplyTheme(AppTheme.Light);
+        }
+        else
+        {
+            ApplyTheme(AppTheme.Dark);
+        }
+    }
+
+    private void ApplyTheme(AppTheme theme)
+    {
+        _currentTheme = theme;
+
+        if (theme == AppTheme.Dark)
+        {
+            // Обновляем динамические ресурсы
+            this.Resources["DictSurface"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#202A38"));
+            this.Resources["DictSurfaceStrong"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#273447"));
+            this.Resources["DictBorder"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#36465E"));
+            this.Resources["DictCardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#202A38"));
+            this.Resources["DictAccent"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#5BA5FF"));
+            this.Resources["DictTextPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EDF2F7"));
+            this.Resources["DictTextSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A7B3C5"));
+
+            // Основные фоны
+            this.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Background));
+            ((Grid)this.Content).Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Background));
+            SidePanel.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.SidePanel));
+
+            // Заголовок окна
+            WindowTitle.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
+
+            // Текст
+            HeaderText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
+
+            // Поля ввода
+            SearchBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Input));
+            SearchBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
+            SearchBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
+
+            ThemeCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
+
+            EntriesListBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.SidePanel));
+            EntriesListBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
+            EntriesListBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
+
+            TitleTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Input));
+            TitleTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
+            TitleTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
+
+            DescriptionTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Input));
+            DescriptionTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
+            DescriptionTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
+
+            TagsTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Input));
+            TagsTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
+            TagsTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
+
+            WordWrapCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
+
+            CodeTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.CodeBackground));
+            CodeTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.CodeForeground));
+            CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextSecondary));
+            CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
+
+            // Применяем тёмную схему подсветки синтаксиса
+            CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? _lightCSharpHighlighting;
+        }
+        else
+        {
+            // Обновляем динамические ресурсы для светлой темы
+            this.Resources["DictSurface"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+            this.Resources["DictSurfaceStrong"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F5F5F5"));
+            this.Resources["DictBorder"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D0D0D0"));
+            this.Resources["DictCardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+            this.Resources["DictAccent"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0078D4"));
+            this.Resources["DictTextPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F1F1F"));
+            this.Resources["DictTextSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B6B6B"));
+
+            // Основные фоны
+            this.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Background));
+            ((Grid)this.Content).Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Background));
+            SidePanel.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.SidePanel));
+
+            // Заголовок окна
+            WindowTitle.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
+
+            // Текст
+            HeaderText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
+
+            // Поля ввода
+            SearchBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Input));
+            SearchBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
+            SearchBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
+
+            ThemeCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
+
+            EntriesListBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.SidePanel));
+            EntriesListBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
+            EntriesListBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
+
+            TitleTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Input));
+            TitleTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
+            TitleTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
+
+            DescriptionTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Input));
+            DescriptionTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
+            DescriptionTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
+
+            TagsTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Input));
+            TagsTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
+            TagsTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
+
+            WordWrapCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
+
+            CodeTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeBackground));
+            CodeTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeForeground));
+            CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextSecondary));
+            CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
+
+            // Применяем светлую схему подсветки синтаксиса
+            CodeTextBox.SyntaxHighlighting = _lightCSharpHighlighting;
+        }
+    }
+
+    private void RefreshCategoryFilter()
+    {
+        CategoryFilter.Items.Clear();
+        CategoryFilter.Items.Add("Все категории");
+
+        foreach (var category in _data.Categories.OrderBy(c => c))
+        {
+            CategoryFilter.Items.Add(category);
+        }
+
+        CategoryFilter.SelectedIndex = 0;
+    }
+
+    private void RefreshEntriesList()
+    {
+        var searchText = SearchBox.Text.ToLower();
+        var selectedCategory = CategoryFilter.SelectedItem?.ToString();
+
+        _filteredEntries = _data.Entries
+            .Where(e =>
+            {
+                var matchesSearch = string.IsNullOrWhiteSpace(searchText) ||
+                                  searchText == "поиск..." ||
+                                  e.Title.ToLower().Contains(searchText) ||
+                                  e.Description.ToLower().Contains(searchText) ||
+                                  e.Code.ToLower().Contains(searchText) ||
+                                  e.Tags.Any(t => t.ToLower().Contains(searchText));
+
+                var matchesCategory = selectedCategory == "Все категории" ||
+                                    string.IsNullOrEmpty(selectedCategory) ||
+                                    e.Category == selectedCategory;
+
+                return matchesSearch && matchesCategory;
+            })
+            .OrderByDescending(e => e.ModifiedAt)
+            .ToList();
+
+        EntriesListBox.ItemsSource = _filteredEntries;
+    }
+
+    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_isInitialized)
+        {
+            RefreshEntriesList();
+        }
+    }
+
+    private void CategoryFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitialized)
+        {
+            RefreshEntriesList();
+        }
+    }
+
+    private void EntriesListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (EntriesListBox.SelectedItem is CodeEntry entry)
+        {
+            _currentEntry = entry;
+            LoadEntryToForm(entry);
+        }
+    }
+
+    private void LoadEntryToForm(CodeEntry entry)
+    {
+        TitleTextBox.Text = entry.Title;
+        DescriptionTextBox.Text = entry.Description;
+        CodeTextBox.Text = entry.Code;
+        CategoryComboBox.Text = entry.Category;
+        TagsTextBox.Text = string.Join(", ", entry.Tags);
+
+        CategoryComboBox.ItemsSource = _data.Categories;
+    }
+
+    private void AddEntry_Click(object sender, RoutedEventArgs e)
+    {
+        _currentEntry = new CodeEntry();
+        _data.Entries.Add(_currentEntry);
+
+        TitleTextBox.Text = "";
+        DescriptionTextBox.Text = "";
+        CodeTextBox.Text = "";
+        CategoryComboBox.Text = "";
+        TagsTextBox.Text = "";
+        CategoryComboBox.ItemsSource = _data.Categories;
+
+        TitleTextBox.Focus();
+    }
+
+    private async void SaveEntry_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentEntry == null)
+        {
+            MessageBox.Show("Выберите или создайте запись", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(TitleTextBox.Text))
+        {
+            MessageBox.Show("Введите название", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        _currentEntry.Title = TitleTextBox.Text;
+        _currentEntry.Description = DescriptionTextBox.Text;
+        _currentEntry.Code = CodeTextBox.Text;
+        _currentEntry.Category = CategoryComboBox.Text;
+        _currentEntry.Tags = TagsTextBox.Text
+            .Split(',')
+            .Select(t => t.Trim())
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .ToList();
+        _currentEntry.ModifiedAt = DateTime.Now;
+
+        if (!string.IsNullOrWhiteSpace(_currentEntry.Category) &&
+            !_data.Categories.Contains(_currentEntry.Category))
+        {
+            _data.Categories.Add(_currentEntry.Category);
+            RefreshCategoryFilter();
+        }
+
+        await _dataService.SaveDataAsync(_data);
+        RefreshEntriesList();
+
+        MessageBox.Show("Запись сохранена", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private async void DeleteEntry_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentEntry == null)
+        {
+            MessageBox.Show("Выберите запись для удаления", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var result = MessageBox.Show(
+            $"Удалить запись '{_currentEntry.Title}'?",
+            "Подтверждение",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.Yes)
+        {
+            _data.Entries.Remove(_currentEntry);
+            await _dataService.SaveDataAsync(_data);
+
+            _currentEntry = null;
+            TitleTextBox.Text = "";
+            DescriptionTextBox.Text = "";
+            CodeTextBox.Text = "";
+            CategoryComboBox.Text = "";
+            TagsTextBox.Text = "";
+
+            RefreshEntriesList();
+            MessageBox.Show("Запись удалена", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private async void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        // Сохраняем текущее состояние
+        _appState.SelectedCategory = CategoryFilter.SelectedItem?.ToString() ?? "Все категории";
+        _appState.SelectedEntryId = _currentEntry?.Id;
+        _appState.IsLightTheme = ThemeCheckBox.IsChecked == true;
+
+        await _dataService.SaveStateAsync(_appState);
+    }
+
+    // Обработчики контекстного меню редактора кода
+    private void CopyMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(CodeTextBox.SelectedText))
+        {
+            Clipboard.SetText(CodeTextBox.SelectedText);
+        }
+    }
+
+    private void CutMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(CodeTextBox.SelectedText))
+        {
+            Clipboard.SetText(CodeTextBox.SelectedText);
+            CodeTextBox.Document.Remove(CodeTextBox.SelectionStart, CodeTextBox.SelectionLength);
+        }
+    }
+
+    private void PasteMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (Clipboard.ContainsText())
+        {
+            var text = Clipboard.GetText();
+            if (CodeTextBox.SelectionLength > 0)
+            {
+                CodeTextBox.Document.Replace(CodeTextBox.SelectionStart, CodeTextBox.SelectionLength, text);
+            }
+            else
+            {
+                CodeTextBox.Document.Insert(CodeTextBox.CaretOffset, text);
+            }
+        }
+    }
+
+    private void DeleteMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (CodeTextBox.SelectionLength > 0)
+        {
+            CodeTextBox.Document.Remove(CodeTextBox.SelectionStart, CodeTextBox.SelectionLength);
+        }
+    }
+
+    private void SelectAllMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        CodeTextBox.SelectAll();
+    }
+}
