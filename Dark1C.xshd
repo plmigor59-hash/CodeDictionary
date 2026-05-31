@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<SyntaxDefinition name="1C" extensions=".bsl;.os" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+	<Color name="Comment" foreground="#008000" fontStyle="italic" />
+	<Color name="String" foreground="#000000" />
+	<Color name="Number" foreground="#000000" />
+	<Color name="Preprocessor" foreground="#963200" />
+  <Color name="Preprocedure" foreground="#963200" />
+	<Color name="Keywords" foreground="#FF0000" fontWeight="bold" />
+	<Color name="KeywordsEn" foreground="#FF0000" fontWeight="bold" />
+	<Color name="OperatorKeywords" foreground="#FF0000" />
+	<Color name="OperatorKeywordsEn" foreground="#FF0000" />
+	<Color name="TrueFalse" foreground="#FF0000" />
+	<Color name="Punctuation" foreground="#000000" />
+	<Color name="DefaultText" foreground="#0000FF" />
+
+	<RuleSet ignoreCase="true">
+		<Span color="Comment">
+			<Begin>//</Begin>
+		</Span>
+
+		<Span color="String" multiline="true">
+			<Begin>"</Begin>
+			<End>"</End>
+		</Span>
+
+		<Span color="Preprocessor">
+			<Begin>\#</Begin>
+		</Span>
+
+    <Keywords color="Preprocedure">
+    <Word>НаКлиенте</Word>
+    <Word>НаСервере</Word>
+    <Word>Клиент</Word>
+    <Word>Сервер</Word>
+    <Word>ТонкийКлиент</Word>
+    <Word>ВебКлиент</Word>
+    <Word>МобильныйАвтономныйСервер</Word>
+    <Word>МобильноеПриложениеКлиент</Word>
+    <Word>МобильноеПриложениеСервер</Word>
+    <Word>МобильныйКлиент</Word>
+    <Word>ТолстыйКлиентОбычноеПриложение</Word>
+    <Word>ТолстыйКлиентУправляемоеПриложение</Word>
+    <Word>ВнешнееСоединение</Word>
+    <Word>#Если</Word>
+    <Word>#Тогда</Word>
+    <Word>#ИначеЕсли</Word>
+    <Word>#Иначе</Word>
+    <Word>#КонецЕсли</Word>
+    <Word>#Область</Word>
+    <Word>#КонецОбласти</Word>
+    <Word>#Вставка</Word>
+    <Word>#КонецВставки</Word>
+    <Word>#Удаление</Word>
+    <Word>#КонецУдаления</Word>
+    </Keywords>
+
+
+    <Keywords color="TrueFalse">
+			<Word>Истина</Word>
+			<Word>Ложь</Word>
+			<Word>Неопределено</Word>
+			<Word>Null</Word>
+			<Word>True</Word>
+			<Word>False</Word>
+			<Word>Undefined</Word>
+		</Keywords>
+
+		<Keywords color="Keywords">
+			<Word>Если</Word>
+			<Word>Тогда</Word>
+			<Word>Иначе</Word>
+			<Word>ИначеЕсли</Word>
+			<Word>КонецЕсли</Word>
+			<Word>Для</Word>
+			<Word>Каждого</Word>
+			<Word>Из</Word>
+			<Word>По</Word>
+			<Word>Цикл</Word>
+			<Word>КонецЦикла</Word>
+			<Word>Пока</Word>
+			<Word>Процедура</Word>
+			<Word>КонецПроцедуры</Word>
+			<Word>Функция</Word>
+			<Word>КонецФункции</Word>
+			<Word>Перем</Word>
+			<Word>Экспорт</Word>
+			<Word>Возврат</Word>
+			<Word>Продолжить</Word>
+			<Word>Прервать</Word>
+			<Word>Попытка</Word>
+			<Word>Исключение</Word>
+			<Word>КонецПопытки</Word>
+			<Word>ВызватьИсключение</Word>
+			<Word>Новый</Word>
+			<Word>Выполнить</Word>
+		</Keywords>
+
+		<Keywords color="KeywordsEn">
+			<Word>If</Word>
+			<Word>Then</Word>
+			<Word>Else</Word>
+			<Word>ElsIf</Word>
+			<Word>EndIf</Word>
+			<Word>For</Word>
+			<Word>Each</Word>
+			<Word>In</Word>
+			<Word>To</Word>
+			<Word>Do</Word>
+			<Word>EndDo</Word>
+			<Word>While</Word>
+			<Word>Procedure</Word>
+			<Word>EndProcedure</Word>
+			<Word>Function</Word>
+			<Word>EndFunction</Word>
+			<Word>Var</Word>
+			<Word>Export</Word>
+			<Word>Return</Word>
+			<Word>Continue</Word>
+			<Word>Break</Word>
+			<Word>Try</Word>
+			<Word>Except</Word>
+			<Word>EndTry</Word>
+			<Word>Raise</Word>
+			<Word>New</Word>
+			<Word>Execute</Word>
+		</Keywords>
+
+		<Keywords color="OperatorKeywords">
+			<Word>И</Word>
+			<Word>Или</Word>
+			<Word>Не</Word>
+		</Keywords>
+
+		<Keywords color="OperatorKeywordsEn">
+			<Word>And</Word>
+			<Word>Or</Word>
+			<Word>Not</Word>
+		</Keywords>
+
+		<Rule color="Number">
+			\b\d+(\.\d+)?\b
+		</Rule>
+
+		<Rule color="Punctuation">
+			[?,.;()\[\]{}+\-/%*&lt;&gt;^~=|&amp;]+
+		</Rule>
+
+		<!-- Все остальные слова (идентификаторы, переменные, методы) по умолчанию подсвечиваем синим -->
+		<Rule color="DefaultText">
+			\b[a-zA-Z_а-яА-Я_][a-zA-Z_а-яА-Я0-9_]*\b
+		</Rule>
+	</RuleSet>
+</SyntaxDefinition>
