@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
 <SyntaxDefinition name="1C" extensions=".bsl;.os" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
 	<Color name="Comment" foreground="#008000" fontStyle="italic" />
-	<Color name="String" foreground="#A31515" />
+	<Color name="String" foreground="#000000" />
 	<Color name="Number" foreground="#000000" />
 	<Color name="Preprocessor" foreground="#963200" />
+  <Color name="Preprocedure" foreground="#963200" />
 	<Color name="Keywords" foreground="#FF0000" fontWeight="bold" />
 	<Color name="KeywordsEn" foreground="#FF0000" fontWeight="bold" />
 	<Color name="OperatorKeywords" foreground="#FF0000" />
@@ -26,7 +27,35 @@
 			<Begin>\#</Begin>
 		</Span>
 
-		<Keywords color="TrueFalse">
+    <Keywords color="Preprocedure">
+    <Word>НаКлиенте</Word>
+    <Word>НаСервере</Word>
+    <Word>Клиент</Word>
+    <Word>Сервер</Word>
+    <Word>ТонкийКлиент</Word>
+    <Word>ВебКлиент</Word>
+    <Word>МобильныйАвтономныйСервер</Word>
+    <Word>МобильноеПриложениеКлиент</Word>
+    <Word>МобильноеПриложениеСервер</Word>
+    <Word>МобильныйКлиент</Word>
+    <Word>ТолстыйКлиентОбычноеПриложение</Word>
+    <Word>ТолстыйКлиентУправляемоеПриложение</Word>
+    <Word>ВнешнееСоединение</Word>
+    <Word>#Если</Word>
+    <Word>#Тогда</Word>
+    <Word>#ИначеЕсли</Word>
+    <Word>#Иначе</Word>
+    <Word>#КонецЕсли</Word>
+    <Word>#Область</Word>
+    <Word>#КонецОбласти</Word>
+    <Word>#Вставка</Word>
+    <Word>#КонецВставки</Word>
+    <Word>#Удаление</Word>
+    <Word>#КонецУдаления</Word>
+    </Keywords>
+
+
+    <Keywords color="TrueFalse">
 			<Word>Истина</Word>
 			<Word>Ложь</Word>
 			<Word>Неопределено</Word>
