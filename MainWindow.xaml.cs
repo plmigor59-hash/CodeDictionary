@@ -1,11 +1,13 @@
+using CodeDictionary.Models;
+using CodeDictionary.Services;
+using ICSharpCode.AvalonEdit;
+using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Xml;
-using CodeDictionary.Models;
-using CodeDictionary.Services;
-using ICSharpCode.AvalonEdit.Highlighting;
-using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace CodeDictionary;
 
@@ -45,7 +47,11 @@ public partial class MainWindow : Window
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
         StateChanged += MainWindow_StateChanged;
+    
+
     }
+
+
 
     private void LoadCustomHighlighting()
 
@@ -211,7 +217,12 @@ public partial class MainWindow : Window
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
-    {
+       {
+        DescriptionTextBox.Visibility = Visibility.Collapsed;
+        DescriptionRow.Height = new GridLength(0);
+        ToggleDescriptionButton.Content = " ▼ Развернуть ";
+
+
         _data = await _dataService.LoadDataAsync();
         _appState = await _dataService.LoadStateAsync();
 
@@ -231,6 +242,9 @@ public partial class MainWindow : Window
         }
 
         RefreshEntriesList();
+
+
+      
 
         // Восстанавливаем выбранную запись
         if (_appState.SelectedEntryId.HasValue)
@@ -268,29 +282,7 @@ public partial class MainWindow : Window
         FontSizeComboBox.SelectedItem = 12;
 
         WordWrapCheckBox.IsChecked = false;
-
-        // Варианты подсветки синтаксиса
-        SyntaxHighlightingComboBox.Items.Add("Темная С#");
-        SyntaxHighlightingComboBox.Items.Add("Светлая С#");
-        SyntaxHighlightingComboBox.Items.Add("Темная C++");
-        SyntaxHighlightingComboBox.Items.Add("Светлая C++");
-        SyntaxHighlightingComboBox.Items.Add("Темная (1C)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (1C)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (C#)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (C++)");
-
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (Java)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (JavaScript)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (HTML)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (XML)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (CSS)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (PHP)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (PowerShell)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (SQL)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (VB)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (ASP/XHTML)");
-        SyntaxHighlightingComboBox.Items.Add("Стандартная (Patch)");
-
+     
         SyntaxHighlightingComboBox.SelectedIndex = 0; // По умолчанию DarkCSharp
     }
 
@@ -474,7 +466,12 @@ public partial class MainWindow : Window
             WordWrapCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
 
             UpdateCodeEditorColors();
-
+            SyntaxHighlightingComboBox?.Items.Clear();
+            SyntaxHighlightingComboBox?.Items.Add("Темная (1C)");
+            SyntaxHighlightingComboBox?.Items.Add("Темная С#");
+            SyntaxHighlightingComboBox?.Items.Add("Темная C++");
+           
+         
             // По умолчанию при темном режиме выбираем DarkCSharp или DarkCpp
             if (SyntaxHighlightingComboBox != null)
             {
@@ -540,7 +537,26 @@ public partial class MainWindow : Window
 
             WordWrapCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
 
-            UpdateCodeEditorColors();
+             UpdateCodeEditorColors();
+
+            SyntaxHighlightingComboBox?.Items.Clear();
+            SyntaxHighlightingComboBox?.Items.Add("Светлая С#");
+            SyntaxHighlightingComboBox?.Items.Add("Светлая C++");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (1C)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (C#)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (C++)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (Java)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (JavaScript)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (HTML)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (XML)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (CSS)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (PHP)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (PowerShell)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (SQL)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (VB)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (ASP/XHTML)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная (Patch)");
+
 
             // По умолчанию при светлом режиме выбираем LightCSharp или LightCpp
             if (SyntaxHighlightingComboBox != null)
@@ -817,6 +833,16 @@ public partial class MainWindow : Window
     private void SelectAllMenuItem_Click(object sender, RoutedEventArgs e)
     {
         CodeTextBox.SelectAll();
+    }
+
+    private void UndoMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        CodeTextBox.Undo();
+    }
+
+    private void RedoMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        CodeTextBox.Redo();
     }
 
     private void ToggleDescriptionButton_Click(object sender, RoutedEventArgs e)
