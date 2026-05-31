@@ -1,237 +1,118 @@
 <?xml version="1.0"?>
-<SyntaxDefinition name="C#" extensions=".cs" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+<SyntaxDefinition name="1C" extensions=".bsl;.os" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
 	<Color name="Comment" foreground="#008000" fontStyle="italic" />
 	<Color name="String" foreground="#A31515" />
-	<Color name="Char" foreground="#A31515" />
-	<Color name="Preprocessor" foreground="#0431FA" />
-	<Color name="Punctuation" foreground="#000000" />
-	<Color name="ValueTypes" foreground="#2B91AF" fontWeight="normal" />
-	<Color name="ReferenceTypes" foreground="#2B91AF" />
-	<Color name="MethodCall" foreground="#74531F" fontWeight="normal" />
-	<Color name="NumberLiteral" foreground="#098658" />
-	<Color name="ThisOrBaseReference" foreground="#0000FF" fontWeight="normal" />
-	<Color name="NullOrValueKeywords" foreground="#0000FF" fontWeight="normal" />
-	<Color name="Keywords" foreground="#0000FF" fontWeight="normal" />
-	<Color name="GotoKeywords" foreground="#8F08C4" />
-	<Color name="ContextKeywords" foreground="#0000FF" />
-	<Color name="ExceptionKeywords" foreground="#8F08C4" fontWeight="normal" />
-	<Color name="CheckedKeyword" foreground="#0000FF" />
-	<Color name="UnsafeKeywords" foreground="#0000FF" />
-	<Color name="OperatorKeywords" foreground="#0000FF" />
-	<Color name="ParameterModifiers" foreground="#0000FF" />
-	<Color name="Modifiers" foreground="#0000FF" />
-	<Color name="Visibility" foreground="#0000FF" />
-	<Color name="NamespaceKeywords" foreground="#0000FF" />
-	<Color name="GetSetAddRemove" foreground="#0000FF" />
+	<Color name="Number" foreground="#000000" />
+	<Color name="Preprocessor" foreground="#963200" />
+	<Color name="Keywords" foreground="#FF0000" fontWeight="bold" />
+	<Color name="KeywordsEn" foreground="#0000FF" fontWeight="bold" />
+	<Color name="OperatorKeywords" foreground="#FF0000" />
+	<Color name="OperatorKeywordsEn" foreground="#0000FF" />
 	<Color name="TrueFalse" foreground="#0000FF" />
-	<Color name="TypeKeywords" foreground="#0000FF" />
-	<Color name="SemanticKeywords" foreground="#0000FF" />
+	<Color name="Punctuation" foreground="#000000" />
 
-	<RuleSet ignoreCase="false">
-		<Span color="Comment" ruleSet="XmlDoc/DocCommentSet">
-			<Begin>///</Begin>
-		</Span>
-
-		<Span color="Comment" multiline="true">
-			<Begin>/\*</Begin>
-			<End>\*/</End>
-		</Span>
-
+	<RuleSet ignoreCase="true">
 		<Span color="Comment">
 			<Begin>//</Begin>
 		</Span>
 
-		<Span color="String">
+		<Span color="String" multiline="true">
 			<Begin>"</Begin>
 			<End>"</End>
-			<RuleSet>
-				<Span begin="\\" end="." />
-			</RuleSet>
-		</Span>
-
-		<Span color="Char">
-			<Begin>'</Begin>
-			<End>'</End>
-			<RuleSet>
-				<Span begin="\\" end="." />
-			</RuleSet>
-		</Span>
-
-		<Span color="String" multiline="true">
-			<Begin>@"</Begin>
-			<End>"</End>
-			<RuleSet>
-				<Span begin='""' end="" />
-			</RuleSet>
 		</Span>
 
 		<Span color="Preprocessor">
 			<Begin>\#</Begin>
 		</Span>
 
-		<Keywords color="ThisOrBaseReference">
-			<Word>this</Word>
-			<Word>base</Word>
-		</Keywords>
-
-		<Keywords color="TypeKeywords">
-			<Word>class</Word>
-			<Word>interface</Word>
-			<Word>struct</Word>
-			<Word>enum</Word>
-			<Word>delegate</Word>
-		</Keywords>
-
 		<Keywords color="TrueFalse">
-			<Word>true</Word>
-			<Word>false</Word>
+			<Word>Истина</Word>
+			<Word>Ложь</Word>
+			<Word>Неопределено</Word>
+			<Word>Null</Word>
+			<Word>True</Word>
+			<Word>False</Word>
+			<Word>Undefined</Word>
 		</Keywords>
 
 		<Keywords color="Keywords">
-			<Word>as</Word>
-			<Word>is</Word>
-			<Word>new</Word>
-			<Word>sizeof</Word>
-			<Word>typeof</Word>
-			<Word>stackalloc</Word>
-			<Word>else</Word>
-			<Word>if</Word>
-			<Word>switch</Word>
-			<Word>case</Word>
-			<Word>default</Word>
-			<Word>do</Word>
-			<Word>for</Word>
-			<Word>foreach</Word>
-			<Word>in</Word>
-			<Word>while</Word>
-			<Word>lock</Word>
+			<Word>Если</Word>
+			<Word>Тогда</Word>
+			<Word>Иначе</Word>
+			<Word>ИначеЕсли</Word>
+			<Word>КонецЕсли</Word>
+			<Word>Для</Word>
+			<Word>Каждого</Word>
+			<Word>Из</Word>
+			<Word>По</Word>
+			<Word>Цикл</Word>
+			<Word>КонецЦикла</Word>
+			<Word>Пока</Word>
+			<Word>Процедура</Word>
+			<Word>КонецПроцедуры</Word>
+			<Word>Функция</Word>
+			<Word>КонецФункции</Word>
+			<Word>Перем</Word>
+			<Word>Экспорт</Word>
+			<Word>Возврат</Word>
+			<Word>Продолжить</Word>
+			<Word>Прервать</Word>
+			<Word>Попытка</Word>
+			<Word>Исключение</Word>
+			<Word>КонецПопытки</Word>
+			<Word>ВызватьИсключение</Word>
+			<Word>Новый</Word>
+			<Word>Выполнить</Word>
 		</Keywords>
 
-		<Keywords color="GotoKeywords">
-			<Word>break</Word>
-			<Word>continue</Word>
-			<Word>goto</Word>
-			<Word>return</Word>
-		</Keywords>
-
-		<Keywords color="ContextKeywords">
-			<Word>yield</Word>
-			<Word>partial</Word>
-			<Word>global</Word>
-			<Word>where</Word>
-			<Word>select</Word>
-			<Word>group</Word>
-			<Word>by</Word>
-			<Word>into</Word>
-			<Word>from</Word>
-			<Word>ascending</Word>
-			<Word>descending</Word>
-			<Word>orderby</Word>
-			<Word>let</Word>
-			<Word>join</Word>
-			<Word>on</Word>
-			<Word>equals</Word>
-			<Word>var</Word>
-			<Word>dynamic</Word>
-			<Word>await</Word>
-			<Word>async</Word>
-			<Word>when</Word>
-		</Keywords>
-
-		<Keywords color="ExceptionKeywords">
-			<Word>try</Word>
-			<Word>throw</Word>
-			<Word>catch</Word>
-			<Word>finally</Word>
-		</Keywords>
-
-		<Keywords color="CheckedKeyword">
-			<Word>checked</Word>
-			<Word>unchecked</Word>
-		</Keywords>
-
-		<Keywords color="UnsafeKeywords">
-			<Word>fixed</Word>
-			<Word>unsafe</Word>
-		</Keywords>
-
-		<Keywords color="ValueTypes">
-			<Word>bool</Word>
-			<Word>byte</Word>
-			<Word>char</Word>
-			<Word>decimal</Word>
-			<Word>double</Word>
-			<Word>float</Word>
-			<Word>int</Word>
-			<Word>long</Word>
-			<Word>sbyte</Word>
-			<Word>short</Word>
-			<Word>uint</Word>
-			<Word>ulong</Word>
-			<Word>ushort</Word>
-			<Word>void</Word>
-		</Keywords>
-
-		<Keywords color="ReferenceTypes">
-			<Word>object</Word>
-			<Word>string</Word>
+		<Keywords color="KeywordsEn">
+			<Word>If</Word>
+			<Word>Then</Word>
+			<Word>Else</Word>
+			<Word>ElsIf</Word>
+			<Word>EndIf</Word>
+			<Word>For</Word>
+			<Word>Each</Word>
+			<Word>In</Word>
+			<Word>To</Word>
+			<Word>Do</Word>
+			<Word>EndDo</Word>
+			<Word>While</Word>
+			<Word>Procedure</Word>
+			<Word>EndProcedure</Word>
+			<Word>Function</Word>
+			<Word>EndFunction</Word>
+			<Word>Var</Word>
+			<Word>Export</Word>
+			<Word>Return</Word>
+			<Word>Continue</Word>
+			<Word>Break</Word>
+			<Word>Try</Word>
+			<Word>Except</Word>
+			<Word>EndTry</Word>
+			<Word>Raise</Word>
+			<Word>New</Word>
+			<Word>Execute</Word>
 		</Keywords>
 
 		<Keywords color="OperatorKeywords">
-			<Word>explicit</Word>
-			<Word>implicit</Word>
-			<Word>operator</Word>
+			<Word>И</Word>
+			<Word>Или</Word>
+			<Word>Не</Word>
 		</Keywords>
 
-		<Keywords color="ParameterModifiers">
-			<Word>params</Word>
-			<Word>ref</Word>
-			<Word>out</Word>
+		<Keywords color="OperatorKeywordsEn">
+			<Word>And</Word>
+			<Word>Or</Word>
+			<Word>Not</Word>
 		</Keywords>
 
-		<Keywords color="Modifiers">
-			<Word>abstract</Word>
-			<Word>const</Word>
-			<Word>event</Word>
-			<Word>extern</Word>
-			<Word>override</Word>
-			<Word>readonly</Word>
-			<Word>sealed</Word>
-			<Word>static</Word>
-			<Word>virtual</Word>
-			<Word>volatile</Word>
-		</Keywords>
-
-		<Keywords color="Visibility">
-			<Word>public</Word>
-			<Word>protected</Word>
-			<Word>private</Word>
-			<Word>internal</Word>
-		</Keywords>
-
-		<Keywords color="NamespaceKeywords">
-			<Word>namespace</Word>
-			<Word>using</Word>
-		</Keywords>
-
-		<Keywords color="GetSetAddRemove">
-			<Word>get</Word>
-			<Word>set</Word>
-			<Word>add</Word>
-			<Word>remove</Word>
-		</Keywords>
-
-		<Keywords color="NullOrValueKeywords">
-			<Word>null</Word>
-			<Word>value</Word>
-		</Keywords>
-
-		<Rule color="NumberLiteral">
-			\b0[xX][0-9a-fA-F]+|(\b\d+(\.[0-9]+)?|\.[0-9]+)([eE][+-]?[0-9]+)?
+		<Rule color="Number">
+			\b\d+(\.\d+)?\b
 		</Rule>
 
 		<Rule color="Punctuation">
-			[?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;]+
+			[?,.;()\[\]{}+\-/%*&lt;&gt;^~=|&amp;]+
 		</Rule>
 	</RuleSet>
 </SyntaxDefinition>
