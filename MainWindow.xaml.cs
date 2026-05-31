@@ -800,13 +800,13 @@ public partial class MainWindow : Window
         {
             DescriptionTextBox.Visibility = Visibility.Collapsed;
             DescriptionRow.Height = new GridLength(0);
-            ToggleDescriptionButton.Content = "▼ Развернуть";
+            ToggleDescriptionButton.Content = " ▼ Развернуть ";
         }
         else
         {
             DescriptionTextBox.Visibility = Visibility.Visible;
             DescriptionRow.Height = new GridLength(1, GridUnitType.Star);
-            ToggleDescriptionButton.Content = "▲ Свернуть";
+            ToggleDescriptionButton.Content = " ▲ Свернуть ";
         }
     }
 }
