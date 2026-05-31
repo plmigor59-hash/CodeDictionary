@@ -8,6 +8,7 @@ public class CodeEntry
     public string Code { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public List<string> Tags { get; set; } = new();
+    public string Syntax { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime ModifiedAt { get; set; }
 

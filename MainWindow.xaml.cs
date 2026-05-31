@@ -287,7 +287,6 @@ public partial class MainWindow : Window
         {
             CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C++");
         }
-
         else if (selected == "Стандартная (1C)")
         {
             CodeTextBox.SyntaxHighlighting = _standart1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
@@ -296,6 +295,8 @@ public partial class MainWindow : Window
         {
             CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
         }
+
+        UpdateCodeEditorColors(selected);
     }
 
     private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -384,10 +385,7 @@ public partial class MainWindow : Window
 
             WordWrapCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
 
-            CodeTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.CodeBackground));
-            CodeTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.CodeForeground));
-            CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextSecondary));
-            CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
+            UpdateCodeEditorColors();
 
             // По умолчанию при темном режиме выбираем DarkCSharp или DarkCpp
             if (SyntaxHighlightingComboBox != null)
@@ -454,10 +452,7 @@ public partial class MainWindow : Window
 
             WordWrapCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
 
-            CodeTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeBackground));
-            CodeTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeForeground));
-            CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextSecondary));
-            CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
+            UpdateCodeEditorColors();
 
             // По умолчанию при светлом режиме выбираем LightCSharp или LightCpp
             if (SyntaxHighlightingComboBox != null)
@@ -475,6 +470,40 @@ public partial class MainWindow : Window
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 1; // LightCSharp
                 }
+            }
+        }
+    }
+
+    private void UpdateCodeEditorColors(string? selectedSyntax = null)
+    {
+        if (CodeTextBox == null) return;
+
+        var syntax = selectedSyntax ?? SyntaxHighlightingComboBox?.SelectedItem?.ToString();
+
+        if (syntax == "Стандартная (1C)")
+        {
+            // Для 1С фон всегда остается светлым
+            CodeTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeBackground));
+            CodeTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeForeground));
+            CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextSecondary));
+            CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
+        }
+        else
+        {
+            // Для остальных языков цвета зависят от темы
+            if (_currentTheme == AppTheme.Dark)
+            {
+                CodeTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.CodeBackground));
+                CodeTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.CodeForeground));
+                CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextSecondary));
+                CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
+            }
+            else
+            {
+                CodeTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeBackground));
+                CodeTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeForeground));
+                CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextSecondary));
+                CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
             }
         }
     }
@@ -553,6 +582,11 @@ public partial class MainWindow : Window
         TagsTextBox.Text = string.Join(", ", entry.Tags);
 
         CategoryComboBox.ItemsSource = _data.Categories;
+
+        if (!string.IsNullOrEmpty(entry.Syntax) && SyntaxHighlightingComboBox != null)
+        {
+            SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
+        }
     }
 
     private void AddEntry_Click(object sender, RoutedEventArgs e)
@@ -593,6 +627,7 @@ public partial class MainWindow : Window
             .Select(t => t.Trim())
             .Where(t => !string.IsNullOrWhiteSpace(t))
             .ToList();
+        _currentEntry.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
         _currentEntry.ModifiedAt = DateTime.Now;
 
         if (!string.IsNullOrWhiteSpace(_currentEntry.Category) &&
