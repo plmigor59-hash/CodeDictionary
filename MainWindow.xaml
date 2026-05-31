@@ -363,7 +363,7 @@
                 <Setter.Value>
                     <Border Background="{DynamicResource DictCardBackground}" 
                     Width="20" 
-                    Height="30"/>
+                    Height="20"/>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -657,6 +657,21 @@
                         <ContextMenu Background="{DynamicResource DictCardBackground}"
                                  BorderBrush="{DynamicResource DictCardBackground}"
                                  BorderThickness="1">
+                            <MenuItem Command="Undo" Header="Отменить">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="↩️"  FontSize="12"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+
+
+                            <MenuItem Command="Redo" Header="Повторить">    
+                                <MenuItem.Icon>
+                                    <TextBlock Text="↪️"  FontSize="12"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator/>
+
+
                             <MenuItem Header="Копировать" Click="CopyMenuItem_Click">
                                 <MenuItem.Icon>
                                     <TextBlock Text="📋"  FontSize="12"/>
