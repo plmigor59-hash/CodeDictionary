@@ -230,10 +230,10 @@ public partial class MainWindow : Window
         WordWrapCheckBox.IsChecked = false;
 
         // Варианты подсветки синтаксиса
-        SyntaxHighlightingComboBox.Items.Add("DarkCSharp");
-        SyntaxHighlightingComboBox.Items.Add("LightCSharp");
-        SyntaxHighlightingComboBox.Items.Add("DarkCpp");
-        SyntaxHighlightingComboBox.Items.Add("LightCpp");
+        SyntaxHighlightingComboBox.Items.Add("Темная С#");
+        SyntaxHighlightingComboBox.Items.Add("Светлая С#");
+        SyntaxHighlightingComboBox.Items.Add("Темная C++");
+        SyntaxHighlightingComboBox.Items.Add("Светлая C++");
         SyntaxHighlightingComboBox.Items.Add("Стандартная (C#)");
         SyntaxHighlightingComboBox.Items.Add("Стандартная (C++)");
         SyntaxHighlightingComboBox.SelectedIndex = 0; // По умолчанию DarkCSharp
@@ -244,19 +244,19 @@ public partial class MainWindow : Window
         if (CodeTextBox == null || SyntaxHighlightingComboBox?.SelectedItem == null) return;
 
         var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
-        if (selected == "DarkCSharp")
+        if (selected == "Темная С#")
         {
             CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
         }
-        else if (selected == "LightCSharp")
+        else if (selected == "Светлая С#")
         {
             CodeTextBox.SyntaxHighlighting = _lightCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
         }
-        else if (selected == "DarkCpp")
+        else if (selected == "Темная C++")
         {
             CodeTextBox.SyntaxHighlighting = _darkCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
         }
-        else if (selected == "LightCpp")
+        else if (selected == "Светлая C++")
         {
             CodeTextBox.SyntaxHighlighting = _lightCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
         }
