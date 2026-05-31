@@ -7,6 +7,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Xml;
+using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
+using System.IO;
+using System.Text;
+
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace CodeDictionary;
@@ -26,10 +30,16 @@ public partial class MainWindow : Window
     private IHighlightingDefinition? _lightCppHighlighting;
     private IHighlightingDefinition? _standart1CHigh;
     private IHighlightingDefinition? _dark1CHigh;
+    private string _currentFilePath = null;  // Хранит путь к текущему открытому файлу
 
 
     public MainWindow()
+
+
     {
+        // Загружаем кастомную тему подсветки для тёмного и светлого режимов
+      
+
         InitializeComponent();
         _dataService = new DataService();
         _data = new CodeDictionaryData();
@@ -38,8 +48,8 @@ public partial class MainWindow : Window
         _currentTheme = AppTheme.Dark;
         _appState = new AppState();
 
-        // Загружаем кастомную тему подсветки для тёмного и светлого режимов
         LoadCustomHighlighting();
+
 
         // Инициализируем список шрифтов и настроек подсветки
         InitializeFontSettings();
@@ -50,6 +60,150 @@ public partial class MainWindow : Window
     
 
     }
+
+
+
+    private void OpenFile_Click(object sender, RoutedEventArgs e)
+    {
+        var openFileDialog = new OpenFileDialog();
+
+        // Настройки диалога
+        openFileDialog.Title = "Выберите текстовый файл";
+        openFileDialog.Filter = "Текстовые файлы (*.txt;*.cs;*.xaml;*.json;*.xml)|*.txt;*.cs;*.xaml;*.json;*.xml|Все файлы (*.*)|*.*";
+        openFileDialog.FilterIndex = 1;
+        openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+        if (openFileDialog.ShowDialog() == true)
+        {
+            try
+            {
+                _currentFilePath = openFileDialog.FileName;
+
+                // Загружаем файл с определением кодировки (автоматическая)
+                using (var stream = new FileStream(_currentFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    CodeTextBox.Load(stream);
+                }
+
+                // Обновляем заголовок окна или статус
+                this.Title = $"{Path.GetFileName(_currentFilePath)} - Мой редактор";
+
+                // Показываем уведомление об успехе
+                MessageBox.Show($"Файл '{Path.GetFileName(_currentFilePath)}' успешно открыт",
+                                "Открытие файла",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при открытии файла: {ex.Message}",
+                                "Ошибка",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
+            }
+        }
+    }
+
+    // 💾 СОХРАНИТЬ (если путь уже есть, иначе Сохранить как...)
+    private void SaveFile_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_currentFilePath))
+        {
+            SaveAsFile_Click(sender, e);  // Если файл новый, вызываем "Сохранить как"
+        }
+        else
+        {
+            try
+            {
+                // Сохраняем в существующий файл
+                using (var stream = new FileStream(_currentFilePath, FileMode.Create, FileAccess.Write))
+                {
+                    CodeTextBox.Save(stream);
+                }
+
+                // Обновляем заголовок (на случай если имя изменилось, но у нас оно то же)
+                this.Title = $"{Path.GetFileName(_currentFilePath)} - Мой редактор";
+
+                MessageBox.Show("Файл успешно сохранён",
+                                "Сохранение",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении: {ex.Message}",
+                                "Ошибка",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
+            }
+        }
+    }
+
+    // 📝 СОХРАНИТЬ КАК (всегда спрашиваем путь)
+    private void SaveAsFile_Click(object sender, RoutedEventArgs e)
+    {
+        var saveFileDialog = new SaveFileDialog();
+
+        // Настройки диалога
+        saveFileDialog.Title = "Сохранить файл как";
+        saveFileDialog.Filter = "Текстовые файлы (*.txt)|*.txt|1c (*.bsl)|*.bsl|c# (*.cs)|*.cs|Все файлы (*.*)|*.*";
+        saveFileDialog.FilterIndex = 1;
+        saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+        // Если файл уже был открыт, предлагаем его имя по умолчанию
+        if (!string.IsNullOrEmpty(_currentFilePath))
+        {
+            saveFileDialog.FileName = Path.GetFileName(_currentFilePath);
+        }
+
+        if (saveFileDialog.ShowDialog() == true)
+        {
+            try
+            {
+                _currentFilePath = saveFileDialog.FileName;
+
+                using (var stream = new FileStream(_currentFilePath, FileMode.Create, FileAccess.Write))
+                {
+                    CodeTextBox.Save(stream);
+                }
+
+                this.Title = $"{Path.GetFileName(_currentFilePath)} ";
+
+                MessageBox.Show("Файл успешно сохранён",
+                                "Сохранение",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении: {ex.Message}",
+                                "Ошибка",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
+            }
+        }
+    }
+/*
+    // 🆕 НОВЫЙ ФАЙЛ (очищаем редактор и сбрасываем путь)
+    private void NewFile_Click(object sender, RoutedEventArgs e)
+    {
+        // Проверяем, не потеряются ли изменения (можно добавить диалог)
+        if (!string.IsNullOrEmpty(CodeTextBox.Text))
+        {
+            var result = MessageBox.Show("Текст не сохранён. Продолжить без сохранения?",
+                                         "Новый файл",
+                                         MessageBoxButton.YesNo,
+                                         MessageBoxImage.Question);
+            if (result == MessageBoxResult.No)
+                return;
+        }
+
+        CodeTextBox.Text = string.Empty;
+        _currentFilePath = null;
+        this.Title = "Новый документ";
+    }
+*/
+
 
 
 
@@ -218,14 +372,16 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
        {
-        DescriptionTextBox.Visibility = Visibility.Collapsed;
-        DescriptionRow.Height = new GridLength(0);
-        ToggleDescriptionButton.Content = " ▼ Развернуть ";
-
+      
 
         _data = await _dataService.LoadDataAsync();
         _appState = await _dataService.LoadStateAsync();
 
+
+       DescriptionTextBox.Visibility = Visibility.Collapsed;
+       DescriptionRow.Height = new GridLength(0);
+       ToggleDescriptionButton.Content = " ▼ Развернуть ";
+ 
         RefreshCategoryFilter();
 
         // Восстанавливаем выбранную категорию
@@ -259,6 +415,10 @@ public partial class MainWindow : Window
         // Применяем сохраненную тему
         ThemeCheckBox.IsChecked = _appState.IsLightTheme;
         ApplyTheme(_appState.IsLightTheme ? AppTheme.Light : AppTheme.Dark);
+
+      
+
+
 
         _isInitialized = true;
     }

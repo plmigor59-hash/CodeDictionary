@@ -538,14 +538,14 @@
                 <StackPanel Grid.Row="7" Orientation="Horizontal" Margin="10,10,10,10" HorizontalAlignment="Center">
                     <Button Content="Сохранить" Click="SaveEntry_Click"
                         Height="30"
-                        Width="85"
+                        Width="185"
                         Padding="10,5" Margin="0,0,5,0"
                         Style="{StaticResource ActionButtonStyle}"
                         Background="#0E639C" Foreground="White" BorderThickness="0" Cursor="Hand"/>
                     <Button Content="Удалить" Click="DeleteEntry_Click"
                         Padding="10,5" Margin="5,0,0,0"
                         Height="30"
-                        Width="70"
+                        Width="185"
                         Style="{StaticResource ActionButtonStyle}"
                         Background="#C72E2E" Foreground="White" BorderThickness="0" Cursor="Hand"/>
                 </StackPanel>
@@ -645,6 +645,11 @@
                             <Button Click="CopyMenuItem_Click" Content="📋" Width="30" Margin="2" ToolTip="Копировать" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="PasteMenuItem_Click" Content="📄" Width="30" Margin="2" ToolTip="Вставить" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="SelectAllMenuItem_Click" Content="🔲" Width="30" Margin="2" ToolTip="Выделить все" Style="{StaticResource TitleBarButtonStyle}"/>
+                            
+                            <Button Click="OpenFile_Click" Content="📂" Width="30" Margin="2" ToolTip="Открыть..." Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить как..." Style="{StaticResource TitleBarButtonStyle}"/>
+
+
                         </StackPanel>
 
 
