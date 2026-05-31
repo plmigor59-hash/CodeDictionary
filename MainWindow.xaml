@@ -14,7 +14,7 @@
         Background="#1E1E1E">
     <Window.Resources>
 
-       
+
         <LinearGradientBrush x:Key="DictWindowGradient" StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#111720" Offset="0"/>
             <GradientStop Color="#1A2332" Offset="0.5"/>
@@ -348,6 +348,44 @@
             </Setter>
         </Style>
 
+        <Style TargetType="ContextMenu">
+            <Setter Property="Background" Value="{DynamicResource DictCardBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DictCardBackground}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style TargetType="MenuItem">
+            <Setter Property="Background" Value="{DynamicResource DictCardBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
+
+            <!-- Шаблон для иконки -->
+            <Setter Property="Icon">
+                <Setter.Value>
+                    <Border Background="{DynamicResource DictCardBackground}" 
+                    Width="20" 
+                    Height="30"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Separator">
+            <Setter Property="Background" Value="{DynamicResource DictCardBackground}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Grid Background="{TemplateBinding Background}">
+                            <Line X1="0" Y1="0" X2="0" Y2="0" 
+                          Stretch="Fill" 
+                          Stroke="{DynamicResource DictCardBackground}"
+                          StrokeThickness="1"
+                          Margin="30,0,0,0"/>
+                            <!-- Сдвигаем линию вправо -->
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
 
 
 
@@ -407,25 +445,25 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-        <!-- Левая панель: список записей и детали -->
-        <Grid Grid.Column="0" x:Name="SidePanel" Background="#252526">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+            <!-- Левая панель: список записей и детали -->
+            <Grid Grid.Column="0" x:Name="SidePanel" Background="#252526">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" x:Name="HeaderText" Text="Справочник" FontSize="18" FontWeight="Bold"
+                <TextBlock Grid.Row="0" x:Name="HeaderText" Text="Справочник" FontSize="18" FontWeight="Bold"
                        Margin="10" HorizontalAlignment="Center" Foreground="#CCCCCC"/>
 
-            <!-- Переключатель темы -->
-            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,5,10,10">
-                <CheckBox x:Name="ThemeCheckBox"
+                <!-- Переключатель темы -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,5,10,10">
+                    <CheckBox x:Name="ThemeCheckBox"
                           Content="Светлая тема"
                           Checked="ThemeCheckBox_Changed"
                           Unchecked="ThemeCheckBox_Changed"
@@ -433,10 +471,10 @@
                           Foreground="#CCCCCC"
                           Style="{StaticResource ToggleSwitchStyle}"
                           FontSize="12"/>
-            </StackPanel>
+                </StackPanel>
 
-            <StackPanel Grid.Row="2" Margin="10,0,10,10" >
-                <TextBox x:Name="SearchBox"
+                <StackPanel Grid.Row="2" Margin="10,0,10,10" >
+                    <TextBox x:Name="SearchBox"
                          TextChanged="SearchBox_TextChanged"
                          Padding="5"
                          FontSize="14"
@@ -444,13 +482,13 @@
                          Foreground="#000000"
                          BorderBrush="#555555"
                          Text=""/>
-                <ComboBox x:Name="CategoryFilter"
+                    <ComboBox x:Name="CategoryFilter"
                           SelectionChanged="CategoryFilter_SelectionChanged"
                           Margin="0,5,0,0"
                           Style="{StaticResource ComboBoxStyle}"/>
-            </StackPanel>
+                </StackPanel>
 
-            <ListBox x:Name="EntriesListBox"
+                <ListBox x:Name="EntriesListBox"
                      Grid.Row="3"
                      SelectionChanged="EntriesListBox_SelectionChanged"
                      Margin="10,0,10,10"
@@ -458,17 +496,17 @@
                      Foreground="#CCCCCC"
                      FontSize="14"
                      BorderBrush="{DynamicResource DictBorder}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Margin="5">
-                            <TextBlock Text="{Binding Title}" FontWeight="Bold" Foreground="#CCCCCC" />
-                            <TextBlock Text="{Binding Category}" FontSize="14" Foreground="#858585" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="5">
+                                <TextBlock Text="{Binding Title}" FontWeight="Bold" Foreground="#CCCCCC" />
+                                <TextBlock Text="{Binding Category}" FontSize="14" Foreground="#858585" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
 
-            <Button Grid.Row="4" Content="+ Добавить запись"
+                <Button Grid.Row="4" Content="+ Добавить запись"
                     Click="AddEntry_Click"
                     Height="30"
                     Margin="5"
@@ -479,57 +517,62 @@
                     Style="{StaticResource ActionButtonStyle}"
                     Cursor="Hand"/>
 
-            <!-- Название -->
-            <StackPanel Grid.Row="5" Margin="10,10,10,5">
-                <TextBlock Text="Название:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC"/>
-                <TextBox x:Name="TitleTextBox" Padding="5"
+                <!-- Название -->
+                <StackPanel Grid.Row="5" Margin="10,10,10,5">
+                    <TextBlock Text="Название:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC"/>
+                    <TextBox x:Name="TitleTextBox" Padding="5"
                          FontSize="14"
                          Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#555555"/>
-            </StackPanel>
+                </StackPanel>
 
-            <!-- Категория -->
-            <StackPanel Grid.Row="6" Margin="10,5,10,5">
-                <TextBlock Text="Категория:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC"/>
-                <ComboBox x:Name="CategoryComboBox"
+                <!-- Категория -->
+                <StackPanel Grid.Row="6" Margin="10,5,10,5">
+                    <TextBlock Text="Категория:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC"/>
+                    <ComboBox x:Name="CategoryComboBox"
                           IsEditable="True"
                           Style="{StaticResource ComboBoxStyle}"/>
-            </StackPanel>
+                </StackPanel>
 
-            <!-- Кнопки управления -->
-            <StackPanel Grid.Row="7" Orientation="Horizontal" Margin="10,10,10,10" HorizontalAlignment="Center">
-                <Button Content="Сохранить" Click="SaveEntry_Click"
+                <!-- Кнопки управления -->
+                <StackPanel Grid.Row="7" Orientation="Horizontal" Margin="10,10,10,10" HorizontalAlignment="Center">
+                    <Button Content="Сохранить" Click="SaveEntry_Click"
                         Height="30"
                         Width="85"
                         Padding="10,5" Margin="0,0,5,0"
                         Style="{StaticResource ActionButtonStyle}"
                         Background="#0E639C" Foreground="White" BorderThickness="0" Cursor="Hand"/>
-                <Button Content="Удалить" Click="DeleteEntry_Click"
+                    <Button Content="Удалить" Click="DeleteEntry_Click"
                         Padding="10,5" Margin="5,0,0,0"
                         Height="30"
                         Width="70"
                         Style="{StaticResource ActionButtonStyle}"
                         Background="#C72E2E" Foreground="White" BorderThickness="0" Cursor="Hand"/>
-            </StackPanel>
-        </Grid>
+                </StackPanel>
+            </Grid>
 
-        <!-- Правая панель: описание, код и теги -->
-        <Grid Grid.Column="1" Margin="10">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/> <!-- Description Header -->
-                <RowDefinition x:Name="DescriptionRow" Height="1*"/> <!-- Description TextBox -->
-                <RowDefinition Height="Auto"/> <!-- Code Header -->
-                <RowDefinition x:Name="CodeRow" Height="1*"/> <!-- Code TextBox -->
-                <RowDefinition Height="Auto"/> <!-- Tags -->
-            </Grid.RowDefinitions>
+            <!-- Правая панель: описание, код и теги -->
+            <Grid Grid.Column="1" Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- Description Header -->
+                    <RowDefinition x:Name="DescriptionRow" Height="1*"/>
+                    <!-- Description TextBox -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- Code Header -->
+                    <RowDefinition x:Name="CodeRow" Height="1*"/>
+                    <!-- Code TextBox -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- Tags -->
+                </Grid.RowDefinitions>
 
-            <!-- Шапка описания -->
-            <Grid Grid.Row="0" Margin="0,0,0,5">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Описание:" FontWeight="Bold" Foreground="#CCCCCC" VerticalAlignment="Center" FontSize="14"/>
-                <Button Grid.Column="1" x:Name="ToggleDescriptionButton"
+                <!-- Шапка описания -->
+                <Grid Grid.Row="0" Margin="0,0,0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Описание:" FontWeight="Bold" Foreground="#CCCCCC" VerticalAlignment="Center" FontSize="14"/>
+                    <Button Grid.Column="1" x:Name="ToggleDescriptionButton"
                         Content="▲ Свернуть"
                         Click="ToggleDescriptionButton_Click"
                         Padding="8,2"
@@ -537,10 +580,10 @@
                         Height="26"
                         Cursor="Hand"
                         Style="{StaticResource ActionButtonStyle}"/>
-            </Grid>
+                </Grid>
 
-            <!-- Поле описания (1/3 от высоты кода) -->
-            <TextBox Grid.Row="1" x:Name="DescriptionTextBox"
+                <!-- Поле описания (1/3 от высоты кода) -->
+                <TextBox Grid.Row="1" x:Name="DescriptionTextBox"
                      TextWrapping="Wrap"
                      AcceptsReturn="True"
                      VerticalScrollBarVisibility="Auto"
@@ -550,35 +593,35 @@
                      VerticalAlignment="Stretch"
                      Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#555555"/>
 
-            <!-- Шапка кода и панель управления шрифтом -->
-            <Grid Grid.Row="2" Margin="0,0,0,10">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="Код:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC" FontSize="14"/>
+                <!-- Шапка кода и панель управления шрифтом -->
+                <Grid Grid.Row="2" Margin="0,0,0,10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="Код:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC" FontSize="14"/>
 
-                <!-- Панель управления шрифтом -->
-                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,5">
-                    <TextBlock Text="Шрифт:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#CCCCCC"/>
-                    <ComboBox x:Name="FontFamilyComboBox"
+                    <!-- Панель управления шрифтом -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,5">
+                        <TextBlock Text="Шрифт:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#CCCCCC"/>
+                        <ComboBox x:Name="FontFamilyComboBox"
                               SelectionChanged="FontFamilyComboBox_SelectionChanged"
-                              Width="150"
+                              Width="120"
                               Margin="0,0,10,0"
                               FontSize="12"
-                              Style="{StaticResource ComboBoxStyle}"
+                              Style="{StaticResource ComboBoxStyle}" Height="22"
                              />
 
-                    <TextBlock Text="Размер:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#CCCCCC"/>
-                    <ComboBox x:Name="FontSizeComboBox"
+                        <TextBlock Text="Размер:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#CCCCCC"/>
+                        <ComboBox x:Name="FontSizeComboBox"
                               SelectionChanged="FontSizeComboBox_SelectionChanged"
-                              Width="60"
+                              Width="42"
                               Margin="0,0,10,0"
                               FontSize="12"
-                              Style="{StaticResource ComboBoxStyle}"
+                              Style="{StaticResource ComboBoxStyle}" Height="22"
                              />
 
-                    <CheckBox x:Name="WordWrapCheckBox"
+                        <CheckBox x:Name="WordWrapCheckBox"
                               Content="Перенос строк"
                               Checked="WordWrapCheckBox_Changed"
                               Unchecked="WordWrapCheckBox_Changed"
@@ -587,19 +630,19 @@
                               Foreground="#CCCCCC"
                               Margin="10,0,0,0"/>
 
-                     <TextBlock Text="Синтаксис:" VerticalAlignment="Center" Margin="15,0,5,0" Foreground="#CCCCCC"/>
-                     <ComboBox x:Name="SyntaxHighlightingComboBox"
+                        <TextBlock Text="Синтаксис:" VerticalAlignment="Center" Margin="15,0,5,0" Foreground="#CCCCCC"/>
+                        <ComboBox x:Name="SyntaxHighlightingComboBox"
                                SelectionChanged="SyntaxHighlightingComboBox_SelectionChanged"
-                               Width="130"
+                               Width="160"
                                FontSize="12"
-                               Style="{StaticResource ComboBoxStyle}"/>
-                 </StackPanel>
-            </Grid>
+                               Style="{StaticResource ComboBoxStyle}" Height="22"/>
+                    </StackPanel>
+                </Grid>
 
-            <!-- Текстовый редактор кода (3/3 от высоты кода) -->
-            <avalonEdit:TextEditor Grid.Row="3" x:Name="CodeTextBox"
+                <!-- Текстовый редактор кода (3/3 от высоты кода) -->
+                <avalonEdit:TextEditor Grid.Row="3" x:Name="CodeTextBox"
                                    FontFamily="Consolas"
-                                   FontSize="14"
+                                   FontSize="12"
                                    ShowLineNumbers="True"
                                    Background="#252526"
                                    Foreground="#D4D4D4"
@@ -610,58 +653,54 @@
                                    Margin="0,0,0,10"
                                    VerticalScrollBarVisibility="Auto"
                                    HorizontalScrollBarVisibility="Auto">
-                <avalonEdit:TextEditor.ContextMenu>
-                    <ContextMenu Background="{DynamicResource DictCardBackground}"
-                                 BorderBrush="{DynamicResource DictBorder}"
+                    <avalonEdit:TextEditor.ContextMenu>
+                        <ContextMenu Background="{DynamicResource DictCardBackground}"
+                                 BorderBrush="{DynamicResource DictCardBackground}"
                                  BorderThickness="1">
-                        <MenuItem Header="Копировать" Click="CopyMenuItem_Click"
-                                  Foreground="{DynamicResource DictTextPrimary}"
-                                  Background="{DynamicResource DictCardBackground}">
-                            <MenuItem.Icon>
-                                <TextBlock Text="📋" FontSize="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Вырезать" Click="CutMenuItem_Click"
-                                  Foreground="{DynamicResource DictTextPrimary}"
-                                  Background="{DynamicResource DictCardBackground}">
-                            <MenuItem.Icon>
-                                <TextBlock Text="✂️" FontSize="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Вставить" Click="PasteMenuItem_Click"
-                                  Foreground="{DynamicResource DictTextPrimary}"
-                                  Background="{DynamicResource DictCardBackground}">
-                            <MenuItem.Icon>
-                                <TextBlock Text="📄" FontSize="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator Background="{DynamicResource DictBorder}"/>
-                        <MenuItem Header="Удалить выделенное" Click="DeleteMenuItem_Click"
-                                  Foreground="{DynamicResource DictTextPrimary}"
-                                  Background="{DynamicResource DictCardBackground}">
-                            <MenuItem.Icon>
-                                <TextBlock Text="🗑️" FontSize="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator Background="{DynamicResource DictBorder}"/>
-                        <MenuItem Header="Выделить всё" Click="SelectAllMenuItem_Click"
-                                  Foreground="{DynamicResource DictTextPrimary}"
-                                  Background="{DynamicResource DictCardBackground}">
-                            <MenuItem.Icon>
-                                <TextBlock Text="📝" FontSize="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                    </ContextMenu>
-                </avalonEdit:TextEditor.ContextMenu>
-            </avalonEdit:TextEditor>
+                            <MenuItem Header="Копировать" Click="CopyMenuItem_Click">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="📋"  FontSize="12"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Вырезать" Click="CutMenuItem_Click" >
+                                
+                               <MenuItem.Icon>
+                                    <TextBlock Text="✂️"  FontSize="12"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Вставить" Click="PasteMenuItem_Click">
+                                 
+                                <MenuItem.Icon>
+                                    <TextBlock Text="📄" FontSize="12"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            
+                            <Separator/>
+                            
+                            <MenuItem Header="Удалить выделенное" Click="DeleteMenuItem_Click">
+                                
+                                <MenuItem.Icon>
+                                    <TextBlock Text="🗑️" FontSize="12"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator/>
+                            <MenuItem Header="Выделить всё" Click="SelectAllMenuItem_Click" >
+                                
+                                <MenuItem.Icon>
+                                    <TextBlock Text="📝" FontSize="12"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </avalonEdit:TextEditor.ContextMenu>
+                </avalonEdit:TextEditor>
 
-            <!-- Теги -->
-            <StackPanel Grid.Row="4">
-                <TextBlock Text="Теги (через запятую):" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC"/>
-                <TextBox x:Name="TagsTextBox" Padding="5"
+                <!-- Теги -->
+                <StackPanel Grid.Row="4">
+                    <TextBlock Text="Теги (через запятую):" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC"/>
+                    <TextBox x:Name="TagsTextBox" Padding="5"
                          Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#555555" FontSize="14"/>
-            </StackPanel>
-        </Grid>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
