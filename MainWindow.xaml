@@ -565,7 +565,7 @@
                               SelectionChanged="FontFamilyComboBox_SelectionChanged"
                               Width="150"
                               Margin="0,0,10,0"
-                              FontSize="14"
+                              FontSize="12"
                               Style="{StaticResource ComboBoxStyle}"
                              />
 
@@ -574,7 +574,7 @@
                               SelectionChanged="FontSizeComboBox_SelectionChanged"
                               Width="60"
                               Margin="0,0,10,0"
-                              FontSize="14"
+                              FontSize="12"
                               Style="{StaticResource ComboBoxStyle}"
                              />
 
@@ -591,7 +591,7 @@
                      <ComboBox x:Name="SyntaxHighlightingComboBox"
                                SelectionChanged="SyntaxHighlightingComboBox_SelectionChanged"
                                Width="130"
-                               FontSize="14"
+                               FontSize="12"
                                Style="{StaticResource ComboBoxStyle}"/>
                  </StackPanel>
             </Grid>

@@ -20,6 +20,8 @@ public partial class MainWindow : Window
     private AppState _appState;
     private IHighlightingDefinition? _darkCSharpHighlighting;
     private IHighlightingDefinition? _lightCSharpHighlighting;
+    private IHighlightingDefinition? _darkCppHighlighting;
+    private IHighlightingDefinition? _lightCppHighlighting;
 
     public MainWindow()
     {
@@ -80,6 +82,43 @@ public partial class MainWindow : Window
         if (_lightCSharpHighlighting == null)
         {
             _lightCSharpHighlighting = HighlightingManager.Instance.GetDefinition("C#");
+        }
+
+        try
+        {
+            var darkCppPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkCpp.xshd");
+            if (System.IO.File.Exists(darkCppPath))
+            {
+                using (var reader = new XmlTextReader(darkCppPath))
+                {
+                    _darkCppHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                }
+            }
+        }
+        catch
+        {
+            _darkCppHighlighting = null;
+        }
+
+        try
+        {
+            var lightCppPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LightCpp.xshd");
+            if (System.IO.File.Exists(lightCppPath))
+            {
+                using (var reader = new XmlTextReader(lightCppPath))
+                {
+                    _lightCppHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                }
+            }
+        }
+        catch
+        {
+            _lightCppHighlighting = null;
+        }
+
+        if (_lightCppHighlighting == null)
+        {
+            _lightCppHighlighting = HighlightingManager.Instance.GetDefinition("C++");
         }
     }
 
@@ -193,7 +232,10 @@ public partial class MainWindow : Window
         // Варианты подсветки синтаксиса
         SyntaxHighlightingComboBox.Items.Add("DarkCSharp");
         SyntaxHighlightingComboBox.Items.Add("LightCSharp");
+        SyntaxHighlightingComboBox.Items.Add("DarkCpp");
+        SyntaxHighlightingComboBox.Items.Add("LightCpp");
         SyntaxHighlightingComboBox.Items.Add("Стандартная (C#)");
+        SyntaxHighlightingComboBox.Items.Add("Стандартная (C++)");
         SyntaxHighlightingComboBox.SelectedIndex = 0; // По умолчанию DarkCSharp
     }
 
@@ -209,6 +251,18 @@ public partial class MainWindow : Window
         else if (selected == "LightCSharp")
         {
             CodeTextBox.SyntaxHighlighting = _lightCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
+        }
+        else if (selected == "DarkCpp")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
+        }
+        else if (selected == "LightCpp")
+        {
+            CodeTextBox.SyntaxHighlighting = _lightCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
+        }
+        else if (selected == "Стандартная (C++)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C++");
         }
         else
         {
@@ -307,10 +361,22 @@ public partial class MainWindow : Window
             CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextSecondary));
             CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
 
-            // По умолчанию при темном режиме выбираем DarkCSharp
+            // По умолчанию при темном режиме выбираем DarkCSharp или DarkCpp
             if (SyntaxHighlightingComboBox != null)
             {
-                SyntaxHighlightingComboBox.SelectedIndex = 0; // DarkCSharp
+                var selected = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+                if (selected == "LightCSharp" || selected == "Стандартная (C#)")
+                {
+                    SyntaxHighlightingComboBox.SelectedIndex = 0; // DarkCSharp
+                }
+                else if (selected == "LightCpp" || selected == "Стандартная (C++)")
+                {
+                    SyntaxHighlightingComboBox.SelectedIndex = 2; // DarkCpp
+                }
+                else if (string.IsNullOrEmpty(selected))
+                {
+                    SyntaxHighlightingComboBox.SelectedIndex = 0; // DarkCSharp
+                }
             }
         }
         else
@@ -365,10 +431,22 @@ public partial class MainWindow : Window
             CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextSecondary));
             CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
 
-            // По умолчанию при светлом режиме выбираем LightCSharp
+            // По умолчанию при светлом режиме выбираем LightCSharp или LightCpp
             if (SyntaxHighlightingComboBox != null)
             {
-                SyntaxHighlightingComboBox.SelectedIndex = 1; // LightCSharp
+                var selected = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+                if (selected == "DarkCSharp" || selected == "Стандартная (C#)")
+                {
+                    SyntaxHighlightingComboBox.SelectedIndex = 1; // LightCSharp
+                }
+                else if (selected == "DarkCpp" || selected == "Стандартная (C++)")
+                {
+                    SyntaxHighlightingComboBox.SelectedIndex = 3; // LightCpp
+                }
+                else if (string.IsNullOrEmpty(selected))
+                {
+                    SyntaxHighlightingComboBox.SelectedIndex = 1; // LightCSharp
+                }
             }
         }
     }

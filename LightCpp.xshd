@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<SyntaxDefinition name="C++" extensions=".cpp;.hpp;.h;.cc;.cxx;.hxx" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+	<Color name="Comment" foreground="#008000" fontStyle="italic" />
+	<Color name="String" foreground="#A31515" />
+	<Color name="Char" foreground="#A31515" />
+	<Color name="Preprocessor" foreground="#0431FA" />
+	<Color name="Punctuation" foreground="#000000" />
+	<Color name="ValueTypes" foreground="#2B91AF" fontWeight="normal" />
+	<Color name="ReferenceTypes" foreground="#2B91AF" />
+	<Color name="MethodCall" foreground="#74531F" fontWeight="normal" />
+	<Color name="NumberLiteral" foreground="#098658" />
+	<Color name="ThisOrBaseReference" foreground="#0000FF" fontWeight="normal" />
+	<Color name="NullOrValueKeywords" foreground="#0000FF" fontWeight="normal" />
+	<Color name="Keywords" foreground="#0000FF" fontWeight="normal" />
+	<Color name="GotoKeywords" foreground="#8F08C4" />
+	<Color name="ContextKeywords" foreground="#0000FF" />
+	<Color name="ExceptionKeywords" foreground="#8F08C4" fontWeight="normal" />
+	<Color name="CheckedKeyword" foreground="#0000FF" />
+	<Color name="UnsafeKeywords" foreground="#0000FF" />
+	<Color name="OperatorKeywords" foreground="#0000FF" />
+	<Color name="ParameterModifiers" foreground="#0000FF" />
+	<Color name="Modifiers" foreground="#0000FF" />
+	<Color name="Visibility" foreground="#0000FF" />
+	<Color name="NamespaceKeywords" foreground="#0000FF" />
+	<Color name="GetSetAddRemove" foreground="#0000FF" />
+	<Color name="TrueFalse" foreground="#0000FF" />
+	<Color name="TypeKeywords" foreground="#0000FF" />
+	<Color name="SemanticKeywords" foreground="#0000FF" />
+
+	<RuleSet ignoreCase="false">
+		<Span color="Comment" multiline="true">
+			<Begin>/\*</Begin>
+			<End>\*/</End>
+		</Span>
+
+		<Span color="Comment">
+			<Begin>//</Begin>
+		</Span>
+
+		<Span color="String">
+			<Begin>"</Begin>
+			<End>"</End>
+			<RuleSet>
+				<Span begin="\\" end="." />
+			</RuleSet>
+		</Span>
+
+		<Span color="Char">
+			<Begin>'</Begin>
+			<End>'</End>
+			<RuleSet>
+				<Span begin="\\" end="." />
+			</RuleSet>
+		</Span>
+
+		<Span color="Preprocessor">
+			<Begin>\#</Begin>
+		</Span>
+
+		<Keywords color="ThisOrBaseReference">
+			<Word>this</Word>
+		</Keywords>
+
+		<Keywords color="TypeKeywords">
+			<Word>class</Word>
+			<Word>struct</Word>
+			<Word>union</Word>
+			<Word>enum</Word>
+			<Word>typename</Word>
+			<Word>template</Word>
+			<Word>typedef</Word>
+		</Keywords>
+
+		<Keywords color="TrueFalse">
+			<Word>true</Word>
+			<Word>false</Word>
+		</Keywords>
+
+		<Keywords color="Keywords">
+			<Word>new</Word>
+			<Word>delete</Word>
+			<Word>sizeof</Word>
+			<Word>typeof</Word>
+			<Word>typeid</Word>
+			<Word>else</Word>
+			<Word>if</Word>
+			<Word>switch</Word>
+			<Word>case</Word>
+			<Word>default</Word>
+			<Word>do</Word>
+			<Word>for</Word>
+			<Word>while</Word>
+			<Word>alignas</Word>
+			<Word>alignof</Word>
+			<Word>decltype</Word>
+			<Word>concept</Word>
+			<Word>requires</Word>
+			<Word>import</Word>
+			<Word>module</Word>
+		</Keywords>
+
+		<Keywords color="GotoKeywords">
+			<Word>break</Word>
+			<Word>continue</Word>
+			<Word>goto</Word>
+			<Word>return</Word>
+			<Word>co_await</Word>
+			<Word>co_yield</Word>
+			<Word>co_return</Word>
+		</Keywords>
+
+		<Keywords color="ContextKeywords">
+			<Word>static_cast</Word>
+			<Word>dynamic_cast</Word>
+			<Word>const_cast</Word>
+			<Word>reinterpret_cast</Word>
+		</Keywords>
+
+		<Keywords color="ExceptionKeywords">
+			<Word>try</Word>
+			<Word>throw</Word>
+			<Word>catch</Word>
+			<Word>noexcept</Word>
+		</Keywords>
+
+		<Keywords color="ValueTypes">
+			<Word>bool</Word>
+			<Word>char</Word>
+			<Word>char8_t</Word>
+			<Word>char16_t</Word>
+			<Word>char32_t</Word>
+			<Word>wchar_t</Word>
+			<Word>double</Word>
+			<Word>float</Word>
+			<Word>int</Word>
+			<Word>long</Word>
+			<Word>short</Word>
+			<Word>signed</Word>
+			<Word>unsigned</Word>
+			<Word>void</Word>
+			<Word>auto</Word>
+		</Keywords>
+
+		<Keywords color="OperatorKeywords">
+			<Word>operator</Word>
+		</Keywords>
+
+		<Keywords color="Modifiers">
+			<Word>const</Word>
+			<Word>constexpr</Word>
+			<Word>consteval</Word>
+			<Word>constinit</Word>
+			<Word>extern</Word>
+			<Word>inline</Word>
+			<Word>register</Word>
+			<Word>restrict</Word>
+			<Word>static</Word>
+			<Word>thread_local</Word>
+			<Word>volatile</Word>
+			<Word>virtual</Word>
+			<Word>override</Word>
+			<Word>final</Word>
+			<Word>explicit</Word>
+			<Word>friend</Word>
+			<Word>mutable</Word>
+		</Keywords>
+
+		<Keywords color="Visibility">
+			<Word>public</Word>
+			<Word>protected</Word>
+			<Word>private</Word>
+		</Keywords>
+
+		<Keywords color="NamespaceKeywords">
+			<Word>namespace</Word>
+			<Word>using</Word>
+		</Keywords>
+
+		<Keywords color="NullOrValueKeywords">
+			<Word>nullptr</Word>
+		</Keywords>
+
+		<Rule color="NumberLiteral">
+			\b0[xX][0-9a-fA-F]+|(\b\d+(\.[0-9]+)?|\.[0-9]+)([eE][+-]?[0-9]+)?
+		</Rule>
+
+		<Rule color="Punctuation">
+			[?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;]+
+		</Rule>
+	</RuleSet>
+</SyntaxDefinition>
