@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     private IHighlightingDefinition? _darkCppHighlighting;
     private IHighlightingDefinition? _lightCppHighlighting;
     private IHighlightingDefinition? _standart1CHigh;
+    private IHighlightingDefinition? _dark1CHigh;
 
 
     public MainWindow()
@@ -63,6 +64,22 @@ public partial class MainWindow : Window
         catch
         {
             _standart1CHigh = null;
+        }
+
+        try
+        {
+            var dark1CXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dark1C.xshd");
+            if (System.IO.File.Exists(dark1CXshdPath))
+            {
+                using (var reader = new XmlTextReader(dark1CXshdPath))
+                {
+                    _dark1CHigh = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                }
+            }
+        }
+        catch
+        {
+            _dark1CHigh = null;
         }
 
 
@@ -257,6 +274,7 @@ public partial class MainWindow : Window
         SyntaxHighlightingComboBox.Items.Add("Светлая С#");
         SyntaxHighlightingComboBox.Items.Add("Темная C++");
         SyntaxHighlightingComboBox.Items.Add("Светлая C++");
+        SyntaxHighlightingComboBox.Items.Add("Темная (1C)");
         SyntaxHighlightingComboBox.Items.Add("Стандартная (1C)");
         SyntaxHighlightingComboBox.Items.Add("Стандартная (C#)");
         SyntaxHighlightingComboBox.Items.Add("Стандартная (C++)");
@@ -281,6 +299,7 @@ public partial class MainWindow : Window
         if (CodeTextBox == null || SyntaxHighlightingComboBox?.SelectedItem == null) return;
 
         var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
+
         if (selected == "Темная С#")
         {
             CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
@@ -301,6 +320,12 @@ public partial class MainWindow : Window
         {
             CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C++");
         }
+        
+        else if (selected == "Темная (1C)")
+        {
+            CodeTextBox.SyntaxHighlighting = _dark1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
+        }
+
         else if (selected == "Стандартная (1C)")
         {
             CodeTextBox.SyntaxHighlighting = _standart1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
