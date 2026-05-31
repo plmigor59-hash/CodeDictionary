@@ -22,6 +22,7 @@ public partial class MainWindow : Window
     private IHighlightingDefinition? _lightCSharpHighlighting;
     private IHighlightingDefinition? _darkCppHighlighting;
     private IHighlightingDefinition? _lightCppHighlighting;
+    private IHighlightingDefinition? _standart1CHigh;
 
     public MainWindow()
     {
@@ -45,7 +46,27 @@ public partial class MainWindow : Window
     }
 
     private void LoadCustomHighlighting()
+
     {
+        try
+        {
+            var standart1CXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Standart1C.xshd");
+            if (System.IO.File.Exists(standart1CXshdPath))
+            {
+                using (var reader = new XmlTextReader(standart1CXshdPath))
+                {
+                    _standart1CHigh = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                }
+            }
+        }
+        catch
+        {
+            _standart1CHigh = null;
+        }
+
+
+
+
         try
         {
             var darkXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkCSharp.xshd");
@@ -114,6 +135,7 @@ public partial class MainWindow : Window
         catch
         {
             _lightCppHighlighting = null;
+
         }
 
         if (_lightCppHighlighting == null)
@@ -234,6 +256,7 @@ public partial class MainWindow : Window
         SyntaxHighlightingComboBox.Items.Add("Светлая С#");
         SyntaxHighlightingComboBox.Items.Add("Темная C++");
         SyntaxHighlightingComboBox.Items.Add("Светлая C++");
+        SyntaxHighlightingComboBox.Items.Add("Стандартная (1C)");
         SyntaxHighlightingComboBox.Items.Add("Стандартная (C#)");
         SyntaxHighlightingComboBox.Items.Add("Стандартная (C++)");
         SyntaxHighlightingComboBox.SelectedIndex = 0; // По умолчанию DarkCSharp
@@ -263,6 +286,11 @@ public partial class MainWindow : Window
         else if (selected == "Стандартная (C++)")
         {
             CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C++");
+        }
+
+        else if (selected == "Стандартная (1C)")
+        {
+            CodeTextBox.SyntaxHighlighting = _standart1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
         }
         else
         {
