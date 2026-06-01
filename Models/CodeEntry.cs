@@ -11,6 +11,7 @@ public class CodeEntry
     public string Syntax { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime ModifiedAt { get; set; }
+    public string FormattingData { get; set; } = string.Empty; // JSON строка с форматированием
 
     public CodeEntry()
     {
@@ -18,4 +19,5 @@ public class CodeEntry
         CreatedAt = DateTime.Now;
         ModifiedAt = DateTime.Now;
     }
+
 }

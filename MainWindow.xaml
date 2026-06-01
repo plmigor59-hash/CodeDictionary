@@ -645,10 +645,15 @@
                             <Button Click="CopyMenuItem_Click" Content="📋" Width="30" Margin="2" ToolTip="Копировать" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="PasteMenuItem_Click" Content="📄" Width="30" Margin="2" ToolTip="Вставить" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="SelectAllMenuItem_Click" Content="🔲" Width="30" Margin="2" ToolTip="Выделить все" Style="{StaticResource TitleBarButtonStyle}"/>
-                            
                             <Button Click="OpenFile_Click" Content="📂" Width="30" Margin="2" ToolTip="Открыть..." Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить как..." Style="{StaticResource TitleBarButtonStyle}"/>
 
+                            <Button Content="🖌️" ToolTip="Изменить фон"  Width="30" Click="ChangeBackground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Content="🎨" ToolTip="Изменить цвет текста"  Width="30" Click="ChangeForeground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Content="𝐁" FontWeight="Bold" ToolTip="Жирный" Width="30" Click="MakeBold_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Content="𝐼" FontStyle="Italic" ToolTip="Курсив" Width="30" Click="MakeItalic_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Content="U" ToolTip="Подчёркнутый" Width="30" Click="MakeUnderline_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Content="❌" ToolTip="Очистить стиль" Width="30" Click="ClearStyle_Click" Style="{StaticResource TitleBarButtonStyle}"/>
 
                         </StackPanel>
 

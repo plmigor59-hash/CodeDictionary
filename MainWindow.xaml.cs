@@ -1,16 +1,20 @@
 using CodeDictionary.Models;
 using CodeDictionary.Services;
 using ICSharpCode.AvalonEdit;
+using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
+using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Xml;
-using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
-using System.IO;
-using System.Text;
-
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace CodeDictionary;
@@ -31,6 +35,9 @@ public partial class MainWindow : Window
     private IHighlightingDefinition? _standart1CHigh;
     private IHighlightingDefinition? _dark1CHigh;
     private string _currentFilePath = null;  // Хранит путь к текущему открытому файлу
+
+
+    private List<TextSegmentStyle> _textSegments = new();
 
 
     public MainWindow()
@@ -57,10 +64,134 @@ public partial class MainWindow : Window
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
         StateChanged += MainWindow_StateChanged;
-    
+
+        CodeTextBox.TextArea.TextView.LineTransformers.Add(new CustomColorTransformer(_textSegments));
+
+        // Подписываемся на изменения текста
+        CodeTextBox.TextChanged += (s, e) => UpdateSegmentsAfterTextChange();
 
     }
 
+    private void ApplyStyleToSelection(string backgroundColor = null, string foregroundColor = null,
+                                          bool? bold = null, bool? italic = null, bool? underline = null)
+    {
+        var selection = CodeTextBox.TextArea.Selection;
+        if (selection.IsEmpty)
+        {
+            MessageBox.Show("Сначала выделите текст", "Нет выделения",
+                          MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        // Получаем границы выделения
+        var start = selection.Segments.First().StartOffset;
+        var end = selection.Segments.Last().EndOffset;
+        var length = end - start;
+
+        // Проверяем, не перекрывается ли с существующими стилями
+        var existingSegment = _textSegments.FirstOrDefault(s => s.StartOffset == start && s.Length == length);
+
+        if (existingSegment != null)
+        {
+            // Обновляем существующий стиль
+            if (backgroundColor != null) existingSegment.BackgroundColor = backgroundColor;
+            if (foregroundColor != null) existingSegment.ForegroundColor = foregroundColor;
+            if (bold.HasValue) existingSegment.IsBold = bold.Value;
+            if (italic.HasValue) existingSegment.IsItalic = italic.Value;
+            if (underline.HasValue) existingSegment.IsUnderline = underline.Value;
+        }
+        else
+        {
+           
+
+
+            // Создаём новый стиль
+            var newSegment = new TextSegmentStyle
+            {
+                StartOffset = start,
+                Length = length,
+                BackgroundColor = backgroundColor,  // может быть null, строкой с цветом, или "transparent"
+                ForegroundColor = foregroundColor,  // может быть null или строкой с цветом
+                IsBold = bold ?? false,
+                IsItalic = italic ?? false,
+                IsUnderline = underline ?? false
+            };
+            _textSegments.Add(newSegment);
+        }
+
+        // Обновляем визуальное отображение
+        CodeTextBox.TextArea.TextView.Redraw();
+    }
+
+
+    // 🔄 Обновить сегменты после изменения текста
+    private void UpdateSegmentsAfterTextChange()
+    {
+        var currentLength = CodeTextBox.Document.TextLength;
+
+        // Удаляем стили, которые вышли за пределы документа
+        _textSegments.RemoveAll(s => s.StartOffset + s.Length > currentLength);
+
+        // Можно добавить логику смещения позиций при вставке/удалении
+        // (для простоты пока просто перерисовываем)
+        CodeTextBox.TextArea.TextView.Redraw();
+    }
+
+    private void ChangeBackground_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new System.Windows.Forms.ColorDialog();
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            string colorHex = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+            ApplyStyleToSelection(backgroundColor: colorHex);
+        }
+    }
+
+    private void ChangeForeground_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new System.Windows.Forms.ColorDialog();
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            string colorHex = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+            ApplyStyleToSelection(foregroundColor: colorHex);
+        }
+    }
+
+    private void MakeBold_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyStyleToSelection(bold: true);
+    }
+
+    private void MakeItalic_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyStyleToSelection(italic: true);
+    }
+
+    private void MakeUnderline_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyStyleToSelection(underline: true);
+    }
+
+    private void ClearStyle_Click(object sender, RoutedEventArgs e)
+    {
+        ClearStyleFromSelection();
+    }
+
+
+    // ❌ Очистить стили с выделенного текста
+    private void ClearStyleFromSelection()
+    {
+        var selection = CodeTextBox.TextArea.Selection;
+        if (selection.IsEmpty) return;
+
+        var start = selection.Segments.First().StartOffset;
+        var end = selection.Segments.Last().EndOffset;
+
+        // Удаляем все стили, попадающие в выделение
+        _textSegments.RemoveAll(s => s.StartOffset >= start && s.StartOffset + s.Length <= end);
+
+        CodeTextBox.TextArea.TextView.Redraw();
+    }
 
 
     private void OpenFile_Click(object sender, RoutedEventArgs e)
@@ -183,28 +314,6 @@ public partial class MainWindow : Window
             }
         }
     }
-/*
-    // 🆕 НОВЫЙ ФАЙЛ (очищаем редактор и сбрасываем путь)
-    private void NewFile_Click(object sender, RoutedEventArgs e)
-    {
-        // Проверяем, не потеряются ли изменения (можно добавить диалог)
-        if (!string.IsNullOrEmpty(CodeTextBox.Text))
-        {
-            var result = MessageBox.Show("Текст не сохранён. Продолжить без сохранения?",
-                                         "Новый файл",
-                                         MessageBoxButton.YesNo,
-                                         MessageBoxImage.Question);
-            if (result == MessageBoxResult.No)
-                return;
-        }
-
-        CodeTextBox.Text = string.Empty;
-        _currentFilePath = null;
-        this.Title = "Новый документ";
-    }
-*/
-
-
 
 
     private void LoadCustomHighlighting()
@@ -847,10 +956,13 @@ public partial class MainWindow : Window
 
         CategoryComboBox.ItemsSource = _data.Categories;
 
+
         if (!string.IsNullOrEmpty(entry.Syntax) && SyntaxHighlightingComboBox != null)
         {
             SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
         }
+
+        LoadSegmentsFromEntry();
     }
 
     private void AddEntry_Click(object sender, RoutedEventArgs e)
@@ -867,6 +979,84 @@ public partial class MainWindow : Window
 
         TitleTextBox.Focus();
     }
+
+
+    private void SaveSegmentsToEntry()
+    {
+        // Создаем контейнер с данными
+        var container = new FormattingContainer
+        {
+            Segments = _textSegments,
+            Version = 1,
+            SavedAt = DateTime.Now
+        };
+
+        // Настройки сериализации
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,  // Красивый формат JSON
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // Поддержка Unicode
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull // Не сохраняем null
+        };
+
+        // Сериализуем и сохраняем
+        _currentEntry.FormattingData = JsonSerializer.Serialize(container, options);
+    }
+
+    // 📖 ЗАГРУЗКА СЕГМЕНТОВ ИЗ JSON
+    private void LoadSegmentsFromEntry()
+    {
+        // Если данных нет - очищаем сегменты
+        if (string.IsNullOrEmpty(_currentEntry.FormattingData))
+        {
+            _textSegments.Clear();
+            return;
+        }
+
+        try
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true  // Игнорируем регистр букв в JSON
+            };
+
+            // Десериализуем контейнер
+            var container = JsonSerializer.Deserialize<FormattingContainer>(
+                _currentEntry.FormattingData, options);
+
+            if (container != null && container.Segments != null)
+            {
+                // Очищаем и добавляем элементы, чтобы сохранить ссылку на список
+                _textSegments.Clear();
+                _textSegments.AddRange(container.Segments);
+
+                // Обновляем отображение в редакторе
+                CodeTextBox.TextArea.TextView.Redraw();
+            }
+            else
+            {
+                _textSegments.Clear();
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Ошибка загрузки форматирования: {ex.Message}");
+            _textSegments.Clear();
+        }
+    }
+
+    // Применение форматирования к редактору (если нужно)
+    private void ApplySegmentsToEditor()
+    {
+        // Здесь ваша логика отрисовки сегментов
+        // Например, перерисовка TextView
+        CodeTextBox.TextArea.TextView.Redraw();
+    }
+
+
+
+
+
 
     private async void SaveEntry_Click(object sender, RoutedEventArgs e)
     {
@@ -893,6 +1083,8 @@ public partial class MainWindow : Window
             .ToList();
         _currentEntry.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
         _currentEntry.ModifiedAt = DateTime.Now;
+        
+        SaveSegmentsToEntry();
 
         if (!string.IsNullOrWhiteSpace(_currentEntry.Category) &&
             !_data.Categories.Contains(_currentEntry.Category))
@@ -906,6 +1098,9 @@ public partial class MainWindow : Window
 
         MessageBox.Show("Запись сохранена", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
     }
+
+
+
 
     private async void DeleteEntry_Click(object sender, RoutedEventArgs e)
     {
