@@ -1020,6 +1020,7 @@ public partial class MainWindow : Window
         }
 
         LoadSegmentsFromEntry();
+        ClearSearch();
     }
 
     private void AddEntry_Click(object sender, RoutedEventArgs e)
@@ -1034,6 +1035,7 @@ public partial class MainWindow : Window
         TagsTextBox.Text = "";
         CategoryComboBox.ItemsSource = _data.Categories;
 
+        ClearSearch();
         TitleTextBox.Focus();
     }
 
@@ -1313,6 +1315,10 @@ public partial class MainWindow : Window
     private void SearchOptions_Changed(object sender, RoutedEventArgs e)
     {
         PerformSearch();
+        if (_searchResults.Count > 0)
+        {
+            HighlightSearchResult();
+        }
     }
 
     private void PerformSearch()
@@ -1343,7 +1349,6 @@ public partial class MainWindow : Window
         if (_searchResults.Count > 0)
         {
             _currentSearchIndex = 0;
-            HighlightSearchResult();
             UpdateSearchResultsText();
         }
         else
@@ -1409,5 +1414,17 @@ public partial class MainWindow : Window
         {
             SearchResultsTextBlock.Text = "";
         }
+    }
+
+    private void ClearSearch()
+    {
+        if (SearchInTextBox != null)
+            SearchInTextBox.Text = "";
+
+        _searchResults.Clear();
+        _currentSearchIndex = -1;
+
+        if (SearchResultsTextBlock != null)
+            SearchResultsTextBlock.Text = "";
     }
 }
