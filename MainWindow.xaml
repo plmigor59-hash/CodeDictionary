@@ -7,7 +7,7 @@
         xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
         mc:Ignorable="d"
-        Title="Справочник кода C#" Height="600" Width="1000"
+        Title="Справочник кода C#" Height="900" Width="1400"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="False"
@@ -599,6 +599,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Text="Код:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC" FontSize="14"/>
 
@@ -637,8 +638,16 @@
                                Width="160"
                                FontSize="12"
                                Style="{StaticResource ComboBoxStyle}" Height="22"/>
+                    </StackPanel>
 
-                        <StackPanel Orientation="Horizontal" Margin="10">
+                    <!-- Панель кнопок -->
+                    <Grid Grid.Row="2" Margin="0,0,0,5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
                             <Button Click="UndoMenuItem_Click" Content="↩️" Width="30" Margin="2" ToolTip="Отменить" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="RedoMenuItem_Click" Content="↪️" Width="30" Margin="2" ToolTip="Повторить" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="CutMenuItem_Click" Content="✂️" Width="30" Margin="2" ToolTip="Вырезать" Style="{StaticResource TitleBarButtonStyle}"/>
@@ -648,17 +657,46 @@
                             <Button Click="OpenFile_Click" Content="📂" Width="30" Margin="2" ToolTip="Открыть..." Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить как..." Style="{StaticResource TitleBarButtonStyle}"/>
 
-                            <Button Content="🖌️" ToolTip="Изменить фон"  Width="30" Click="ChangeBackground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="🎨" ToolTip="Изменить цвет текста"  Width="30" Click="ChangeForeground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="𝐁" FontWeight="Bold" ToolTip="Жирный" Width="30" Click="MakeBold_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="𝐼" FontStyle="Italic" ToolTip="Курсив" Width="30" Click="MakeItalic_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="U" ToolTip="Подчёркнутый" Width="30" Click="MakeUnderline_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="❌" ToolTip="Очистить стиль" Width="30" Click="ClearStyle_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-
+                            <Button Content="🖌️" ToolTip="Изменить фон"  Width="30" Margin="2" Click="ChangeBackground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Content="🎨" ToolTip="Изменить цвет текста"  Width="30" Margin="2" Click="ChangeForeground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Content="𝐁" FontWeight="Bold" ToolTip="Жирный" Width="30" Margin="2" Click="MakeBold_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Content="𝐼" FontStyle="Italic" ToolTip="Курсив" Width="30" Margin="2" Click="MakeItalic_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Content="U" ToolTip="Подчёркнутый" Width="30" Margin="2" Click="MakeUnderline_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Content="❌" ToolTip="Очистить стиль" Width="30" Margin="2" Click="ClearStyle_Click" Style="{StaticResource TitleBarButtonStyle}"/>
                         </StackPanel>
 
-
-                    </StackPanel>
+                        <!-- Панель поиска -->
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0">
+                            <TextBlock Text="🔍" VerticalAlignment="Center" Margin="2,0,5,0" Foreground="#CCCCCC"/>
+                            <TextBox x:Name="SearchInTextBox"
+                                     Width="200"
+                                     Height="26"
+                                     Padding="5,3"
+                                     FontSize="12"
+                                     Background="#3C3C3C"
+                                     Foreground="#CCCCCC"
+                                     BorderBrush="#555555"
+                                     VerticalContentAlignment="Center"
+                                     KeyDown="SearchInTextBox_KeyDown"
+                                     TextChanged="SearchInTextBox_TextChanged"/>
+                            <Button Click="FindPrevious_Click" Content="▲" Width="30" Height="26" Margin="5,0,2,0" ToolTip="Предыдущее (Shift+F3)" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Click="FindNext_Click" Content="▼" Width="30" Height="26" Margin="2,0,5,0" ToolTip="Следующее (F3)" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <CheckBox x:Name="MatchCaseCheckBox"
+                                      Content="Аа"
+                                      ToolTip="Учитывать регистр"
+                                      VerticalAlignment="Center"
+                                      Foreground="#CCCCCC"
+                                      Margin="5,0,10,0"
+                                      Checked="SearchOptions_Changed"
+                                      Unchecked="SearchOptions_Changed"/>
+                            <TextBlock x:Name="SearchResultsTextBlock"
+                                       Text=""
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource DictTextSecondary}"
+                                       FontSize="11"
+                                       Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </Grid>
                 </Grid>
 
                 <!-- Текстовый редактор кода (3/3 от высоты кода) -->

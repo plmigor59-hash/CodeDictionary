@@ -1272,4 +1272,142 @@ public partial class MainWindow : Window
             ToggleDescriptionButton.Content = " ▲ Свернуть ";
         }
     }
+
+    // Поиск в тексте
+    private List<int> _searchResults = new List<int>();
+    private int _currentSearchIndex = -1;
+
+    private void SearchInTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        PerformSearch();
+    }
+
+    private void SearchInTextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter)
+        {
+            if (System.Windows.Input.Keyboard.Modifiers == System.Windows.Input.ModifierKeys.Shift)
+            {
+                FindPrevious();
+            }
+            else
+            {
+                FindNext();
+            }
+            e.Handled = true;
+        }
+        else if (e.Key == System.Windows.Input.Key.F3)
+        {
+            if (System.Windows.Input.Keyboard.Modifiers == System.Windows.Input.ModifierKeys.Shift)
+            {
+                FindPrevious();
+            }
+            else
+            {
+                FindNext();
+            }
+            e.Handled = true;
+        }
+    }
+
+    private void SearchOptions_Changed(object sender, RoutedEventArgs e)
+    {
+        PerformSearch();
+    }
+
+    private void PerformSearch()
+    {
+        _searchResults.Clear();
+        _currentSearchIndex = -1;
+
+        string searchText = SearchInTextBox?.Text;
+        if (string.IsNullOrEmpty(searchText) || CodeTextBox == null)
+        {
+            if (SearchResultsTextBlock != null)
+                SearchResultsTextBlock.Text = "";
+            return;
+        }
+
+        string documentText = CodeTextBox.Text;
+        bool matchCase = MatchCaseCheckBox?.IsChecked ?? false;
+
+        StringComparison comparison = matchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+        int index = 0;
+        while ((index = documentText.IndexOf(searchText, index, comparison)) != -1)
+        {
+            _searchResults.Add(index);
+            index += searchText.Length;
+        }
+
+        if (_searchResults.Count > 0)
+        {
+            _currentSearchIndex = 0;
+            HighlightSearchResult();
+            UpdateSearchResultsText();
+        }
+        else
+        {
+            if (SearchResultsTextBlock != null)
+                SearchResultsTextBlock.Text = "Не найдено";
+        }
+    }
+
+    private void FindNext_Click(object sender, RoutedEventArgs e)
+    {
+        FindNext();
+    }
+
+    private void FindPrevious_Click(object sender, RoutedEventArgs e)
+    {
+        FindPrevious();
+    }
+
+    private void FindNext()
+    {
+        if (_searchResults.Count == 0) return;
+
+        _currentSearchIndex = (_currentSearchIndex + 1) % _searchResults.Count;
+        HighlightSearchResult();
+        UpdateSearchResultsText();
+    }
+
+    private void FindPrevious()
+    {
+        if (_searchResults.Count == 0) return;
+
+        _currentSearchIndex--;
+        if (_currentSearchIndex < 0)
+            _currentSearchIndex = _searchResults.Count - 1;
+
+        HighlightSearchResult();
+        UpdateSearchResultsText();
+    }
+
+    private void HighlightSearchResult()
+    {
+        if (_currentSearchIndex < 0 || _currentSearchIndex >= _searchResults.Count)
+            return;
+
+        int offset = _searchResults[_currentSearchIndex];
+        int length = SearchInTextBox.Text.Length;
+
+        CodeTextBox.Select(offset, length);
+        CodeTextBox.ScrollToLine(CodeTextBox.Document.GetLineByOffset(offset).LineNumber);
+        CodeTextBox.Focus();
+    }
+
+    private void UpdateSearchResultsText()
+    {
+        if (SearchResultsTextBlock == null) return;
+
+        if (_searchResults.Count > 0)
+        {
+            SearchResultsTextBlock.Text = $"{_currentSearchIndex + 1} из {_searchResults.Count}";
+        }
+        else
+        {
+            SearchResultsTextBlock.Text = "";
+        }
+    }
 }
