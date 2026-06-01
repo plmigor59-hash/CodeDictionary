@@ -513,37 +513,16 @@ public partial class MainWindow : Window
 
 
        DescriptionTextBox.Visibility = Visibility.Collapsed;
+       DescriptionSplitter.Visibility = Visibility.Collapsed;
        DescriptionRow.Height = new GridLength(0);
        ToggleDescriptionButton.Content = " ▼ Развернуть ";
  
-        RefreshCategoryFilter();
-
-        // Восстанавливаем выбранную категорию
-        if (!string.IsNullOrEmpty(_appState.SelectedCategory))
-        {
-            for (int i = 0; i < CategoryFilter.Items.Count; i++)
-            {
-                if (CategoryFilter.Items[i]?.ToString() == _appState.SelectedCategory)
-                {
-                    CategoryFilter.SelectedIndex = i;
-                    break;
-                }
-            }
-        }
-
         RefreshEntriesList();
-
-
-      
 
         // Восстанавливаем выбранную запись
         if (_appState.SelectedEntryId.HasValue)
         {
-            var entry = _filteredEntries.FirstOrDefault(e => e.Id == _appState.SelectedEntryId.Value);
-            if (entry != null)
-            {
-                EntriesListBox.SelectedItem = entry;
-            }
+            SelectEntryInTree(_appState.SelectedEntryId.Value);
         }
 
         // Применяем сохраненную тему
@@ -773,9 +752,9 @@ public partial class MainWindow : Window
 
             ThemeCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
 
-            EntriesListBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.SidePanel));
-            EntriesListBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
-            EntriesListBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
+            EntriesTreeView.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.SidePanel));
+            EntriesTreeView.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
+            EntriesTreeView.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
 
             TitleTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Input));
             TitleTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
@@ -845,9 +824,9 @@ public partial class MainWindow : Window
 
             ThemeCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
 
-            EntriesListBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.SidePanel));
-            EntriesListBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
-            EntriesListBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
+            EntriesTreeView.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.SidePanel));
+            EntriesTreeView.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
+            EntriesTreeView.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
 
             TitleTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Input));
             TitleTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
@@ -940,42 +919,40 @@ public partial class MainWindow : Window
 
     private void RefreshCategoryFilter()
     {
-        CategoryFilter.Items.Clear();
-        CategoryFilter.Items.Add("Все категории");
-
-        foreach (var category in _data.Categories.OrderBy(c => c))
-        {
-            CategoryFilter.Items.Add(category);
-        }
-
-        CategoryFilter.SelectedIndex = 0;
+        // Поле фильтра удалено, метод сохранен пустым для совместимости с вызовами в других частях программы
     }
 
     private void RefreshEntriesList()
     {
         var searchText = SearchBox.Text.ToLower();
-        var selectedCategory = CategoryFilter.SelectedItem?.ToString();
 
+        // 1. Фильтруем записи по поисковому запросу
         _filteredEntries = _data.Entries
             .Where(e =>
             {
-                var matchesSearch = string.IsNullOrWhiteSpace(searchText) ||
-                                  searchText == "поиск..." ||
-                                  e.Title.ToLower().Contains(searchText) ||
-                                  e.Description.ToLower().Contains(searchText) ||
-                                  e.Code.ToLower().Contains(searchText) ||
-                                  e.Tags.Any(t => t.ToLower().Contains(searchText));
-
-                var matchesCategory = selectedCategory == "Все категории" ||
-                                    string.IsNullOrEmpty(selectedCategory) ||
-                                    e.Category == selectedCategory;
-
-                return matchesSearch && matchesCategory;
+                return string.IsNullOrWhiteSpace(searchText) ||
+                       searchText == "поиск..." ||
+                       e.Title.ToLower().Contains(searchText) ||
+                       e.Description.ToLower().Contains(searchText) ||
+                       e.Code.ToLower().Contains(searchText) ||
+                       e.Tags.Any(t => t.ToLower().Contains(searchText));
             })
             .OrderByDescending(e => e.ModifiedAt)
             .ToList();
 
-        EntriesListBox.ItemsSource = _filteredEntries;
+        // 2. Группируем отфильтрованные записи по категориям
+        var grouped = _filteredEntries
+            .GroupBy(e => string.IsNullOrWhiteSpace(e.Category) ? "Без категории" : e.Category)
+            .Select(g => new CategoryNode
+            {
+                Name = g.Key,
+                Entries = g.Select(e => new CodeEntryViewModel(e)).OrderBy(e => e.Title).ToList()
+            })
+            .OrderBy(c => c.Name == "Без категории" ? 1 : 0) // "Без категории" в самом конце
+            .ThenBy(c => c.Name)
+            .ToList();
+
+        EntriesTreeView.ItemsSource = grouped;
     }
 
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -986,20 +963,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CategoryFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void EntriesTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
-        if (_isInitialized)
+        if (e.NewValue is CodeEntryViewModel viewEntry)
         {
-            RefreshEntriesList();
-        }
-    }
-
-    private void EntriesListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (EntriesListBox.SelectedItem is CodeEntry entry)
-        {
-            _currentEntry = entry;
-            LoadEntryToForm(entry);
+            _currentEntry = viewEntry.Entry;
+            LoadEntryToForm(_currentEntry);
         }
     }
 
@@ -1195,7 +1164,7 @@ public partial class MainWindow : Window
     private async void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         // Сохраняем текущее состояние
-        _appState.SelectedCategory = CategoryFilter.SelectedItem?.ToString() ?? "Все категории";
+        _appState.SelectedCategory = _currentEntry?.Category ?? "";
         _appState.SelectedEntryId = _currentEntry?.Id;
         _appState.IsLightTheme = ThemeCheckBox.IsChecked == true;
 
@@ -1264,12 +1233,14 @@ public partial class MainWindow : Window
         if (DescriptionRow.Height.Value > 0)
         {
             DescriptionTextBox.Visibility = Visibility.Collapsed;
+            DescriptionSplitter.Visibility = Visibility.Collapsed;
             DescriptionRow.Height = new GridLength(0);
             ToggleDescriptionButton.Content = " ▼ Развернуть ";
         }
         else
         {
             DescriptionTextBox.Visibility = Visibility.Visible;
+            DescriptionSplitter.Visibility = Visibility.Visible;
             DescriptionRow.Height = new GridLength(1, GridUnitType.Star);
             ToggleDescriptionButton.Content = " ▲ Свернуть ";
         }
@@ -1426,5 +1397,42 @@ public partial class MainWindow : Window
 
         if (SearchResultsTextBlock != null)
             SearchResultsTextBlock.Text = "";
+    }
+
+    private void SelectEntryInTree(Guid entryId)
+    {
+        if (EntriesTreeView.ItemsSource is IEnumerable<CategoryNode> categories)
+        {
+            foreach (var category in categories)
+            {
+                var viewEntry = category.Entries.FirstOrDefault(e => e.Entry.Id == entryId);
+                if (viewEntry != null)
+                {
+                    // Для TreeView в WPF автоматический выбор требует получения TreeViewItem.
+                    // Для простоты мы можем установить _currentEntry и загрузить ее, а также установить элемент как выбранный
+                    _currentEntry = viewEntry.Entry;
+                    LoadEntryToForm(_currentEntry);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+public class CategoryNode
+{
+    public string Name { get; set; } = string.Empty;
+    public List<CodeEntryViewModel> Entries { get; set; } = new();
+    public string CountString => $"({Entries.Count})";
+}
+
+public class CodeEntryViewModel
+{
+    public CodeEntry Entry { get; }
+    public string Title => Entry.Title;
+
+    public CodeEntryViewModel(CodeEntry entry)
+    {
+        Entry = entry;
     }
 }

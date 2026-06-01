@@ -477,36 +477,125 @@
 
                 <StackPanel Grid.Row="2" Margin="10,0,10,10" >
                     <TextBox x:Name="SearchBox"
-                         TextChanged="SearchBox_TextChanged"
-                         Padding="5"
-                         FontSize="14"
-                         Background="#3C3C3C"
-                         Foreground="#000000"
-                         BorderBrush="#555555"
-                         Text=""/>
-                    <ComboBox x:Name="CategoryFilter"
-                          SelectionChanged="CategoryFilter_SelectionChanged"
-                          Margin="0,5,0,0"
-                          Style="{StaticResource ComboBoxStyle}"/>
+                          TextChanged="SearchBox_TextChanged"
+                          Padding="5"
+                          FontSize="14"
+                          Background="#3C3C3C"
+                          Foreground="#000000"
+                          BorderBrush="#555555"
+                          Text=""/>
                 </StackPanel>
 
-                <ListBox x:Name="EntriesListBox"
-                     Grid.Row="3"
-                     SelectionChanged="EntriesListBox_SelectionChanged"
-                     Margin="10,0,10,10"
-                     Background="#1E1E1E"
-                     Foreground="#CCCCCC"
-                     FontSize="14"
-                     BorderBrush="{DynamicResource DictBorder}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="5">
-                                <TextBlock Text="{Binding Title}" FontWeight="Bold" Foreground="#CCCCCC" />
-                              
+                <TreeView x:Name="EntriesTreeView"
+                      Grid.Row="3"
+                      SelectedItemChanged="EntriesTreeView_SelectedItemChanged"
+                      Margin="10,0,10,10"
+                      Background="#1E1E1E"
+                      Foreground="#CCCCCC"
+                      FontSize="14"
+                      BorderBrush="{DynamicResource DictBorder}">
+                    <TreeView.Resources>
+                        <!-- Шаблон для записи (конечный элемент) -->
+                        <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
+                            <StackPanel Orientation="Horizontal" Margin="2">
+                                <TextBlock Text="📄" Margin="0,0,5,0" Foreground="{DynamicResource DictAccent}"/>
+                                <TextBlock Text="{Binding Title}" Foreground="#CCCCCC"/>
                             </StackPanel>
                         </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                        <!-- Шаблон для категории (узел) -->
+                        <HierarchicalDataTemplate DataType="{x:Type local:CategoryNode}" ItemsSource="{Binding Entries}">
+                            <StackPanel Orientation="Horizontal" Margin="2">
+                                <TextBlock Text="📁" Margin="0,0,5,0" Foreground="#FFD700"/>
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="#EDF2F7"/>
+                                <TextBlock Text="{Binding CountString}" Margin="5,0,0,0" Foreground="#A7B3C5" FontSize="11" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </HierarchicalDataTemplate>
+                        
+                        <!-- Стиль для элементов дерева -->
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="IsExpanded" Value="True"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Padding" Value="4,2"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TreeViewItem">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            
+                                            <!-- Кнопка раскрытия (стрелочка) -->
+                                            <ToggleButton x:Name="Expander" 
+                                                          ClickMode="Press" 
+                                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
+                                                          Foreground="{TemplateBinding Foreground}"
+                                                          VerticalAlignment="Center">
+                                                <ToggleButton.Template>
+                                                    <ControlTemplate TargetType="ToggleButton">
+                                                        <Border Background="Transparent" Width="16" Height="16">
+                                                            <Path x:Name="Arrow" 
+                                                                  Data="M 4 2 L 8 6 L 4 10 Z" 
+                                                                  Fill="#858585" 
+                                                                  HorizontalAlignment="Center" 
+                                                                  VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsChecked" Value="True">
+                                                                <Setter TargetName="Arrow" Property="Data" Value="M 2 4 L 10 4 L 6 8 Z"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </ToggleButton.Template>
+                                            </ToggleButton>
+                                            
+                                            <!-- Содержимое элемента -->
+                                            <Border x:Name="Bd" 
+                                                    Grid.Column="1" 
+                                                    Background="{TemplateBinding Background}" 
+                                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                                    BorderThickness="{TemplateBinding BorderThickness}" 
+                                                    Padding="{TemplateBinding Padding}" 
+                                                    CornerRadius="3">
+                                                <ContentPresenter x:Name="PART_Header" 
+                                                                  ContentSource="Header" 
+                                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                            </Border>
+                                            
+                                            <!-- Дочерние элементы -->
+                                            <ItemsPresenter x:Name="ItemsHost" 
+                                                            Grid.Column="1" 
+                                                            Grid.Row="1"/>
+                                        </Grid>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsExpanded" Value="False">
+                                                <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/>
+                                            </Trigger>
+                                            <Trigger Property="HasItems" Value="False">
+                                                <Setter TargetName="Expander" Property="Visibility" Value="Hidden"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DictAccent}"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Trigger>
+                                            <MultiTrigger>
+                                                <MultiTrigger.Conditions>
+                                                    <Condition Property="IsSelected" Value="False"/>
+                                                    <Condition Property="IsMouseOver" Value="True" SourceName="Bd"/>
+                                                </MultiTrigger.Conditions>
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DictSurfaceStrong}"/>
+                                            </MultiTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TreeView.Resources>
+                </TreeView>
 
                 <Button Grid.Row="4" Content="+ Добавить запись"
                     Click="AddEntry_Click"
@@ -571,6 +660,8 @@
                     <RowDefinition x:Name="DescriptionRow" Height="1*"/>
                     <!-- Description TextBox -->
                     <RowDefinition Height="Auto"/>
+                    <!-- Horizontal Splitter row -->
+                    <RowDefinition Height="Auto"/>
                     <!-- Code Header -->
                     <RowDefinition x:Name="CodeRow" Height="1*"/>
                     <!-- Code TextBox -->
@@ -606,8 +697,22 @@
                      VerticalAlignment="Stretch"
                      Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#555555"/>
 
+                <!-- Горизонтальный разделитель -->
+                <GridSplitter x:Name="DescriptionSplitter"
+                              Grid.Row="2"
+                              Height="6"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Center"
+                              Background="#2D2D2D"
+                              BorderBrush="#3E3E3E"
+                              BorderThickness="0,1"
+                              Cursor="SizeNS"
+                              ResizeBehavior="PreviousAndNext"
+                              Margin="0,0,0,10"
+                              Visibility="Collapsed"/>
+
                 <!-- Шапка кода и панель управления шрифтом -->
-                <Grid Grid.Row="2" Margin="0,0,0,10">
+                <Grid Grid.Row="3" Margin="0,0,0,10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -713,7 +818,7 @@
                 </Grid>
 
                 <!-- Текстовый редактор кода (3/3 от высоты кода) -->
-                <avalonEdit:TextEditor Grid.Row="3" x:Name="CodeTextBox"
+                <avalonEdit:TextEditor Grid.Row="4" x:Name="CodeTextBox"
                                    FontFamily="Consolas"
                                    FontSize="12"
                                    ShowLineNumbers="True"
@@ -772,7 +877,7 @@
                                 <MenuItem.Icon>
                                     <materialIcons:MaterialIcon Kind="ContentPaste" 
                                      Width="16" 
-                                     Height="16" 
+                                      Height="16" 
                                     Foreground="{DynamicResource DictTextPrimary}" />
                                 </MenuItem.Icon>
                             </MenuItem>
