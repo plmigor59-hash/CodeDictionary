@@ -246,19 +246,39 @@ public partial class MainWindow : Window
         {
             try
             {
-                // Сохраняем в существующий файл
-                using (var stream = new FileStream(_currentFilePath, FileMode.Create, FileAccess.Write))
+                // Проверяем, есть ли выделенный текст
+                var selection = CodeTextBox.TextArea.Selection;
+                if (!selection.IsEmpty)
                 {
-                    CodeTextBox.Save(stream);
+                    // Сохраняем только выделенные строки
+                    var selectedText = CodeTextBox.SelectedText;
+                    using (var stream = new FileStream(_currentFilePath, FileMode.Create, FileAccess.Write))
+                    using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                    {
+                        writer.Write(selectedText);
+                    }
+
+                    MessageBox.Show("Выделенный текст успешно сохранён",
+                                    "Сохранение",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Information);
+                }
+                else
+                {
+                    // Сохраняем весь файл
+                    using (var stream = new FileStream(_currentFilePath, FileMode.Create, FileAccess.Write))
+                    {
+                        CodeTextBox.Save(stream);
+                    }
+
+                    MessageBox.Show("Файл успешно сохранён",
+                                    "Сохранение",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Information);
                 }
 
-                // Обновляем заголовок (на случай если имя изменилось, но у нас оно то же)
+                // Обновляем заголовок
                 this.Title = $"{Path.GetFileName(_currentFilePath)} - Мой редактор";
-
-                MessageBox.Show("Файл успешно сохранён",
-                                "Сохранение",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
