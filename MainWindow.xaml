@@ -7,7 +7,7 @@
         xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
         mc:Ignorable="d"
-        Title="Справочник кода C#" Height="900" Width="1400"
+        Title="Справочник кода C#" Height="700" Width="1200"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="False"
@@ -686,6 +686,7 @@
                                       ToolTip="Учитывать регистр"
                                       VerticalAlignment="Center"
                                       Foreground="#CCCCCC"
+                                      Style="{StaticResource ToggleSwitchStyle}"
                                       Margin="5,0,10,0"
                                       Checked="SearchOptions_Changed"
                                       Unchecked="SearchOptions_Changed"/>

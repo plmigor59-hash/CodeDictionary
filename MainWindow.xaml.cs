@@ -1055,7 +1055,7 @@ public partial class MainWindow : Window
         {
             WriteIndented = true,  // Красивый формат JSON
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // Поддержка Unicode
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull // Не сохраняем null
+            DefaultIgnoreCondition = JsonIgnoreCondition.Never // Сохраняем все значения, включая null
         };
 
         // Сериализуем и сохраняем

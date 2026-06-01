@@ -41,13 +41,8 @@ namespace CodeDictionary
 
         public TextSegmentStyle()
         {
-            BackgroundColor = "#00000000";  // Прозрачный по умолчанию
-            ForegroundColor = "#000000";
-            IsBold = false;
-            IsItalic = false;
-            IsUnderline = false;
-            FontFamily = null;  // null = использовать шрифт по умолчанию
-            FontSize = null;    // null = использовать размер по умолчанию
+            // Значения по умолчанию устанавливаются только при создании нового объекта
+            // При десериализации JSON эти значения могут быть перезаписаны
         }
     }
 }
