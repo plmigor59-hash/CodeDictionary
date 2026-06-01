@@ -512,10 +512,10 @@ public partial class MainWindow : Window
         _appState = await _dataService.LoadStateAsync();
 
 
-       DescriptionTextBox.Visibility = Visibility.Collapsed;
-       DescriptionSplitter.Visibility = Visibility.Collapsed;
-       DescriptionRow.Height = new GridLength(0);
-       ToggleDescriptionButton.Content = " ▼ Развернуть ";
+        DescriptionTextBox.Visibility = Visibility.Collapsed;
+        DescriptionSplitter.Visibility = Visibility.Collapsed;
+        DescriptionRow.Height = new GridLength(0);
+        ToggleDescriptionButton.Content = " ▼ Развернуть ";
  
         RefreshEntriesList();
 
@@ -1241,7 +1241,7 @@ public partial class MainWindow : Window
         {
             DescriptionTextBox.Visibility = Visibility.Visible;
             DescriptionSplitter.Visibility = Visibility.Visible;
-            DescriptionRow.Height = new GridLength(1, GridUnitType.Star);
+            DescriptionRow.Height = new GridLength(150);
             ToggleDescriptionButton.Content = " ▲ Свернуть ";
         }
     }

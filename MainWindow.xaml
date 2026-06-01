@@ -657,7 +657,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <!-- Description Header -->
-                    <RowDefinition x:Name="DescriptionRow" Height="1*"/>
+                    <RowDefinition x:Name="DescriptionRow" Height="Auto"/>
                     <!-- Description TextBox -->
                     <RowDefinition Height="Auto"/>
                     <!-- Horizontal Splitter row -->
@@ -695,7 +695,8 @@
                      Padding="5"
                      Margin="0,0,0,10"
                      VerticalAlignment="Stretch"
-                     Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#555555"/>
+                     Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#555555"
+                     MinHeight="80"/>
 
                 <!-- Горизонтальный разделитель -->
                 <GridSplitter x:Name="DescriptionSplitter"
@@ -711,8 +712,15 @@
                               Margin="0,0,0,10"
                               Visibility="Collapsed"/>
 
-                <!-- Шапка кода и панель управления шрифтом -->
-                <Grid Grid.Row="3" Margin="0,0,0,10">
+                <!-- Контейнер кода (Row 3) -->
+                <Grid Grid.Row="3" x:Name="CodeContainer">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Шапка кода и панель управления шрифтом -->
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -818,7 +826,7 @@
                 </Grid>
 
                 <!-- Текстовый редактор кода (3/3 от высоты кода) -->
-                <avalonEdit:TextEditor Grid.Row="4" x:Name="CodeTextBox"
+                <avalonEdit:TextEditor Grid.Row="1" x:Name="CodeTextBox"
                                    FontFamily="Consolas"
                                    FontSize="12"
                                    ShowLineNumbers="True"
@@ -906,6 +914,7 @@
                         </ContextMenu>
                     </avalonEdit:TextEditor.ContextMenu>
                 </avalonEdit:TextEditor>
+                </Grid>
 
                 <!-- Теги -->
                 <StackPanel Grid.Row="4">
