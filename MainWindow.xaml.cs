@@ -73,7 +73,8 @@ public partial class MainWindow : Window
     }
 
     private void ApplyStyleToSelection(string backgroundColor = null, string foregroundColor = null,
-                                          bool? bold = null, bool? italic = null, bool? underline = null)
+                                          bool? bold = null, bool? italic = null, bool? underline = null,
+                                          string fontFamily = null, double? fontSize = null)
     {
         var selection = CodeTextBox.TextArea.Selection;
         if (selection.IsEmpty)
@@ -99,10 +100,12 @@ public partial class MainWindow : Window
             if (bold.HasValue) existingSegment.IsBold = bold.Value;
             if (italic.HasValue) existingSegment.IsItalic = italic.Value;
             if (underline.HasValue) existingSegment.IsUnderline = underline.Value;
+            if (fontFamily != null) existingSegment.FontFamily = fontFamily;
+            if (fontSize.HasValue) existingSegment.FontSize = fontSize.Value;
         }
         else
         {
-           
+
 
 
             // Создаём новый стиль
@@ -114,7 +117,9 @@ public partial class MainWindow : Window
                 ForegroundColor = foregroundColor,  // может быть null или строкой с цветом
                 IsBold = bold ?? false,
                 IsItalic = italic ?? false,
-                IsUnderline = underline ?? false
+                IsUnderline = underline ?? false,
+                FontFamily = fontFamily,  // может быть null или названием шрифта
+                FontSize = fontSize       // может быть null или размером шрифта
             };
             _textSegments.Add(newSegment);
         }
@@ -672,7 +677,23 @@ public partial class MainWindow : Window
     {
         if (FontFamilyComboBox.SelectedItem != null)
         {
-            CodeTextBox.FontFamily = new System.Windows.Media.FontFamily(FontFamilyComboBox.SelectedItem.ToString()!);
+            var selectedFont = FontFamilyComboBox.SelectedItem.ToString()!;
+
+            // Проверяем, есть ли выделенный текст
+            var selection = CodeTextBox?.TextArea?.Selection;
+            if (selection != null && !selection.IsEmpty)
+            {
+                // Применяем шрифт только к выделенному тексту
+                ApplyStyleToSelection(fontFamily: selectedFont);
+            }
+            else
+            {
+                // Применяем шрифт ко всему редактору
+                if (CodeTextBox != null)
+                {
+                    CodeTextBox.FontFamily = new System.Windows.Media.FontFamily(selectedFont);
+                }
+            }
         }
     }
 
@@ -680,7 +701,23 @@ public partial class MainWindow : Window
     {
         if (FontSizeComboBox.SelectedItem != null)
         {
-            CodeTextBox.FontSize = (int)FontSizeComboBox.SelectedItem;
+            var selectedSize = (int)FontSizeComboBox.SelectedItem;
+
+            // Проверяем, есть ли выделенный текст
+            var selection = CodeTextBox?.TextArea?.Selection;
+            if (selection != null && !selection.IsEmpty)
+            {
+                // Применяем размер шрифта только к выделенному тексту
+                ApplyStyleToSelection(fontSize: selectedSize);
+            }
+            else
+            {
+                // Применяем размер шрифта ко всему редактору
+                if (CodeTextBox != null)
+                {
+                    CodeTextBox.FontSize = selectedSize;
+                }
+            }
         }
     }
 

@@ -35,6 +35,10 @@ namespace CodeDictionary
         public bool IsItalic { get; set; }
         public bool IsUnderline { get; set; }
 
+        // Шрифт и размер
+        public string? FontFamily { get; set; }   // Название шрифта (например, "Consolas")
+        public double? FontSize { get; set; }     // Размер шрифта (например, 14.0)
+
         public TextSegmentStyle()
         {
             BackgroundColor = "#00000000";  // Прозрачный по умолчанию
@@ -42,6 +46,8 @@ namespace CodeDictionary
             IsBold = false;
             IsItalic = false;
             IsUnderline = false;
+            FontFamily = null;  // null = использовать шрифт по умолчанию
+            FontSize = null;    // null = использовать размер по умолчанию
         }
     }
 }

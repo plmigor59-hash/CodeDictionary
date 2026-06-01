@@ -37,7 +37,7 @@ public class CustomColorTransformer : DocumentColorizingTransformer
             {
                 // Установка фона
                 if (!string.IsNullOrEmpty(segment.BackgroundColor) && segment.BackgroundColor != "#00000000")
-                   
+
                     {
                     var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(segment.BackgroundColor));
                     visualLineElement.TextRunProperties.SetBackgroundBrush(brush);
@@ -50,24 +50,40 @@ public class CustomColorTransformer : DocumentColorizingTransformer
                     visualLineElement.TextRunProperties.SetForegroundBrush(brush);
                 }
 
+                // Определяем текущие параметры шрифта
+                var currentFontFamily = visualLineElement.TextRunProperties.Typeface.FontFamily;
+                var currentFontStyle = visualLineElement.TextRunProperties.Typeface.Style;
+                var currentFontWeight = visualLineElement.TextRunProperties.Typeface.Weight;
+
+                // Применяем шрифт, если указан
+                if (!string.IsNullOrEmpty(segment.FontFamily))
+                {
+                    currentFontFamily = new System.Windows.Media.FontFamily(segment.FontFamily);
+                }
+
                 // Жирный шрифт
                 if (segment.IsBold)
                 {
-                    visualLineElement.TextRunProperties.SetTypeface(
-                        new Typeface(visualLineElement.TextRunProperties.Typeface.FontFamily,
-                                    FontStyles.Normal,
-                                    FontWeights.Bold,
-                                    FontStretches.Normal));
+                    currentFontWeight = FontWeights.Bold;
                 }
 
                 // Курсив
                 if (segment.IsItalic)
                 {
+                    currentFontStyle = FontStyles.Italic;
+                }
+
+                // Применяем typeface с учетом всех изменений
+                if (segment.IsBold || segment.IsItalic || !string.IsNullOrEmpty(segment.FontFamily))
+                {
                     visualLineElement.TextRunProperties.SetTypeface(
-                        new Typeface(visualLineElement.TextRunProperties.Typeface.FontFamily,
-                                    FontStyles.Italic,
-                                    visualLineElement.TextRunProperties.Typeface.Weight,
-                                    FontStretches.Normal));
+                        new Typeface(currentFontFamily, currentFontStyle, currentFontWeight, FontStretches.Normal));
+                }
+
+                // Размер шрифта
+                if (segment.FontSize.HasValue && segment.FontSize.Value > 0)
+                {
+                    visualLineElement.TextRunProperties.SetFontRenderingEmSize(segment.FontSize.Value);
                 }
 
                 // Подчёркивание
