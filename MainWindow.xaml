@@ -32,6 +32,7 @@
         <SolidColorBrush x:Key="DictTextSecondary" Color="#A7B3C5"/>
         <SolidColorBrush x:Key="DictSuccess" Color="#4ADE80"/>
         <SolidColorBrush x:Key="DictChat" Color="#FFDA00"/>
+        <SolidColorBrush x:Key="DarkBackground" Color="#1E1E1E"/>
 
         <Style x:Key="ToggleSwitchStyle" TargetType="CheckBox">
             <Setter Property="Foreground" Value="{DynamicResource  DictTextPrimary}"/>
@@ -490,7 +491,7 @@
                       Grid.Row="3"
                       SelectedItemChanged="EntriesTreeView_SelectedItemChanged"
                       Margin="10,0,10,10"
-                      Background="#1E1E1E"
+                      Background="{DynamicResource DarkBackground}"
                       Foreground="#CCCCCC"
                       FontSize="14"
                       BorderBrush="{DynamicResource DictBorder}">
@@ -499,15 +500,15 @@
                         <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
                             <StackPanel Orientation="Horizontal" Margin="2">
                                 <TextBlock Text="📄" Margin="0,0,5,0" Foreground="{DynamicResource DictAccent}"/>
-                                <TextBlock Text="{Binding Title}" Foreground="#CCCCCC"/>
+                                <TextBlock Text="{Binding Title}" Foreground="{DynamicResource DictTextPrimary}"/>
                             </StackPanel>
                         </DataTemplate>
                         <!-- Шаблон для категории (узел) -->
                         <HierarchicalDataTemplate DataType="{x:Type local:CategoryNode}" ItemsSource="{Binding Entries}">
                             <StackPanel Orientation="Horizontal" Margin="2">
-                                <TextBlock Text="📁" Margin="0,0,5,0" Foreground="#FFD700"/>
-                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="#EDF2F7"/>
-                                <TextBlock Text="{Binding CountString}" Margin="5,0,0,0" Foreground="#A7B3C5" FontSize="11" VerticalAlignment="Center"/>
+                                <TextBlock Text="📁" Margin="0,0,5,0" Foreground="{DynamicResource DictChat}"/>
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="{DynamicResource DictTextPrimary}"/>
+                                <TextBlock Text="{Binding CountString}" Margin="5,0,0,0" Foreground="{DynamicResource DictTextSecondary}" FontSize="11" VerticalAlignment="Center"/>
                             </StackPanel>
                         </HierarchicalDataTemplate>
                         
@@ -692,11 +693,12 @@
                      TextWrapping="Wrap"
                      AcceptsReturn="True"
                      VerticalScrollBarVisibility="Auto"
-                     FontSize="14"
+                     FontSize="12"
                      Padding="5"
                      Margin="0,0,0,10"
                      VerticalAlignment="Stretch"
-                     Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#555555"
+                         
+                     Background="{DynamicResource DarkBackground}" Foreground="{DynamicResource DictTextPrimary}" 
                      MinHeight="80"/>
 
                 <!-- Горизонтальный разделитель -->
@@ -793,14 +795,12 @@
 
                         <!-- Панель поиска -->
                         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0">
-                            <TextBlock Text="🔍" VerticalAlignment="Center" Margin="2,0,5,0" Foreground="#CCCCCC"/>
+                            <TextBlock Text="🔍" VerticalAlignment="Center" Margin="2,0,5,0" Foreground="{DynamicResource DictTextSecondary}" Background="{DynamicResource DarkBackground}"/>
                             <TextBox x:Name="SearchInTextBox"
                                      Width="200"
                                      Height="26"
                                      Padding="5,3"
                                      FontSize="12"
-                                     Background="#3C3C3C"
-                                     Foreground="#CCCCCC"
                                      BorderBrush="#555555"
                                      VerticalContentAlignment="Center"
                                      KeyDown="SearchInTextBox_KeyDown"

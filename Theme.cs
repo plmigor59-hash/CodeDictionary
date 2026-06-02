@@ -12,8 +12,8 @@ public static class Theme
     {
         public const string Background = "#060606";
         public const string SidePanel = "#252526";
-        public const string Input = "#3C3C3C";
-        public const string TextPrimary = "#CCCCCC";
+        public const string Input = "#0D0D0D";
+        public const string TextPrimary = "#FFFFFF";
         public const string TextSecondary = "#858585";
         public const string Border = "#555555";
         public const string CodeBackground = "#1E1E1E";
@@ -27,7 +27,7 @@ public static class Theme
         public const string Background = "#FFFFFF";
         public const string SidePanel = "#F3F3F3";
         public const string Input = "#FFFFFF";
-        public const string TextPrimary = "#000000";
+        public const string TextPrimary = "#001A00";
         public const string TextSecondary = "#666666";
         public const string Border = "#CCCCCC";
         public const string CodeBackground = "#FFFFFF";
