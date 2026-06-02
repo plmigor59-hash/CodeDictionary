@@ -667,6 +667,7 @@
                     <!-- Code TextBox -->
                     <RowDefinition Height="Auto"/>
                     <!-- Tags -->
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- Шапка описания -->
@@ -712,8 +713,8 @@
                               Margin="0,0,0,10"
                               Visibility="Collapsed"/>
 
-                <!-- Контейнер кода (Row 3) -->
-                <Grid Grid.Row="3" x:Name="CodeContainer">
+                <!-- Контейнер кода (Row 4) -->
+                <Grid Grid.Row="4" x:Name="CodeContainer">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -826,7 +827,7 @@
                 </Grid>
 
                 <!-- Текстовый редактор кода (3/3 от высоты кода) -->
-                <avalonEdit:TextEditor Grid.Row="1" x:Name="CodeTextBox"
+                <avalonEdit:TextEditor Grid.Row="4" x:Name="CodeTextBox"
                                    FontFamily="Consolas"
                                    FontSize="12"
                                    ShowLineNumbers="True"
@@ -914,14 +915,15 @@
                         </ContextMenu>
                     </avalonEdit:TextEditor.ContextMenu>
                 </avalonEdit:TextEditor>
+                  
                 </Grid>
-
                 <!-- Теги -->
-                <StackPanel Grid.Row="4">
+                <StackPanel Grid.Row="5">
                     <TextBlock Text="Теги (через запятую):" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC"/>
                     <TextBox x:Name="TagsTextBox" Padding="5"
-                         Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#555555" FontSize="14"/>
+                     Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#555555" FontSize="14"/>
                 </StackPanel>
+
             </Grid>
         </Grid>
     </Grid>
