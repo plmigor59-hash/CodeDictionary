@@ -384,10 +384,14 @@ public partial class MainWindow : Window
             if (System.IO.File.Exists(darkXMLXshdPath))
             {
                 using (var reader = new XmlTextReader(darkXMLXshdPath))
+               
                 {
-                    _darkXMLHigh = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                    var xshd = HighlightingLoader.LoadXshd(reader);
+                    _darkXMLHigh = HighlightingLoader.Load(xshd, HighlightingManager.Instance);
+                    HighlightingManager.Instance.RegisterHighlighting("XML Dark",
+                      new[] { ".xml", ".xaml" }, _darkXMLHigh);
                 }
-            }
+                }
         }
         catch
         {
