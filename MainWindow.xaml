@@ -350,25 +350,7 @@
             </Setter>
         </Style>
 
-        <Style TargetType="ContextMenu">
-            <Setter Property="Background" Value="{DynamicResource DictCardBackground}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource DictCardBackground}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-        </Style>
-
-        <Style TargetType="MenuItem">
-            <Setter Property="Background" Value="{DynamicResource DictCardBackground}"/>
-            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
-
-            <!-- Шаблон для иконки -->
-            <Setter Property="Icon">
-                <Setter.Value>
-                    <Border Background="{DynamicResource DictCardBackground}" 
-                    Width="20" 
-                    Height="20"/>
-                </Setter.Value>
-            </Setter>
-        </Style>
+       
 
         <Style TargetType="Separator">
             <Setter Property="Background" Value="{DynamicResource DictCardBackground}"/>
@@ -496,15 +478,14 @@
                       FontSize="14"
                       BorderBrush="{DynamicResource DictBorder}">
                     <TreeView.ContextMenu>
-                        <ContextMenu Background="{DynamicResource DictCardBackground}"
-                         BorderBrush="{DynamicResource DictCardBackground}"
+                        <ContextMenu 
                          BorderThickness="1">
-                            <MenuItem Header="Удалить выделенное" Click="DeleteEntry_Click">
+                            <MenuItem Header="Удалить" Click="DeleteEntry_Click">
                                 <MenuItem.Icon>
                                     <materialIcons:MaterialIcon Kind="TrashCanOutline" 
                                      Width="16" 
                                      Height="16" 
-                                     Foreground="{DynamicResource DictTextPrimary}" />
+                                     />
                                 </MenuItem.Icon>
                             </MenuItem>
                         </ContextMenu>
@@ -858,15 +839,14 @@
                                    VerticalScrollBarVisibility="Auto"
                                    HorizontalScrollBarVisibility="Auto">
                     <avalonEdit:TextEditor.ContextMenu>
-                        <ContextMenu Background="{DynamicResource DictCardBackground}"
-                                 BorderBrush="{DynamicResource DictCardBackground}"
+                        <ContextMenu 
                                  BorderThickness="1">
                             <MenuItem Header="Отменить" Click="UndoMenuItem_Click">
                                 <MenuItem.Icon>
                                     <materialIcons:MaterialIcon Kind="Undo" 
                                     Width="16" 
                                     Height="16" 
-                                    Foreground="{DynamicResource DictTextPrimary}" />
+                                   />
                                 </MenuItem.Icon>
                             </MenuItem>
 
@@ -875,7 +855,7 @@
                                     <materialIcons:MaterialIcon Kind="Redo" 
                                     Width="16" 
                                     Height="16" 
-                                    Foreground="{DynamicResource DictTextPrimary}" />
+                                   />
                                 </MenuItem.Icon>
                             </MenuItem>
                             <Separator/>
@@ -886,7 +866,7 @@
                                     <materialIcons:MaterialIcon Kind="ContentCopy" 
                                      Width="16" 
                                       Height="16" 
-                                      Foreground="{DynamicResource DictTextPrimary}" />
+                                      />
                                 </MenuItem.Icon>
                             </MenuItem>
                             <MenuItem Header="Вырезать" Click="CutMenuItem_Click" >
@@ -895,7 +875,7 @@
                                     <materialIcons:MaterialIcon Kind="ContentCut" 
                                     Width="16" 
                                     Height="16" 
-                                    Foreground="{DynamicResource DictTextPrimary}" />
+                                   />
                                 </MenuItem.Icon>
                             </MenuItem>
                             <MenuItem Header="Вставить" Click="PasteMenuItem_Click">
@@ -904,7 +884,7 @@
                                     <materialIcons:MaterialIcon Kind="ContentPaste" 
                                      Width="16" 
                                       Height="16" 
-                                    Foreground="{DynamicResource DictTextPrimary}" />
+                                    />
                                 </MenuItem.Icon>
                             </MenuItem>
                             
@@ -915,7 +895,7 @@
                                     <materialIcons:MaterialIcon Kind="TrashCanOutline" 
                                      Width="16" 
                                      Height="16" 
-                                    Foreground="{DynamicResource DictTextPrimary}" />
+                                   />
                                     
                                 </MenuItem.Icon>
                             </MenuItem>
@@ -925,7 +905,7 @@
                                     <materialIcons:MaterialIcon Kind="Select" 
                                      Width="16" 
                                      Height="16" 
-                                     Foreground="{DynamicResource DictTextPrimary}" />
+                                     />
 
                                 </MenuItem.Icon>
                             </MenuItem>
