@@ -31,7 +31,7 @@
         <SolidColorBrush x:Key="DictTextPrimary" Color="#EDF2F7"/>
         <SolidColorBrush x:Key="DictTextSecondary" Color="#A7B3C5"/>
         <SolidColorBrush x:Key="DictSuccess" Color="#4ADE80"/>
-        <SolidColorBrush x:Key="DictChat" Color="#FFDA00"/>
+        <SolidColorBrush x:Key="DictChat" Color="#FFD700"/>
         <SolidColorBrush x:Key="DarkBackground" Color="#1E1E1E"/>
 
         <Style x:Key="ToggleSwitchStyle" TargetType="CheckBox">
@@ -495,6 +495,23 @@
                       Foreground="#CCCCCC"
                       FontSize="14"
                       BorderBrush="{DynamicResource DictBorder}">
+                    <TreeView.ContextMenu>
+                        <ContextMenu Background="{DynamicResource DictCardBackground}"
+                         BorderBrush="{DynamicResource DictCardBackground}"
+                         BorderThickness="1">
+                            <MenuItem Header="Удалить выделенное" Click="DeleteEntry_Click">
+                                <MenuItem.Icon>
+                                    <materialIcons:MaterialIcon Kind="TrashCanOutline" 
+                                     Width="16" 
+                                     Height="16" 
+                                     Foreground="{DynamicResource DictTextPrimary}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </TreeView.ContextMenu>
+
+
+
                     <TreeView.Resources>
                         <!-- Шаблон для записи (конечный элемент) -->
                         <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
@@ -580,7 +597,7 @@
                                                 <Setter TargetName="Expander" Property="Visibility" Value="Hidden"/>
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DictAccent}"/>
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DictBorder}"/>
                                                 <Setter Property="Foreground" Value="White"/>
                                             </Trigger>
                                             <MultiTrigger>
