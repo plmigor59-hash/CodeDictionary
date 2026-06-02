@@ -792,18 +792,20 @@
                         </StackPanel>
 
                         <!-- Панель поиска -->
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0">
-                            <TextBlock Text="🔍" VerticalAlignment="Center" Margin="2,0,5,0" Foreground="{DynamicResource DictTextSecondary}" Background="{DynamicResource DarkBackground}"/>
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0" >
+                                <TextBlock Text="🔍" VerticalAlignment="Center" Margin="2,0,5,0" Foreground="{DynamicResource DictTextSecondary}" />
                             <TextBox x:Name="SearchInTextBox"
                                      Width="200"
                                      Height="26"
                                      Padding="5,3"
                                      FontSize="12"
                                      BorderBrush="#555555"
+                                     Background="FloralWhite"
                                      VerticalContentAlignment="Center"
                                      KeyDown="SearchInTextBox_KeyDown"
                                      TextChanged="SearchInTextBox_TextChanged"/>
-                            <Button Click="FindPrevious_Click" Content="▲" Width="30" Height="26" Margin="5,0,2,0" ToolTip="Предыдущее (Shift+F3)" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="ClearSearch_Click" Content="❌" Width="30" Height="26" Margin="5,0,2,0" ToolTip="Предыдущее (Shift+F3)" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="FindPrevious_Click" Content="▲" Width="30" Height="26" Margin="5,0,2,0" ToolTip="Предыдущее (Shift+F3)" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="FindNext_Click" Content="▼" Width="30" Height="26" Margin="2,0,5,0" ToolTip="Следующее (F3)" Style="{StaticResource TitleBarButtonStyle}"/>
                             <CheckBox x:Name="MatchCaseCheckBox"
                                       Content="Аа"

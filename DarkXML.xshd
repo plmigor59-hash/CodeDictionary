@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<SyntaxDefinition name="XML Dark" 
+    xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+    
+    <!-- Определяем цвета для тёмной темы -->
+	
+    <Color name="Comment" foreground="#6A9955" exampleText="&lt;!-- comment --&gt;" />
+    <Color name="Tag" foreground="#569CD6" exampleText="&lt;element&gt;" />
+    <Color name="AttributeName" foreground="#9CDCFE" exampleText="name=" />
+    <Color name="AttributeValue" foreground="#CE9178" exampleText="&quot;value&quot;" />
+    <Color name="CData" foreground="#D69D85" exampleText="&lt;![CDATA[...]]&gt;" />
+    
+    <RuleSet>
+        <!-- Комментарии -->
+        <Span color="Comment" begin="&lt;!--" end="--&gt;" />
+        
+        <!-- CDATA секции -->
+        <Span color="CData" begin="&lt;!\[CDATA\[" end="\]\]&gt;" />
+        
+        <!-- Открывающий тег -->
+        <Span color="Tag" begin="&lt;[A-Za-z_][A-Za-z0-9_\-\.]*" end="&gt;">
+            <RuleSet>
+                <!-- Атрибуты внутри тега -->
+                <Span color="AttributeName" begin="[A-Za-z_][A-Za-z0-9_\-\.]*" end="=" />
+                <Span color="AttributeValue" begin="&quot;" end="&quot;" />
+                <Span color="AttributeValue" begin="'" end="'" />
+            </RuleSet>
+        </Span>
+	    
+        <!-- Закрывающий тег -->
+        <Span color="Tag" begin="&lt;/[A-Za-z_][A-Za-z0-9_\-\.]*" end="&gt;" />
+        
+        <!-- Самозакрывающийся тег -->
+        <Span color="Tag" begin="&lt;[A-Za-z_][A-Za-z0-9_\-\.]*[^&gt;]*/&gt;" end="" />
+		
+		
+		
+    </RuleSet>
+</SyntaxDefinition>

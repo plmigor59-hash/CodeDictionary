@@ -34,6 +34,8 @@ public partial class MainWindow : Window
     private IHighlightingDefinition? _lightCppHighlighting;
     private IHighlightingDefinition? _standart1CHigh;
     private IHighlightingDefinition? _dark1CHigh;
+    private IHighlightingDefinition? _darkXMLHigh;
+    private IHighlightingDefinition? _darkHTMLHigh;     
     private string _currentFilePath = null;  // Хранит путь к текущему открытому файлу
 
 
@@ -376,7 +378,41 @@ public partial class MainWindow : Window
             _dark1CHigh = null;
         }
 
+        try
+        {
+            var darkXMLXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkXML.xshd");
+            if (System.IO.File.Exists(darkXMLXshdPath))
+            {
+                using (var reader = new XmlTextReader(darkXMLXshdPath))
+                {
+                    _darkXMLHigh = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                }
+            }
+        }
+        catch
+        {
+            _darkXMLHigh = null;
+        }
 
+        try
+        {
+            var darkHTMLXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkHTML.xshd");
+            if (System.IO.File.Exists(darkHTMLXshdPath))
+            {
+                using (var reader = new XmlTextReader(darkHTMLXshdPath))
+                {
+                    var xshd = HighlightingLoader.LoadXshd(reader);
+                    _darkHTMLHigh = HighlightingLoader.Load(xshd, HighlightingManager.Instance);
+
+                    HighlightingManager.Instance.RegisterHighlighting("HTML  Dark",
+                        new[] { ".html", ".htm" }, _darkHTMLHigh);
+                }
+            }
+        }
+        catch
+        {
+            _darkHTMLHigh = null;
+        }
 
 
         try
@@ -591,6 +627,14 @@ public partial class MainWindow : Window
             CodeTextBox.SyntaxHighlighting = _dark1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
         }
 
+        else if (selected == "Темная (XML)")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkXMLHigh ?? HighlightingManager.Instance.GetDefinition("XML");
+        }
+        else if (selected == "Темная (HTML)")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkHTMLHigh ?? HighlightingManager.Instance.GetDefinition("HTML Dark");
+        }
         else if (selected == "Стандартная (1C)")
         {
             CodeTextBox.SyntaxHighlighting = _standart1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
@@ -775,8 +819,9 @@ public partial class MainWindow : Window
             SyntaxHighlightingComboBox?.Items.Add("Темная (1C)");
             SyntaxHighlightingComboBox?.Items.Add("Темная С#");
             SyntaxHighlightingComboBox?.Items.Add("Темная C++");
-           
-         
+            SyntaxHighlightingComboBox?.Items.Add("Темная (XML)");    
+            SyntaxHighlightingComboBox?.Items.Add("Темная (HTML)");    
+
             // По умолчанию при темном режиме выбираем DarkCSharp или DarkCpp
             if (SyntaxHighlightingComboBox != null)
             {
@@ -1337,6 +1382,11 @@ public partial class MainWindow : Window
     private void FindPrevious_Click(object sender, RoutedEventArgs e)
     {
         FindPrevious();
+    }
+
+    private void ClearSearch_Click(object sender, RoutedEventArgs e)
+    {
+        ClearSearch();
     }
 
     private void FindNext()
