@@ -1772,6 +1772,16 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void ExportCategory_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem menuItem || menuItem.Tag is not CategoryNode categoryNode)
+        {
+            return;
+        }
+
+        await ExportCategoryAsync(categoryNode.FullPath);
+    }
+
     private static string EnsureExportExtension(string fileName, int filterIndex)
     {
         var extension = Path.GetExtension(fileName);
@@ -1781,6 +1791,114 @@ public partial class MainWindow : Window
         }
 
         return filterIndex == 2 ? $"{fileName}.xml" : $"{fileName}.json";
+    }
+
+    private async Task ExportCategoryAsync(string categoryPath)
+    {
+        var normalizedCategoryPath = NormalizeCategoryPath(categoryPath);
+        if (string.IsNullOrWhiteSpace(normalizedCategoryPath))
+        {
+            return;
+        }
+
+        var saveFileDialog = new SaveFileDialog
+        {
+            Title = $"Экспорт категории '{normalizedCategoryPath}'",
+            Filter = "JSON (*.json)|*.json|XML (*.xml)|*.xml",
+            FilterIndex = 1,
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            FileName = SanitizeFileName(GetCategorySegmentName(normalizedCategoryPath))
+        };
+
+        if (saveFileDialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var exportPath = EnsureExportExtension(saveFileDialog.FileName, saveFileDialog.FilterIndex);
+        var exportData = BuildCategoryExportData(normalizedCategoryPath);
+
+        try
+        {
+            await _dataService.ExportDataAsync(exportData, exportPath);
+            _snackbar.Show(CodeTextBox, $"Категория '{normalizedCategoryPath}' экспортирована", NotificationType.Success, 1.5);
+        }
+        catch (Exception ex)
+        {
+            ShowAlert($"Ошибка экспорта категории: {ex.Message}", isError: true);
+        }
+    }
+
+    private CodeDictionaryData BuildCategoryExportData(string categoryPath)
+    {
+        var normalizedCategoryPath = NormalizeCategoryPath(categoryPath);
+        var exportedEntries = _data.Entries
+            .Where(entry => IsPathWithin(NormalizeCategoryPath(entry.Category), normalizedCategoryPath))
+            .Select(CloneEntry)
+            .ToList();
+
+        var exportedCategories = _data.Categories
+            .Select(NormalizeCategoryPath)
+            .Where(path => IsPathWithin(path, normalizedCategoryPath))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var entryCategory in exportedEntries.Select(entry => NormalizeCategoryPath(entry.Category)))
+        {
+            if (string.IsNullOrWhiteSpace(entryCategory))
+            {
+                continue;
+            }
+
+            foreach (var ancestor in EnumerateCategoryAncestors(entryCategory))
+            {
+                if (!exportedCategories.Any(path => string.Equals(path, ancestor, StringComparison.OrdinalIgnoreCase)))
+                {
+                    exportedCategories.Add(ancestor);
+                }
+            }
+        }
+
+        exportedCategories = exportedCategories
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (!exportedCategories.Any(path => string.Equals(path, normalizedCategoryPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            exportedCategories.Insert(0, normalizedCategoryPath);
+        }
+
+        return new CodeDictionaryData
+        {
+            Entries = exportedEntries,
+            Categories = exportedCategories
+        };
+    }
+
+    private static CodeEntry CloneEntry(CodeEntry entry)
+    {
+        return new CodeEntry
+        {
+            Id = entry.Id,
+            Title = entry.Title,
+            Description = entry.Description,
+            Code = entry.Code,
+            Category = entry.Category,
+            Tags = entry.Tags.ToList(),
+            Syntax = entry.Syntax,
+            CreatedAt = entry.CreatedAt,
+            ModifiedAt = entry.ModifiedAt,
+            FormattingData = entry.FormattingData
+        };
+    }
+
+    private static string SanitizeFileName(string fileName)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = new string(fileName.Select(ch => invalidChars.Contains(ch) ? '_' : ch).ToArray());
+        return string.IsNullOrWhiteSpace(sanitized) ? "category" : sanitized;
     }
 
     private List<string> GetKnownCategoryPaths()
@@ -2268,8 +2386,16 @@ public partial class MainWindow : Window
             return;
         }
 
+        var entriesToDelete = _data.Entries
+            .Where(entry => IsPathWithin(NormalizeCategoryPath(entry.Category), categoryPath))
+            .ToList();
+
+        var categoriesToDelete = _data.Categories
+            .Where(category => IsPathWithin(NormalizeCategoryPath(category), categoryPath))
+            .ToList();
+
         var result = MessageBox.Show(
-            $"Удалить категорию '{categoryPath}' и все вложенные категории?\n\nЗаписи внутри будут переведены в 'Без категории'.",
+            $"Удалить категорию '{categoryPath}' и все вложенные категории?\n\nБудет удалено категорий: {categoriesToDelete.Count}\nБудет удалено записей: {entriesToDelete.Count}",
             "Подтверждение",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
@@ -2279,27 +2405,13 @@ public partial class MainWindow : Window
             return;
         }
 
-        _data.Categories.RemoveAll(existing =>
-        {
-            var normalizedExisting = NormalizeCategoryPath(existing);
-            return string.Equals(normalizedExisting, categoryPath, StringComparison.OrdinalIgnoreCase) ||
-                   normalizedExisting.StartsWith($"{categoryPath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase);
-        });
+        var deletedEntryIds = entriesToDelete.Select(entry => entry.Id).ToHashSet();
+        var categoriesToDeleteSet = categoriesToDelete
+            .Select(NormalizeCategoryPath)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var entry in _data.Entries)
-        {
-            var entryCategory = NormalizeCategoryPath(entry.Category);
-            if (string.IsNullOrWhiteSpace(entryCategory))
-            {
-                continue;
-            }
-
-            if (string.Equals(entryCategory, categoryPath, StringComparison.OrdinalIgnoreCase) ||
-                entryCategory.StartsWith($"{categoryPath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase))
-            {
-                entry.Category = string.Empty;
-            }
-        }
+        _data.Categories.RemoveAll(existing => categoriesToDeleteSet.Contains(NormalizeCategoryPath(existing)));
+        _data.Entries.RemoveAll(entry => deletedEntryIds.Contains(entry.Id));
 
         if (string.Equals(_selectedCategoryPath, categoryPath, StringComparison.OrdinalIgnoreCase) ||
             _selectedCategoryPath.StartsWith($"{categoryPath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase))
@@ -2308,20 +2420,20 @@ public partial class MainWindow : Window
             CategoryComboBox.Text = string.Empty;
         }
 
-        if (_currentEntry != null)
+        if (_currentEntry != null && deletedEntryIds.Contains(_currentEntry.Id))
         {
-            var currentEntryCategory = NormalizeCategoryPath(_currentEntry.Category);
-            if (string.Equals(currentEntryCategory, categoryPath, StringComparison.OrdinalIgnoreCase) ||
-                currentEntryCategory.StartsWith($"{categoryPath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase))
-            {
-                _currentEntry.Category = string.Empty;
-                CategoryComboBox.Text = string.Empty;
-            }
+            _currentEntry = null;
+            ClearEditingForm();
+        }
+        else if (_currentEntry != null && IsPathWithin(_currentEntry.Category, categoryPath))
+        {
+            _currentEntry = null;
+            ClearEditingForm();
         }
 
         await _dataService.SaveDataAsync(_data);
         RefreshEntriesList();
-        _snackbar.Show(CodeTextBox, $"Категория '{categoryPath}' удалена", NotificationType.Success, 1.5);
+        _snackbar.Show(CodeTextBox, $"Категория '{categoryPath}' и её содержимое удалены", NotificationType.Success, 1.5);
     }
 }
 

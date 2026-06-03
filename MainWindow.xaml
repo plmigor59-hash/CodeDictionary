@@ -511,6 +511,11 @@
                                                   Tag="{Binding}"
                                                   IsEnabled="{Binding CanDelete}">
                                         </MenuItem>
+                                        <MenuItem Header="Экспортировать категорию"
+                                                  Click="ExportCategory_Click"
+                                                  Tag="{Binding}"
+                                                  IsEnabled="{Binding CanDelete}">
+                                        </MenuItem>
                                         <MenuItem Header="Переименовать"
                                                   Click="RenameCategory_Click"
                                                   Tag="{Binding}"
