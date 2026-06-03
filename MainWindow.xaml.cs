@@ -1418,29 +1418,23 @@ public partial class MainWindow : Window
             return;
         }
 
-        var result = MessageBox.Show(
-            $"Удалить запись '{_currentEntry.Title}'?",
-            "Подтверждение",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
 
-        if (result == MessageBoxResult.Yes)
-        {
-            _data.Entries.Remove(_currentEntry);
-            await _dataService.SaveDataAsync(_data);
+            if (CustomMessageBox.ShowQuestion("Удалить запись?", "Подтверждение") )
+            {
+                _data.Entries.Remove(_currentEntry);
+                await _dataService.SaveDataAsync(_data);
+                _currentEntry = null;
+                TitleTextBox.Text = "";
+                DescriptionTextBox.Text = "";
+                CodeTextBox.Text = "";
+                CategoryComboBox.Text = "";
+                TagsTextBox.Text = "";
+                RefreshEntriesList();
+                _snackbar.Show(CodeTextBox, "Запись удалена", NotificationType.Success, 1.5);
+            }
 
-            _currentEntry = null;
-            TitleTextBox.Text = "";
-            DescriptionTextBox.Text = "";
-            CodeTextBox.Text = "";
-            CategoryComboBox.Text = "";
-            TagsTextBox.Text = "";
-
-            RefreshEntriesList();
-            _snackbar.Show(CodeTextBox, "Запись удалена", NotificationType.Success, 1.5);
-            
         }
-    }
+   
 
     private async void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
@@ -1742,34 +1736,32 @@ public partial class MainWindow : Window
             return;
         }
 
-        var result = MessageBox.Show(
-            "Импорт заменит текущую базу данных. Продолжить?",
-            "Подтверждение импорта",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
+        if (CustomMessageBox.ShowQuestion("Импорт заменит текущую базу данных. Продолжить?", "Подтверждение импорта"))
+        {
+            try
+            {
+                var importedData = await _dataService.ImportDataAsync(openFileDialog.FileName);
+                _data = importedData ?? new CodeDictionaryData();
+                NormalizeImportedData();
+                await _dataService.SaveDataAsync(_data);
 
-        if (result != MessageBoxResult.Yes)
+                _currentEntry = null;
+                _selectedCategoryPath = string.Empty;
+                ClearEditingForm();
+                RefreshEntriesList();
+                _snackbar.Show(CodeTextBox, $"База импортирована из '{Path.GetFileName(openFileDialog.FileName)}'", NotificationType.Success, 1.5);
+            }
+            catch (Exception ex)
+            {
+                ShowAlert($"Ошибка импорта: {ex.Message}", isError: true);
+            }
+
+        }
+        else 
         {
             return;
         }
 
-        try
-        {
-            var importedData = await _dataService.ImportDataAsync(openFileDialog.FileName);
-            _data = importedData ?? new CodeDictionaryData();
-            NormalizeImportedData();
-            await _dataService.SaveDataAsync(_data);
-
-            _currentEntry = null;
-            _selectedCategoryPath = string.Empty;
-            ClearEditingForm();
-            RefreshEntriesList();
-            _snackbar.Show(CodeTextBox, $"База импортирована из '{Path.GetFileName(openFileDialog.FileName)}'", NotificationType.Success, 1.5);
-        }
-        catch (Exception ex)
-        {
-            ShowAlert($"Ошибка импорта: {ex.Message}", isError: true);
-        }
     }
 
     private async void ExportCategory_Click(object sender, RoutedEventArgs e)
@@ -2409,46 +2401,45 @@ public partial class MainWindow : Window
             .Where(category => IsPathWithin(NormalizeCategoryPath(category), categoryPath))
             .ToList();
 
-        var result = MessageBox.Show(
-            $"Удалить категорию '{categoryPath}' и все вложенные категории?\n\nБудет удалено категорий: {categoriesToDelete.Count}\nБудет удалено записей: {entriesToDelete.Count}",
-            "Подтверждение",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
 
-        if (result != MessageBoxResult.Yes)
+        if (CustomMessageBox.ShowQuestion($"Удалить категорию '{categoryPath}' и все вложенные категории?\n\nБудет удалено категорий: {categoriesToDelete.Count}\nБудет удалено записей: {entriesToDelete.Count}", "Подтверждение"))
+
+        {
+            var deletedEntryIds = entriesToDelete.Select(entry => entry.Id).ToHashSet();
+            var categoriesToDeleteSet = categoriesToDelete
+                .Select(NormalizeCategoryPath)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            _data.Categories.RemoveAll(existing => categoriesToDeleteSet.Contains(NormalizeCategoryPath(existing)));
+            _data.Entries.RemoveAll(entry => deletedEntryIds.Contains(entry.Id));
+
+            if (string.Equals(_selectedCategoryPath, categoryPath, StringComparison.OrdinalIgnoreCase) ||
+                _selectedCategoryPath.StartsWith($"{categoryPath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase))
+            {
+                _selectedCategoryPath = string.Empty;
+                CategoryComboBox.Text = string.Empty;
+            }
+
+            if (_currentEntry != null && deletedEntryIds.Contains(_currentEntry.Id))
+            {
+                _currentEntry = null;
+                ClearEditingForm();
+            }
+            else if (_currentEntry != null && IsPathWithin(_currentEntry.Category, categoryPath))
+            {
+                _currentEntry = null;
+                ClearEditingForm();
+            }
+
+            await _dataService.SaveDataAsync(_data);
+            RefreshEntriesList();
+            _snackbar.Show(CodeTextBox, $"Категория '{categoryPath}' и её содержимое удалены", NotificationType.Success, 1.5);
+
+        }
+        else 
         {
             return;
         }
-
-        var deletedEntryIds = entriesToDelete.Select(entry => entry.Id).ToHashSet();
-        var categoriesToDeleteSet = categoriesToDelete
-            .Select(NormalizeCategoryPath)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        _data.Categories.RemoveAll(existing => categoriesToDeleteSet.Contains(NormalizeCategoryPath(existing)));
-        _data.Entries.RemoveAll(entry => deletedEntryIds.Contains(entry.Id));
-
-        if (string.Equals(_selectedCategoryPath, categoryPath, StringComparison.OrdinalIgnoreCase) ||
-            _selectedCategoryPath.StartsWith($"{categoryPath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase))
-        {
-            _selectedCategoryPath = string.Empty;
-            CategoryComboBox.Text = string.Empty;
-        }
-
-        if (_currentEntry != null && deletedEntryIds.Contains(_currentEntry.Id))
-        {
-            _currentEntry = null;
-            ClearEditingForm();
-        }
-        else if (_currentEntry != null && IsPathWithin(_currentEntry.Category, categoryPath))
-        {
-            _currentEntry = null;
-            ClearEditingForm();
-        }
-
-        await _dataService.SaveDataAsync(_data);
-        RefreshEntriesList();
-        _snackbar.Show(CodeTextBox, $"Категория '{categoryPath}' и её содержимое удалены", NotificationType.Success, 1.5);
     }
 }
 
