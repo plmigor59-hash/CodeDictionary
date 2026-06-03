@@ -207,7 +207,7 @@ public partial class MainWindow : Window
 
         // Настройки диалога
         openFileDialog.Title = "Выберите текстовый файл";
-        openFileDialog.Filter = "Текстовые файлы (*.txt;*.cs;*.xaml;*.json;*.xml)|*.txt;*.cs;*.xaml;*.json;*.xml|Все файлы (*.*)|*.*";
+        openFileDialog.Filter = "Текстовые файлы (*.txt;*.bsl;*.cs;*.xaml;*.json;*.xml)|*.txt;*.bsl;cs;*.xaml;*.json;*.xml|Все файлы (*.*)|*.*";
         openFileDialog.FilterIndex = 1;
         openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
