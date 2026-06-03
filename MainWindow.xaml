@@ -479,16 +479,9 @@
                       Foreground="#CCCCCC"
                       FontSize="14"
                       BorderBrush="{DynamicResource DictBorder}">
-                    <TreeView.ContextMenu>
-                        <ContextMenu 
-                         BorderThickness="1">
-                            <MenuItem Header="Удалить" Click="DeleteEntry_Click">
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="TrashCanOutline" 
-                                     Width="16" 
-                                     Height="16" 
-                                     />
-                                </MenuItem.Icon>
+                                        <TreeView.ContextMenu>
+                        <ContextMenu BorderThickness="1">
+                            <MenuItem Header="Добавить корневую категорию" Click="AddCategoryRoot_Click">
                             </MenuItem>
                         </ContextMenu>
                     </TreeView.ContextMenu>
@@ -497,17 +490,35 @@
 
                     <TreeView.Resources>
                         <!-- Шаблон для записи (конечный элемент) -->
-                        <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
+                                                <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
                             <StackPanel Orientation="Horizontal" Margin="2">
                                 <TextBlock Text="📄" Margin="0,0,5,0" Foreground="{DynamicResource DictAccent}"/>
                                 <TextBlock Text="{Binding Title}" Foreground="{DynamicResource DictTextPrimary}"/>
                             </StackPanel>
                         </DataTemplate>
                         <!-- Шаблон для категории (узел) -->
-                        <HierarchicalDataTemplate DataType="{x:Type local:CategoryNode}" ItemsSource="{Binding Entries}">
+                                                <HierarchicalDataTemplate DataType="{x:Type local:CategoryNode}" ItemsSource="{Binding Items}">
                             <StackPanel Orientation="Horizontal" Margin="2">
+                                <StackPanel.ContextMenu>
+                                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                        <MenuItem Header="Добавить подкатегорию"
+                                                  Click="AddCategoryChild_Click"
+                                                  Tag="{Binding}">
+                                        </MenuItem>
+                                        <MenuItem Header="Удалить категорию"
+                                                  Click="DeleteCategory_Click"
+                                                  Tag="{Binding}"
+                                                  IsEnabled="{Binding CanDelete}">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon Kind="TrashCanOutline"
+                                                                             Width="16"
+                                                                             Height="16" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </StackPanel.ContextMenu>
                                 <TextBlock Text="📁" Margin="0,0,5,0" Foreground="{DynamicResource DictChat}"/>
-                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="{DynamicResource DictTextPrimary}"/>
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="{DynamicResource DictTextPrimary}" ToolTip="{Binding FullPath}"/>
                                 <TextBlock Text="{Binding CountString}" Margin="5,0,0,0" Foreground="{DynamicResource DictTextSecondary}" FontSize="11" VerticalAlignment="Center"/>
                             </StackPanel>
                         </HierarchicalDataTemplate>
