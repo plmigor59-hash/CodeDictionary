@@ -1782,6 +1782,21 @@ public partial class MainWindow : Window
         await ExportCategoryAsync(categoryNode.FullPath);
     }
 
+    private async void ExportSelectedCategory_Click(object sender, RoutedEventArgs e)
+    {
+        var categoryPath = !string.IsNullOrWhiteSpace(_selectedCategoryPath)
+            ? _selectedCategoryPath
+            : NormalizeCategoryPath(_currentEntry?.Category);
+
+        if (string.IsNullOrWhiteSpace(categoryPath))
+        {
+            ShowAlert("Выберите категорию для экспорта", isError: true);
+            return;
+        }
+
+        await ExportCategoryAsync(categoryPath);
+    }
+
     private static string EnsureExportExtension(string fileName, int filterIndex)
     {
         var extension = Path.GetExtension(fileName);

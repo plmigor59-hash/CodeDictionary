@@ -813,6 +813,7 @@
                             <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить ..." Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="ExportData_Click" Content="⇧" Width="30" Margin="2" ToolTip="Экспорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="ImportData_Click" Content="⇩" Width="30" Margin="2" ToolTip="Импорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Click="ExportSelectedCategory_Click" Content="🗂" Width="30" Margin="2" ToolTip="Экспорт выбранной категории" Style="{StaticResource TitleBarButtonStyle}"/>
 
                             <Button Content="🖌️" ToolTip="Изменить фон"  Width="30" Margin="2" Click="ChangeBackground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Content="🎨" ToolTip="Изменить цвет текста"  Width="30" Margin="2" Click="ChangeForeground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
