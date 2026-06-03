@@ -783,7 +783,7 @@
                             <Button Click="PasteMenuItem_Click" Content="📄" Width="30" Margin="2" ToolTip="Вставить" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="SelectAllMenuItem_Click" Content="🔲" Width="30" Margin="2" ToolTip="Выделить все" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="OpenFile_Click" Content="📂" Width="30" Margin="2" ToolTip="Открыть..." Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить как..." Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить ..." Style="{StaticResource TitleBarButtonStyle}"/>
 
                             <Button Content="🖌️" ToolTip="Изменить фон"  Width="30" Margin="2" Click="ChangeBackground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Content="🎨" ToolTip="Изменить цвет текста"  Width="30" Margin="2" Click="ChangeForeground_Click" Style="{StaticResource TitleBarButtonStyle}"/>

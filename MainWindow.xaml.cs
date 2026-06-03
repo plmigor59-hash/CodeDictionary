@@ -15,6 +15,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Xml;
+using System.Windows.Controls.Primitives;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace CodeDictionary;
@@ -36,9 +37,8 @@ public partial class MainWindow : Window
     private IHighlightingDefinition? _dark1CHigh;
     private IHighlightingDefinition? _darkXMLHigh;
     private IHighlightingDefinition? _darkHTMLHigh;     
-    private string _currentFilePath = null;  // Хранит путь к текущему открытому файлу
-
-
+    private string _currentFilePath = null;  // Хранит путь к текущему открытому файлу0
+    private SnackbarNotification _snackbar = new SnackbarNotification();
     private List<TextSegmentStyle> _textSegments = new();
 
 
@@ -74,6 +74,7 @@ public partial class MainWindow : Window
 
     }
 
+ 
     private void ApplyStyleToSelection(string backgroundColor = null, string foregroundColor = null,
                                           bool? bold = null, bool? italic = null, bool? underline = null,
                                           string fontFamily = null, double? fontSize = null)
@@ -81,8 +82,7 @@ public partial class MainWindow : Window
         var selection = CodeTextBox.TextArea.Selection;
         if (selection.IsEmpty)
         {
-            MessageBox.Show("Сначала выделите текст", "Нет выделения",
-                          MessageBoxButton.OK, MessageBoxImage.Information);
+            _snackbar.Show(CodeTextBox, "Сначала выделите текст", NotificationType.Warning, 1.5);
             return;
         }
 
@@ -227,24 +227,68 @@ public partial class MainWindow : Window
                 this.Title = $"{Path.GetFileName(_currentFilePath)} - Мой редактор";
 
                 // Показываем уведомление об успехе
-                MessageBox.Show($"Файл '{Path.GetFileName(_currentFilePath)}' успешно открыт",
-                                "Открытие файла",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Information);
+                _snackbar.Show(CodeTextBox, $"Файл '{Path.GetFileName(_currentFilePath)}' успешно открыт", NotificationType.Success, 1.5);
             }
+
+
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при открытии файла: {ex.Message}",
-                                "Ошибка",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error);
+                ShowAlert($"Ошибка при открытии файла: {ex.Message}", isError: true);
             }
         }
     }
 
+  
+
+
+    private void ShowAlert(string message, bool isError = false)
+    {
+        var popup = new Popup
+        {
+            PlacementTarget = CodeTextBox,
+            Placement = PlacementMode.Mouse,
+            AllowsTransparency = true,
+            StaysOpen = false
+        };
+
+        var border = new Border
+        {
+
+            Background = new SolidColorBrush(isError ? Color.FromRgb(200, 50, 50) : Color.FromRgb(50, 50, 50)),   
+            
+
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(12, 6, 12, 6),
+            Child = new TextBlock
+            {
+                Text = message,
+                Foreground = Brushes.White,
+                FontSize = 12
+            }
+        };
+
+        popup.Child = border;
+        popup.IsOpen = true;
+
+        var timer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(2)
+        };
+
+        timer.Tick += (s, e) =>
+        {
+            popup.IsOpen = false;
+            timer.Stop();
+        };
+        timer.Start();
+    }
+
+
     // 💾 СОХРАНИТЬ (если путь уже есть, иначе Сохранить как...)
     private void SaveFile_Click(object sender, RoutedEventArgs e)
     {
+        SaveEntry_Click(sender, e);
+
         if (string.IsNullOrEmpty(_currentFilePath))
         {
             SaveAsFile_Click(sender, e);  // Если файл новый, вызываем "Сохранить как"
@@ -264,11 +308,9 @@ public partial class MainWindow : Window
                     {
                         writer.Write(selectedText);
                     }
-
-                    MessageBox.Show("Выделенный текст успешно сохранён",
-                                    "Сохранение",
-                                    MessageBoxButton.OK,
-                                    MessageBoxImage.Information);
+                 
+                    _snackbar.Show(CodeTextBox, "Выделенный текст успешно сохранён", NotificationType.Success, 1.5);
+                  
                 }
                 else
                 {
@@ -277,24 +319,20 @@ public partial class MainWindow : Window
                     {
                         CodeTextBox.Save(stream);
                     }
-
-                    MessageBox.Show("Файл успешно сохранён",
-                                    "Сохранение",
-                                    MessageBoxButton.OK,
-                                    MessageBoxImage.Information);
-                }
+                    _snackbar.Show(CodeTextBox, "Файл успешно сохранён", NotificationType.Success, 1.5);
+                  
+                  }
 
                 // Обновляем заголовок
                 this.Title = $"{Path.GetFileName(_currentFilePath)} - Мой редактор";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при сохранении: {ex.Message}",
-                                "Ошибка",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error);
+                ShowAlert($"Ошибка при сохранении: {ex.Message}", isError: true);
             }
         }
+
+       
     }
 
     // 📝 СОХРАНИТЬ КАК (всегда спрашиваем путь)
@@ -327,17 +365,13 @@ public partial class MainWindow : Window
 
                 this.Title = $"{Path.GetFileName(_currentFilePath)} ";
 
-                MessageBox.Show("Файл успешно сохранён",
-                                "Сохранение",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Information);
+                _snackbar.Show(CodeTextBox, "Файл успешно сохранён", NotificationType.Success, 1.5);
             }
+
+
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при сохранении: {ex.Message}",
-                                "Ошибка",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error);
+                ShowAlert($"Ошибка при сохранении: {ex.Message}", isError: true);
             }
         }
     }
@@ -1139,13 +1173,14 @@ public partial class MainWindow : Window
     {
         if (_currentEntry == null)
         {
-            MessageBox.Show("Выберите или создайте запись", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ShowAlert("Выберите или создайте запись", isError: true);
             return;
+
         }
 
         if (string.IsNullOrWhiteSpace(TitleTextBox.Text))
         {
-            MessageBox.Show("Введите название", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ShowAlert("Введите название", isError: true);
             return;
         }
 
@@ -1173,7 +1208,7 @@ public partial class MainWindow : Window
         await _dataService.SaveDataAsync(_data);
         RefreshEntriesList();
 
-        MessageBox.Show("Запись сохранена", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+        _snackbar.Show(CodeTextBox, "Запись сохранена", NotificationType.Success, 1.5);
     }
 
 
@@ -1183,7 +1218,7 @@ public partial class MainWindow : Window
     {
         if (_currentEntry == null)
         {
-            MessageBox.Show("Выберите запись для удаления", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ShowAlert("Выберите запись для удаления", isError: true);
             return;
         }
 
@@ -1206,7 +1241,8 @@ public partial class MainWindow : Window
             TagsTextBox.Text = "";
 
             RefreshEntriesList();
-            MessageBox.Show("Запись удалена", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            _snackbar.Show(CodeTextBox, "Запись удалена", NotificationType.Success, 1.5);
+            
         }
     }
 
