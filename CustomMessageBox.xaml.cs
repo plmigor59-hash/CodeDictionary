@@ -53,17 +53,17 @@ namespace CodeDictionary
                 case CustomMessageBoxType.Warning:
                     msgBox.CaptionText.Text = "Предупреждение";
                     msgBox.IconText.Text = "!";
-                    msgBox.IconText.Foreground = (Brush)msgBox.FindResource("AdminWarning");
-                    msgBox.IconBackground.Background = (Brush)msgBox.FindResource("AdminWarningBackground");
-                    msgBox.HeaderDot.Foreground = (Brush)msgBox.FindResource("AdminWarning");
+                    msgBox.IconText.Foreground = (Brush)msgBox.FindResource("DictWarning");
+                    msgBox.IconBackground.Background = (Brush)msgBox.FindResource("DictWarningBackground");
+                    msgBox.HeaderDot.Foreground = (Brush)msgBox.FindResource("DictWarning");
                     break;
 
                 case CustomMessageBoxType.Error:
                     msgBox.CaptionText.Text = "Произошла ошибка";
                     msgBox.IconText.Text = "!";
-                    msgBox.IconText.Foreground = (Brush)msgBox.FindResource("AdminError");
-                    msgBox.IconBackground.Background = (Brush)msgBox.FindResource("AdminErrorBackground");
-                    msgBox.HeaderDot.Foreground = (Brush)msgBox.FindResource("AdminError");
+                    msgBox.IconText.Foreground = (Brush)msgBox.FindResource("DictError");
+                    msgBox.IconBackground.Background = (Brush)msgBox.FindResource("DictErrorBackground");
+                    msgBox.HeaderDot.Foreground = (Brush)msgBox.FindResource("DictError");
                     break;
 
                 case CustomMessageBoxType.Question:
@@ -72,15 +72,15 @@ namespace CodeDictionary
                     msgBox.CancelButton.Content = "Нет";
                     msgBox.CancelButton.Visibility = Visibility.Visible;
                     msgBox.IconText.Text = "?";
-                    msgBox.IconText.Foreground = (Brush)msgBox.FindResource("AdminAccent");
-                    msgBox.HeaderDot.Foreground = (Brush)msgBox.FindResource("AdminAccent");
+                    msgBox.IconText.Foreground = (Brush)msgBox.FindResource("DictChat");
+                    msgBox.HeaderDot.Foreground = (Brush)msgBox.FindResource("DictChat");
                     break;
 
                 default:
                     msgBox.CaptionText.Text = "Системное сообщение";
                     msgBox.IconText.Text = "!";
-                    msgBox.IconText.Foreground = (Brush)msgBox.FindResource("AdminAccent");
-                    msgBox.HeaderDot.Foreground = (Brush)msgBox.FindResource("AdminAccent");
+                    msgBox.IconText.Foreground = (Brush)msgBox.FindResource("DictAccent");
+                    msgBox.HeaderDot.Foreground = (Brush)msgBox.FindResource("DictAccent");
                     break;
             }
 

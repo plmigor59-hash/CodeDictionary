@@ -13,24 +13,23 @@
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
     <Window.Resources>
-        <LinearGradientBrush x:Key="AdminWindowGradient" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#111720" Offset="0"/>
-            <GradientStop Color="#1A2332" Offset="0.5"/>
-            <GradientStop Color="#1C2A3A" Offset="1"/>
-        </LinearGradientBrush>
-        <SolidColorBrush x:Key="AdminSurfaceStrong" Color="#273447"/>
-        <SolidColorBrush x:Key="AdminBorder" Color="#36465E"/>
-        <SolidColorBrush x:Key="AdminTitleBackground" Color="#A51A2534"/>
-        <SolidColorBrush x:Key="AdminAccent" Color="#5BA5FF"/>
-        <SolidColorBrush x:Key="AdminTextPrimary" Color="#EDF2F7"/>
-        <SolidColorBrush x:Key="AdminTextSecondary" Color="#A7B3C5"/>
-        <SolidColorBrush x:Key="AdminWarning" Color="#FFDA00"/>
-        <SolidColorBrush x:Key="AdminWarningBackground" Color="#4A341300"/>
-        <SolidColorBrush x:Key="AdminError" Color="#FF8A80"/>
-        <SolidColorBrush x:Key="AdminErrorBackground" Color="#4A1B1B"/>
-
+      
+        <SolidColorBrush x:Key="DictSurface" Color="#202A38"/>
+        <SolidColorBrush x:Key="DictSurfaceStrong" Color="#273447"/>
+        <SolidColorBrush x:Key="DictBorder" Color="#36465E"/>
+        <SolidColorBrush x:Key="DictCardBackground" Color="#202A38"/>
+        <SolidColorBrush x:Key="DictTitleBackground" Color="#A51A2534"/>
+        <SolidColorBrush x:Key="DictStatusBackground" Color="#132f4b"/>
+        <SolidColorBrush x:Key="DictAccent" Color="#5BA5FF"/>
+        <SolidColorBrush x:Key="DictTextPrimary" Color="#EDF2F7"/>
+        <SolidColorBrush x:Key="DictTextSecondary" Color="#A7B3C5"/>
+        <SolidColorBrush x:Key="DictSuccess" Color="#4ADE80"/>
+        <SolidColorBrush x:Key="DictChat" Color="#FFD700"/>
+        <SolidColorBrush x:Key="DarkBackground" Color="#1E1E1E"/>
+        
+        
         <Style x:Key="DialogButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource AdminAccent}"/>
+            <Setter Property="Background" Value="{DynamicResource DictAccent}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderBrush" Value="#8BC3FF"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -85,16 +84,16 @@
         </Style>
 
         <Style x:Key="SecondaryDialogButtonStyle" TargetType="Button" BasedOn="{StaticResource DialogButtonStyle}">
-            <Setter Property="Background" Value="{StaticResource AdminSurfaceStrong}"/>
-            <Setter Property="Foreground" Value="{StaticResource AdminTextPrimary}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource AdminBorder}"/>
+            <Setter Property="Background" Value="{DynamicResource DictSurfaceStrong}"/>
+            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DictBorder}"/>
         </Style>
     </Window.Resources>
 
     <Border Margin="10"
-            Background="{StaticResource AdminWindowGradient}"
+            Background="{DynamicResource DictSurface}"
             CornerRadius="14"
-            BorderBrush="{StaticResource AdminBorder}"
+            BorderBrush="{DynamicResource DictBorder}"
             BorderThickness="1">
         <Border.Effect>
             <DropShadowEffect BlurRadius="28" ShadowDepth="0" Opacity="0.35" Color="#1A000000"/>
@@ -108,8 +107,8 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0"
-                    Background="{StaticResource AdminTitleBackground}"
-                    BorderBrush="{StaticResource AdminBorder}"
+                    Background="{DynamicResource DictTitleBackground}"
+                    BorderBrush="{DynamicResource DictBorder}"
                     BorderThickness="0,0,0,1"
                     CornerRadius="14,14,0,0"
                     MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
@@ -122,12 +121,12 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
                         <TextBlock x:Name="HeaderDot"
                                    Text="&#x25CF;"
-                                   Foreground="{StaticResource AdminAccent}"
+                                   Foreground="{DynamicResource DictAccent}"
                                    FontSize="12"
                                    Margin="0,0,8,0"/>
                         <TextBlock x:Name="TitleText"
                                    Text="Сообщение"
-                                   Foreground="{StaticResource AdminTextPrimary}"
+                                   Foreground="{DynamicResource DictTextPrimary}"
                                    FontSize="12"
                                    FontWeight="SemiBold"/>
                     </StackPanel>
@@ -138,7 +137,7 @@
                             Margin="0,0,8,0"
                             Background="Transparent"
                             BorderThickness="0"
-                            Foreground="{StaticResource AdminTextSecondary}"
+                            Foreground="{DynamicResource DictTextSecondary}"
                             Cursor="Hand"
                             Click="CloseButton_Click">
                         <Button.Template>
@@ -171,12 +170,12 @@
                         CornerRadius="21"
                         x:Name="IconBackground"
                         Background="#233652"
-                        BorderBrush="{StaticResource AdminBorder}"
+                        BorderBrush="{DynamicResource DictAccent}"
                         BorderThickness="1"
                         VerticalAlignment="Top">
                     <TextBlock x:Name="IconText"
                                Text="!"
-                               Foreground="{StaticResource AdminWarning}"
+                               Foreground="{DynamicResource DictChat}"
                                FontSize="22"
                                FontWeight="Bold"
                                HorizontalAlignment="Center"
@@ -186,13 +185,13 @@
                 <StackPanel Grid.Column="2">
                     <TextBlock x:Name="CaptionText"
                                Text="Требуется подтверждение"
-                               Foreground="{StaticResource AdminTextPrimary}"
+                               Foreground="{DynamicResource DictTextPrimary}"
                                FontSize="15"
                                FontWeight="SemiBold"
                                TextWrapping="Wrap"/>
                     <TextBlock x:Name="MessageText"
                                Margin="0,10,0,0"
-                               Foreground="{StaticResource AdminTextSecondary}"
+                               Foreground="{DynamicResource DictTextSecondary}"
                                FontSize="13"
                                TextWrapping="Wrap"/>
                 </StackPanel>
@@ -203,12 +202,12 @@
                         HorizontalAlignment="Right"
                         Margin="18,0,18,18">
                 <Button x:Name="CancelButton"
-                        Style="{StaticResource SecondaryDialogButtonStyle}"
+                        Style="{DynamicResource SecondaryDialogButtonStyle}"
                         Margin="0,0,10,0"
                         Content="Отмена"
                         Click="CancelButton_Click"/>
                 <Button x:Name="OkButton"
-                        Style="{StaticResource DialogButtonStyle}"
+                        Style="{DynamicResource DialogButtonStyle}"
                         Content="OK"
                         Click="OkButton_Click"/>
             </StackPanel>
