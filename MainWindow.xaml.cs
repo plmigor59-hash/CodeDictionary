@@ -14,6 +14,7 @@ using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Input;
 using System.Xml;
 using System.Windows.Controls.Primitives;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
@@ -31,6 +32,8 @@ public partial class MainWindow : Window
     private CodeEntry? _currentEntry;
     private bool _isInitialized;
     private string _selectedCategoryPath = string.Empty;
+    private object? _draggedTreeItem;
+    private Point _dragStartPoint;
     private AppTheme _currentTheme;
     private AppState _appState;
     private IHighlightingDefinition? _darkCSharpHighlighting;
@@ -1063,6 +1066,147 @@ public partial class MainWindow : Window
         }
     }
 
+    private void EntriesTreeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var treeViewItem = FindParent<TreeViewItem>(e.OriginalSource as DependencyObject);
+        _draggedTreeItem = treeViewItem?.DataContext;
+        _dragStartPoint = e.GetPosition(null);
+    }
+
+    private void EntriesTreeView_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || _draggedTreeItem == null)
+        {
+            return;
+        }
+
+        var currentPosition = e.GetPosition(null);
+        var delta = _dragStartPoint - currentPosition;
+        if (Math.Abs(delta.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(delta.Y) < SystemParameters.MinimumVerticalDragDistance)
+        {
+            return;
+        }
+
+        DragDrop.DoDragDrop(EntriesTreeView, new DataObject("CodeDictionaryTreeItem", _draggedTreeItem), DragDropEffects.Move);
+        _draggedTreeItem = null;
+    }
+
+    private void EntriesTreeView_DragOver(object sender, DragEventArgs e)
+    {
+        if (!TryGetDraggedItem(e, out var draggedItem))
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+
+        var targetItem = GetItemUnderMouse(e.OriginalSource as DependencyObject);
+        if (!TryGetDropTarget(targetItem, draggedItem, out _))
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+
+        e.Effects = DragDropEffects.Move;
+        e.Handled = true;
+    }
+
+    private async void EntriesTreeView_Drop(object sender, DragEventArgs e)
+    {
+        if (!TryGetDraggedItem(e, out var draggedItem))
+        {
+            return;
+        }
+
+        var targetItem = GetItemUnderMouse(e.OriginalSource as DependencyObject);
+        if (!TryGetDropTarget(targetItem, draggedItem, out var destinationPath))
+        {
+            return;
+        }
+
+        if (draggedItem is CategoryNode sourceCategory)
+        {
+            var destinationName = GetCategorySegmentName(sourceCategory.FullPath);
+            await MoveCategoryAsync(sourceCategory.FullPath, destinationPath, destinationName);
+            return;
+        }
+
+        if (draggedItem is CodeEntryViewModel sourceEntry)
+        {
+            await MoveEntryAsync(sourceEntry, destinationPath);
+        }
+    }
+
+    private static bool TryGetDraggedItem(DragEventArgs e, out object? draggedItem)
+    {
+        draggedItem = null;
+        if (!e.Data.GetDataPresent("CodeDictionaryTreeItem"))
+        {
+            return false;
+        }
+
+        draggedItem = e.Data.GetData("CodeDictionaryTreeItem");
+        return draggedItem != null;
+    }
+
+    private object? GetItemUnderMouse(DependencyObject? origin)
+    {
+        var treeViewItem = FindParent<TreeViewItem>(origin);
+        return treeViewItem?.DataContext;
+    }
+
+    private bool TryGetDropTarget(object? targetItem, object draggedItem, out string destinationPath)
+    {
+        destinationPath = string.Empty;
+
+        if (targetItem is CategoryNode targetCategory)
+        {
+            destinationPath = targetCategory.FullPath;
+        }
+        else if (targetItem is CodeEntryViewModel targetEntry)
+        {
+            destinationPath = NormalizeCategoryPath(targetEntry.Entry.Category);
+        }
+        else
+        {
+            destinationPath = string.Empty;
+        }
+
+        if (draggedItem is CategoryNode draggedCategory)
+        {
+            var draggedPath = NormalizeCategoryPath(draggedCategory.FullPath);
+            if (string.IsNullOrWhiteSpace(draggedPath))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(destinationPath) &&
+                IsPathWithin(destinationPath, draggedPath))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static T? FindParent<T>(DependencyObject? child) where T : DependencyObject
+    {
+        while (child != null)
+        {
+            if (child is T parent)
+            {
+                return parent;
+            }
+
+            child = VisualTreeHelper.GetParent(child);
+        }
+
+        return null;
+    }
+
     private void LoadEntryToForm(CodeEntry entry)
     {
         TitleTextBox.Text = entry.Title;
@@ -1098,6 +1242,54 @@ public partial class MainWindow : Window
 
         ClearSearch();
         TitleTextBox.Focus();
+    }
+
+    private void ClearEditingForm()
+    {
+        TitleTextBox.Text = string.Empty;
+        DescriptionTextBox.Text = string.Empty;
+        CodeTextBox.Text = string.Empty;
+        CategoryComboBox.Text = string.Empty;
+        TagsTextBox.Text = string.Empty;
+        _selectedCategoryPath = string.Empty;
+    }
+
+    private void NormalizeImportedData()
+    {
+        foreach (var entry in _data.Entries)
+        {
+            entry.Category = NormalizeCategoryPath(entry.Category);
+        }
+
+        var normalizedCategories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var category in _data.Categories)
+        {
+            var normalizedCategory = NormalizeCategoryPath(category);
+            if (string.IsNullOrWhiteSpace(normalizedCategory))
+            {
+                continue;
+            }
+
+            foreach (var ancestor in EnumerateCategoryAncestors(normalizedCategory))
+            {
+                normalizedCategories.Add(ancestor);
+            }
+        }
+
+        foreach (var entry in _data.Entries)
+        {
+            if (!string.IsNullOrWhiteSpace(entry.Category))
+            {
+                foreach (var ancestor in EnumerateCategoryAncestors(entry.Category))
+                {
+                    normalizedCategories.Add(ancestor);
+                }
+            }
+        }
+
+        _data.Categories = normalizedCategories
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
 
@@ -1508,6 +1700,89 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void ExportData_Click(object sender, RoutedEventArgs e)
+    {
+        var saveFileDialog = new SaveFileDialog
+        {
+            Title = "Экспорт базы",
+            Filter = "JSON (*.json)|*.json|XML (*.xml)|*.xml",
+            FilterIndex = 1,
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+        };
+
+        if (saveFileDialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var exportPath = EnsureExportExtension(saveFileDialog.FileName, saveFileDialog.FilterIndex);
+        try
+        {
+            await _dataService.ExportDataAsync(_data, exportPath);
+            _snackbar.Show(CodeTextBox, $"База экспортирована в '{Path.GetFileName(exportPath)}'", NotificationType.Success, 1.5);
+        }
+        catch (Exception ex)
+        {
+            ShowAlert($"Ошибка экспорта: {ex.Message}", isError: true);
+        }
+    }
+
+    private async void ImportData_Click(object sender, RoutedEventArgs e)
+    {
+        var openFileDialog = new OpenFileDialog
+        {
+            Title = "Импорт базы",
+            Filter = "JSON (*.json)|*.json|XML (*.xml)|*.xml",
+            FilterIndex = 1,
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+        };
+
+        if (openFileDialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var result = MessageBox.Show(
+            "Импорт заменит текущую базу данных. Продолжить?",
+            "Подтверждение импорта",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
+            var importedData = await _dataService.ImportDataAsync(openFileDialog.FileName);
+            _data = importedData ?? new CodeDictionaryData();
+            NormalizeImportedData();
+            await _dataService.SaveDataAsync(_data);
+
+            _currentEntry = null;
+            _selectedCategoryPath = string.Empty;
+            ClearEditingForm();
+            RefreshEntriesList();
+            _snackbar.Show(CodeTextBox, $"База импортирована из '{Path.GetFileName(openFileDialog.FileName)}'", NotificationType.Success, 1.5);
+        }
+        catch (Exception ex)
+        {
+            ShowAlert($"Ошибка импорта: {ex.Message}", isError: true);
+        }
+    }
+
+    private static string EnsureExportExtension(string fileName, int filterIndex)
+    {
+        var extension = Path.GetExtension(fileName);
+        if (!string.IsNullOrWhiteSpace(extension))
+        {
+            return fileName;
+        }
+
+        return filterIndex == 2 ? $"{fileName}.xml" : $"{fileName}.json";
+    }
+
     private List<string> GetKnownCategoryPaths()
     {
         return _data.Categories
@@ -1710,13 +1985,10 @@ public partial class MainWindow : Window
 
     private async Task AddCategoryAsync(string parentPath)
     {
-        var dialog = new CategoryInputDialog
-        {
-            Owner = this,
-            Title = string.IsNullOrWhiteSpace(parentPath)
-                ? "Новая категория"
-                : $"Новая категория внутри '{parentPath}'"
-        };
+        var dialog = new CategoryInputDialog(
+            string.IsNullOrWhiteSpace(parentPath) ? "Новая категория" : $"Новая категория внутри '{parentPath}'",
+            "Введите название категории:");
+        dialog.Owner = this;
 
         if (dialog.ShowDialog() != true)
         {
@@ -1749,6 +2021,232 @@ public partial class MainWindow : Window
         await _dataService.SaveDataAsync(_data);
         RefreshEntriesList();
         _snackbar.Show(CodeTextBox, $"Категория '{newCategoryPath}' добавлена", NotificationType.Success, 1.5);
+    }
+
+    private async void RenameCategory_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem menuItem || menuItem.Tag is not CategoryNode categoryNode)
+        {
+            return;
+        }
+
+        await RenameCategoryAsync(categoryNode);
+    }
+
+    private async Task RenameCategoryAsync(CategoryNode categoryNode)
+    {
+        var currentPath = NormalizeCategoryPath(categoryNode.FullPath);
+        if (string.IsNullOrWhiteSpace(currentPath))
+        {
+            return;
+        }
+
+        var dialog = new CategoryInputDialog(
+            "Переименовать категорию",
+            $"Новое имя для '{currentPath}':",
+            GetCategorySegmentName(currentPath));
+        dialog.Owner = this;
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var newName = NormalizeCategoryPath(dialog.CategoryName);
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            return;
+        }
+
+        if (newName.Contains(CategorySeparator, StringComparison.Ordinal))
+        {
+            ShowAlert($"Имя категории не должно содержать '{CategorySeparator}'", isError: true);
+            return;
+        }
+
+        var parentPath = GetParentCategoryPath(currentPath);
+        var newPath = string.IsNullOrWhiteSpace(parentPath)
+            ? newName
+            : $"{parentPath}{CategorySeparator}{newName}";
+
+        await MoveCategoryAsync(currentPath, parentPath, newName);
+        _snackbar.Show(CodeTextBox, $"Категория переименована в '{newPath}'", NotificationType.Success, 1.5);
+    }
+
+    private async Task MoveCategoryAsync(string sourcePath, string destinationParentPath, string newName)
+    {
+        var normalizedSourcePath = NormalizeCategoryPath(sourcePath);
+        var normalizedDestinationParentPath = NormalizeCategoryPath(destinationParentPath);
+        var normalizedNewName = NormalizeCategoryPath(newName);
+
+        if (string.IsNullOrWhiteSpace(normalizedSourcePath) || string.IsNullOrWhiteSpace(normalizedNewName))
+        {
+            return;
+        }
+
+        var newPath = string.IsNullOrWhiteSpace(normalizedDestinationParentPath)
+            ? normalizedNewName
+            : $"{normalizedDestinationParentPath}{CategorySeparator}{normalizedNewName}";
+
+        if (string.Equals(normalizedSourcePath, newPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (newPath.StartsWith($"{normalizedSourcePath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase))
+        {
+            ShowAlert("Нельзя переместить категорию внутрь самой себя", isError: true);
+            return;
+        }
+
+        if (IsCategoryPathTakenByAnotherNode(normalizedSourcePath, newPath))
+        {
+            ShowAlert($"Категория '{newPath}' уже существует", isError: true);
+            return;
+        }
+
+        RemapCategoryPath(normalizedSourcePath, newPath);
+        await _dataService.SaveDataAsync(_data);
+        RefreshEntriesList();
+        RestoreSelectionAfterCategoryMove(normalizedSourcePath, newPath);
+    }
+
+    private async Task MoveEntryAsync(CodeEntryViewModel entryViewModel, string destinationCategoryPath)
+    {
+        var normalizedDestination = NormalizeCategoryPath(destinationCategoryPath);
+        var entry = entryViewModel.Entry;
+        var normalizedSource = NormalizeCategoryPath(entry.Category);
+
+        if (string.Equals(normalizedSource, normalizedDestination, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        entry.Category = normalizedDestination;
+        EnsureCategoryPathExists(normalizedDestination);
+        await _dataService.SaveDataAsync(_data);
+        RefreshEntriesList();
+        _currentEntry = entry;
+        LoadEntryToForm(entry);
+    }
+
+    private static bool IsPathWithin(string path, string parentPath)
+    {
+        var normalizedPath = NormalizeCategoryPath(path);
+        var normalizedParentPath = NormalizeCategoryPath(parentPath);
+
+        if (string.IsNullOrWhiteSpace(normalizedParentPath))
+        {
+            return false;
+        }
+
+        return string.Equals(normalizedPath, normalizedParentPath, StringComparison.OrdinalIgnoreCase) ||
+               normalizedPath.StartsWith($"{normalizedParentPath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsCategoryPathTakenByAnotherNode(string sourcePath, string newPath)
+    {
+        return _data.Categories.Any(existing =>
+        {
+            var normalizedExisting = NormalizeCategoryPath(existing);
+            if (string.IsNullOrWhiteSpace(normalizedExisting))
+            {
+                return false;
+            }
+
+            if (IsPathWithin(normalizedExisting, sourcePath))
+            {
+                return false;
+            }
+
+            return string.Equals(normalizedExisting, newPath, StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    private void RemapCategoryPath(string sourcePath, string newPath)
+    {
+        var updatedCategoryPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var existing in _data.Categories)
+        {
+            var normalizedExisting = NormalizeCategoryPath(existing);
+            if (IsPathWithin(normalizedExisting, sourcePath))
+            {
+                updatedCategoryPaths.Add(ReplaceCategoryPrefix(normalizedExisting, sourcePath, newPath));
+            }
+            else if (!string.IsNullOrWhiteSpace(normalizedExisting))
+            {
+                updatedCategoryPaths.Add(normalizedExisting);
+            }
+        }
+
+        foreach (var entry in _data.Entries)
+        {
+            var normalizedEntryCategory = NormalizeCategoryPath(entry.Category);
+            if (IsPathWithin(normalizedEntryCategory, sourcePath))
+            {
+                entry.Category = ReplaceCategoryPrefix(normalizedEntryCategory, sourcePath, newPath);
+            }
+        }
+
+        _data.Categories = updatedCategoryPaths
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (_currentEntry != null)
+        {
+            _currentEntry.Category = IsPathWithin(_currentEntry.Category, sourcePath)
+                ? ReplaceCategoryPrefix(_currentEntry.Category, sourcePath, newPath)
+                : NormalizeCategoryPath(_currentEntry.Category);
+        }
+
+        if (IsPathWithin(_selectedCategoryPath, sourcePath))
+        {
+            _selectedCategoryPath = ReplaceCategoryPrefix(_selectedCategoryPath, sourcePath, newPath);
+            CategoryComboBox.Text = _selectedCategoryPath;
+        }
+    }
+
+    private static string ReplaceCategoryPrefix(string path, string sourcePath, string newPath)
+    {
+        var normalizedPath = NormalizeCategoryPath(path);
+        var normalizedSource = NormalizeCategoryPath(sourcePath);
+        var normalizedNew = NormalizeCategoryPath(newPath);
+
+        if (string.IsNullOrWhiteSpace(normalizedSource))
+        {
+            return normalizedPath;
+        }
+
+        if (string.Equals(normalizedPath, normalizedSource, StringComparison.OrdinalIgnoreCase))
+        {
+            return normalizedNew;
+        }
+
+        var suffix = normalizedPath.Substring(normalizedSource.Length);
+        if (suffix.StartsWith(CategorySeparator, StringComparison.Ordinal))
+        {
+            suffix = suffix.Substring(CategorySeparator.Length);
+        }
+
+        return string.IsNullOrWhiteSpace(suffix)
+            ? normalizedNew
+            : $"{normalizedNew}{CategorySeparator}{suffix}";
+    }
+
+    private void RestoreSelectionAfterCategoryMove(string oldPath, string newPath)
+    {
+        if (string.Equals(_selectedCategoryPath, oldPath, StringComparison.OrdinalIgnoreCase) ||
+            _selectedCategoryPath.StartsWith($"{oldPath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase))
+        {
+            _selectedCategoryPath = ReplaceCategoryPrefix(_selectedCategoryPath, oldPath, newPath);
+            CategoryComboBox.Text = _selectedCategoryPath;
+        }
+
+        if (_currentEntry != null && IsPathWithin(_currentEntry.Category, oldPath))
+        {
+            LoadEntryToForm(_currentEntry);
+        }
     }
 
     private async void DeleteCategory_Click(object sender, RoutedEventArgs e)

@@ -474,6 +474,11 @@
                 <TreeView x:Name="EntriesTreeView"
                       Grid.Row="3"
                       SelectedItemChanged="EntriesTreeView_SelectedItemChanged"
+                      PreviewMouseLeftButtonDown="EntriesTreeView_PreviewMouseLeftButtonDown"
+                      PreviewMouseMove="EntriesTreeView_PreviewMouseMove"
+                      AllowDrop="True"
+                      DragOver="EntriesTreeView_DragOver"
+                      Drop="EntriesTreeView_Drop"
                       Margin="10,0,10,10"
                       Background="{DynamicResource DarkBackground}"
                       Foreground="#CCCCCC"
@@ -503,7 +508,13 @@
                                     <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                         <MenuItem Header="Добавить подкатегорию"
                                                   Click="AddCategoryChild_Click"
-                                                  Tag="{Binding}">
+                                                  Tag="{Binding}"
+                                                  IsEnabled="{Binding CanDelete}">
+                                        </MenuItem>
+                                        <MenuItem Header="Переименовать"
+                                                  Click="RenameCategory_Click"
+                                                  Tag="{Binding}"
+                                                  IsEnabled="{Binding CanDelete}">
                                         </MenuItem>
                                         <MenuItem Header="Удалить категорию"
                                                   Click="DeleteCategory_Click"
@@ -795,6 +806,8 @@
                             <Button Click="SelectAllMenuItem_Click" Content="🔲" Width="30" Margin="2" ToolTip="Выделить все" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="OpenFile_Click" Content="📂" Width="30" Margin="2" ToolTip="Открыть..." Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить ..." Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Click="ExportData_Click" Content="⇧" Width="30" Margin="2" ToolTip="Экспорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Click="ImportData_Click" Content="⇩" Width="30" Margin="2" ToolTip="Импорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
 
                             <Button Content="🖌️" ToolTip="Изменить фон"  Width="30" Margin="2" Click="ChangeBackground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Content="🎨" ToolTip="Изменить цвет текста"  Width="30" Margin="2" Click="ChangeForeground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
