@@ -57,6 +57,11 @@ public partial class MainWindow : Window
       
 
         InitializeComponent();
+        if (SyntaxHighlightingComboBox != null)
+        {
+            SyntaxHighlightingComboBox.SelectionChanged -= SyntaxHighlightingComboBox_SelectionChanged;
+            SyntaxHighlightingComboBox.SelectionChanged += SyntaxHighlightingComboBox_SelectionChanged_Forwarder;
+        }
         _dataService = new DataService();
         _data = new CodeDictionaryData();
         _filteredEntries = new List<CodeEntry>();
@@ -745,6 +750,221 @@ public partial class MainWindow : Window
 
         UpdateCodeEditorColors(selected);
     }
+
+    private void SyntaxHighlightingComboBox_SelectionChanged_Forwarder(object sender, SelectionChangedEventArgs e)
+    {
+        ApplySyntaxHighlighting(SyntaxHighlightingComboBox?.SelectedItem?.ToString());
+    }
+
+    private void ApplySyntaxHighlighting(string? selected)
+    {
+        if (CodeTextBox == null || string.IsNullOrWhiteSpace(selected)) return;
+
+        if (selected == "РўРµРјРЅР°СЏ РЎ#")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
+        }
+        else if (selected == "РЎРІРµС‚Р»Р°СЏ РЎ#")
+        {
+            CodeTextBox.SyntaxHighlighting = _lightCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
+        }
+        else if (selected == "РўРµРјРЅР°СЏ C++")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
+        }
+        else if (selected == "РЎРІРµС‚Р»Р°СЏ C++")
+        {
+            CodeTextBox.SyntaxHighlighting = _lightCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (C++)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C++");
+        }
+        else if (selected == "РўРµРјРЅР°СЏ (1C)")
+        {
+            CodeTextBox.SyntaxHighlighting = _dark1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
+        }
+        else if (selected == "РўРµРјРЅР°СЏ (XML)")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkXMLHigh ?? HighlightingManager.Instance.GetDefinition("XML");
+        }
+        else if (selected == "РўРµРјРЅР°СЏ (HTML)")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkHTMLHigh ?? HighlightingManager.Instance.GetDefinition("HTML Dark");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (1C)")
+        {
+            CodeTextBox.SyntaxHighlighting = _standart1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (Java)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Java");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (JavaScript)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (HTML)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("HTML");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (XML)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("XML");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (CSS)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("CSS");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (PHP)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("PHP");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (PowerShell)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("PowerShell");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (SQL)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("SQL");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (VB)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("VB");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (ASP/XHTML)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("ASP/XHTML");
+        }
+        else if (selected == "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (Patch)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Patch");
+        }
+        else
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
+        }
+
+        UpdateCodeEditorColors(selected);
+    }
+
+    private async void OpenXshdEditor_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var syntaxSelection = SyntaxHighlightingComboBox?.SelectedItem?.ToString();
+            var editorFilePath = ResolveXshdEditorPath(syntaxSelection);
+
+            if (string.IsNullOrWhiteSpace(editorFilePath))
+            {
+                var openDialog = new OpenFileDialog
+                {
+                    Title = "Выберите XSHD файл",
+                    Filter = "XSHD files (*.xshd)|*.xshd|All files (*.*)|*.*",
+                    InitialDirectory = AppDomain.CurrentDomain.BaseDirectory
+                };
+
+                if (openDialog.ShowDialog() != true)
+                {
+                    return;
+                }
+
+                editorFilePath = openDialog.FileName;
+            }
+
+            var editorWindow = new global::XshdEditor.XshdEditorWindow(editorFilePath)
+            {
+                Owner = this
+            };
+
+            editorWindow.ShowDialog();
+            LoadCustomHighlighting();
+            ApplySyntaxHighlighting(SyntaxHighlightingComboBox?.SelectedItem?.ToString());
+#pragma warning disable 0162
+            return;
+
+            var selectedSyntax = SyntaxHighlightingComboBox?.SelectedItem?.ToString();
+            var filePath = ResolveXshdEditorPath(selectedSyntax);
+
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                var openDialog = new OpenFileDialog
+                {
+                    Title = "Выберите XSHD файл",
+                    Filter = "XSHD files (*.xshd)|*.xshd|All files (*.*)|*.*",
+                    InitialDirectory = AppDomain.CurrentDomain.BaseDirectory
+                };
+
+                if (openDialog.ShowDialog() != true)
+                {
+                    return;
+                }
+
+                filePath = openDialog.FileName;
+            }
+
+            var editorExePath = FindXshdEditorExecutablePath();
+            if (string.IsNullOrWhiteSpace(editorExePath) || !File.Exists(editorExePath))
+            {
+                ShowAlert("Не найден XshdEditor.exe. Сначала соберите проект XshdEditor.", true);
+                return;
+            }
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = editorExePath,
+                Arguments = $"\"{filePath}\"",
+                UseShellExecute = false
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process == null)
+            {
+                ShowAlert("Не удалось запустить XshdEditor.", true);
+                return;
+            }
+
+            await process.WaitForExitAsync();
+            LoadCustomHighlighting();
+            ApplySyntaxHighlighting(SyntaxHighlightingComboBox?.SelectedItem?.ToString());
+        }
+        catch (Exception ex)
+        {
+            ShowAlert($"Не удалось открыть XSHD-редактор: {ex.Message}", true);
+        }
+    }
+
+    private static string? FindXshdEditorExecutablePath()
+    {
+        var candidates = new[]
+        {
+            Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "XshdEditor", "bin", "Debug", "net10.0-windows", "XshdEditor.exe")),
+            Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "XshdEditor", "bin", "Release", "net10.0-windows", "XshdEditor.exe")),
+            Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "XshdEditor", "bin", "Debug", "net10.0-windows", "win-x64", "XshdEditor.exe")),
+            Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "XshdEditor", "bin", "Release", "net10.0-windows", "win-x64", "XshdEditor.exe"))
+        };
+
+        return candidates.FirstOrDefault(File.Exists);
+    }
+
+    private static string? ResolveXshdEditorPath(string? selectedSyntax)
+    {
+        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+
+        return selectedSyntax switch
+        {
+            "РўРµРјРЅР°СЏ (1C)" => Path.Combine(baseDir, "Dark1C.xshd"),
+            "РўРµРјРЅР°СЏ РЎ#" => Path.Combine(baseDir, "DarkCSharp.xshd"),
+            "РўРµРјРЅР°СЏ C++" => Path.Combine(baseDir, "DarkCpp.xshd"),
+            "РЎРІРµС‚Р»Р°СЏ РЎ#" => Path.Combine(baseDir, "LightCSharp.xshd"),
+            "РЎРІРµС‚Р»Р°СЏ C++" => Path.Combine(baseDir, "LightCpp.xshd"),
+            "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (1C)" => Path.Combine(baseDir, "Standart1C.xshd"),
+            "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (XML)" => Path.Combine(baseDir, "DarkXML.xshd"),
+            "РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ (HTML)" => Path.Combine(baseDir, "DarkHTML.xshd"),
+            _ => null
+        };
+    }
+#pragma warning restore 0162
 
     private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {

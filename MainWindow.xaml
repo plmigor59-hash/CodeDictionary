@@ -793,6 +793,14 @@
                                Width="160"
                                FontSize="12"
                                Style="{StaticResource ComboBoxStyle}" Height="22"/>
+                        <Button Content="XSHD"
+                                Click="OpenXshdEditor_Click"
+                                Width="58"
+                                Height="22"
+                                Margin="8,0,0,0"
+                                FontSize="11"
+                                ToolTip="Открыть визуальный редактор XSHD"
+                                Style="{StaticResource TitleBarButtonStyle}"/>
                     </StackPanel>
 
                     <!-- Панель кнопок -->

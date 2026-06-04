@@ -1,0 +1,111 @@
+<Window x:Class="XshdEditor.XshdEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:xctk="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
+        Title="Редактор XSHD - Настройка подсветки синтаксиса"
+        Width="800" Height="600"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#F0F0F0" Padding="10" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Имя:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0"/>
+                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                         Grid.Row="0" Grid.Column="1" Margin="5"/>
+
+                <TextBlock Text="Расширения:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="2"/>
+                <TextBox Text="{Binding Extensions, UpdateSourceTrigger=PropertyChanged}"
+                         Grid.Row="0" Grid.Column="3" Margin="5"
+                         ToolTip="Например: .xml,.xaml,.html"/>
+            </Grid>
+        </Border>
+
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Colors}"
+                  AutoGenerateColumns="False"
+                  SelectionMode="Single"
+                  CanUserAddRows="True"
+                  CanUserDeleteRows="True">
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="120"/>
+
+                <DataGridTemplateColumn Header="Цвет текста" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Rectangle Width="40" Height="20">
+                                <Rectangle.Fill>
+                                    <SolidColorBrush Color="{Binding ForegroundColor}" />
+                                </Rectangle.Fill>
+                            </Rectangle>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <xctk:ColorPicker SelectedColor="{Binding ForegroundColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Цвет фона" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Rectangle Width="40" Height="20" Margin="5">
+                                <Rectangle.Fill>
+                                    <SolidColorBrush Color="{Binding BackgroundColor}"/>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <xctk:ColorPicker SelectedColor="{Binding BackgroundColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="Пример" Binding="{Binding ExampleText}" Width="200"/>
+
+                <DataGridTemplateColumn Header="Действия" Width="80">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Preview" Click="PreviewColor_Click"
+                                        Tag="{Binding}" Margin="2"/>
+                                <Button Content="Delete" Click="DeleteColor_Click"
+                                        Tag="{Binding}" Margin="2"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Предпросмотр" Click="Preview_Click"
+                    Width="100" Margin="5" Padding="5"/>
+            <Button Content="Сохранить" Click="Save_Click"
+                    Width="100" Margin="5" Padding="5" Background="LightGreen"/>
+            <Button Content="Отмена" Click="Cancel_Click"
+                    Width="100" Margin="5" Padding="5"/>
+        </StackPanel>
+    </Grid>
+</Window>
