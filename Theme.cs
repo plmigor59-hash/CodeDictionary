@@ -8,6 +8,8 @@ public enum AppTheme
 
 public static class Theme
 {
+    public static AppTheme CurrentTheme { get; set; } = AppTheme.Dark;
+
     public static class Dark
     {
         public const string Background = "#060606";

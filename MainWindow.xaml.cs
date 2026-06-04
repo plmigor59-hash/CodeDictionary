@@ -816,6 +816,7 @@ public partial class MainWindow : Window
     private void ApplyTheme(AppTheme theme)
     {
         _currentTheme = theme;
+        Theme.CurrentTheme = theme;
 
         if (theme == AppTheme.Dark)
         {

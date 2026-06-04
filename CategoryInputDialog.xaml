@@ -5,13 +5,103 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Новая категория"
-        Height="180"
+        WindowStyle="None"
+        Height="166"
         Width="420"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        WindowStyle="ToolWindow"
-        Background="#1E1E1E">
-    <Grid Margin="16">
+        AllowsTransparency="True"
+        Background="Transparent">
+
+    <Window.Resources>
+
+        <SolidColorBrush x:Key="DictSurface" Color="#202A38"/>
+        <SolidColorBrush x:Key="DictSurfaceStrong" Color="#273447"/>
+        <SolidColorBrush x:Key="DictBorder" Color="#36465E"/>
+        <SolidColorBrush x:Key="DictCardBackground" Color="#202A38"/>
+        <SolidColorBrush x:Key="DictTitleBackground" Color="#A51A2534"/>
+        <SolidColorBrush x:Key="DictStatusBackground" Color="#132f4b"/>
+        <SolidColorBrush x:Key="DictAccent" Color="#5BA5FF"/>
+        <SolidColorBrush x:Key="DictTextPrimary" Color="#EDF2F7"/>
+        <SolidColorBrush x:Key="DictTextSecondary" Color="#A7B3C5"/>
+        <SolidColorBrush x:Key="DictSuccess" Color="#4ADE80"/>
+        <SolidColorBrush x:Key="DictChat" Color="#FFD700"/>
+        <SolidColorBrush x:Key="DarkBackground" Color="#1E1E1E"/>
+
+
+        <Style x:Key="DialogButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource DictAccent}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#8BC3FF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="16,9"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="MinWidth" Value="104"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="9"
+                            RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform x:Name="ButtonScale" ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <EventTrigger RoutedEvent="MouseEnter">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ButtonScale" Storyboard.TargetProperty="ScaleX" To="1.02" Duration="0:0:0.12"/>
+                                        <DoubleAnimation Storyboard.TargetName="ButtonScale" Storyboard.TargetProperty="ScaleY" To="1.02" Duration="0:0:0.12"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                            <EventTrigger RoutedEvent="MouseLeave">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ButtonScale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.12"/>
+                                        <DoubleAnimation Storyboard.TargetName="ButtonScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.12"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#3F90EB"/>
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#B9DBFF"/>
+                                <Setter Property="Foreground" Value="#0B223C"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#2E79CF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryDialogButtonStyle" TargetType="Button" BasedOn="{StaticResource DialogButtonStyle}">
+            <Setter Property="Background" Value="{DynamicResource DictSurfaceStrong}"/>
+            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DictBorder}"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Margin="10"
+        Background="{DynamicResource DictSurface}"
+        CornerRadius="14"
+        BorderBrush="{DynamicResource DictBorder}"
+        BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="28" ShadowDepth="0" Opacity="0.35" Color="#1A000000"/>
+        </Border.Effect>
+
+
+        <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -42,11 +132,14 @@
                     Width="100"
                     Margin="0,0,8,0"
                     IsCancel="True"
-                    Click="Cancel_Click"/>
+                       Style="{DynamicResource SecondaryDialogButtonStyle}"
+                    Click="Cancel_Click" Height="22"/>
             <Button Content="ОК"
                     Width="100"
+                    Style="{DynamicResource DialogButtonStyle}"
                     IsDefault="True"
                     Click="Ok_Click"/>
         </StackPanel>
     </Grid>
+    </Border>
 </Window>

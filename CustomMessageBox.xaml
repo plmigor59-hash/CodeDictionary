@@ -169,7 +169,7 @@
                         Height="42"
                         CornerRadius="21"
                         x:Name="IconBackground"
-                        Background="#233652"
+                        Background="{DynamicResource DictIconBackground}"
                         BorderBrush="{DynamicResource DictAccent}"
                         BorderThickness="1"
                         VerticalAlignment="Top">
@@ -209,7 +209,7 @@
                 <Button x:Name="OkButton"
                         Style="{DynamicResource DialogButtonStyle}"
                         Content="OK"
-                        Click="OkButton_Click"/>
+                        Click="OkButton_Click" Height="22"/>
             </StackPanel>
         </Grid>
     </Border>
