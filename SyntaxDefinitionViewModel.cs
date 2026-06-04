@@ -116,6 +116,11 @@ namespace XshdEditor
                 xshd.Elements.Add(xshdColor);
             }
 
+            // Ensure there is a main RuleSet named "Main" so HighlightingLoader can find it
+            // without this the loader may throw "Could not find main RuleSet." when opening the XSHD
+            var mainRuleSet = new XshdRuleSet { Name = "Main" };
+            xshd.Elements.Add(mainRuleSet);
+
             var settings = new XmlWriterSettings
             {
                 Indent = true,

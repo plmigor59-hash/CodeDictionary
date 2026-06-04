@@ -350,7 +350,7 @@
             </Setter>
         </Style>
 
-       
+
 
         <Style TargetType="Separator">
             <Setter Property="Background" Value="{DynamicResource DictCardBackground}"/>
@@ -468,7 +468,7 @@
                           Foreground="#000000"
                           BorderBrush="#555555"
                           Text=""/>
-                    
+
                 </StackPanel>
 
                 <TreeView x:Name="EntriesTreeView"
@@ -484,7 +484,7 @@
                       Foreground="#CCCCCC"
                       FontSize="14"
                       BorderBrush="{DynamicResource DictBorder}">
-                                        <TreeView.ContextMenu>
+                    <TreeView.ContextMenu>
                         <ContextMenu BorderThickness="1">
                             <MenuItem Header="Добавить корневую категорию" Click="AddCategoryRoot_Click">
                             </MenuItem>
@@ -495,14 +495,14 @@
 
                     <TreeView.Resources>
                         <!-- Шаблон для записи (конечный элемент) -->
-                                                <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
+                        <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
                             <StackPanel Orientation="Horizontal" Margin="2">
                                 <TextBlock Text="📄" Margin="0,0,5,0" Foreground="{DynamicResource DictAccent}"/>
                                 <TextBlock Text="{Binding Title}" Foreground="{DynamicResource DictTextPrimary}"/>
                             </StackPanel>
                         </DataTemplate>
                         <!-- Шаблон для категории (узел) -->
-                                                <HierarchicalDataTemplate DataType="{x:Type local:CategoryNode}" ItemsSource="{Binding Items}">
+                        <HierarchicalDataTemplate DataType="{x:Type local:CategoryNode}" ItemsSource="{Binding Items}">
                             <StackPanel Orientation="Horizontal" Margin="2">
                                 <StackPanel.ContextMenu>
                                     <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
@@ -538,7 +538,7 @@
                                 <TextBlock Text="{Binding CountString}" Margin="5,0,0,0" Foreground="{DynamicResource DictTextSecondary}" FontSize="11" VerticalAlignment="Center"/>
                             </StackPanel>
                         </HierarchicalDataTemplate>
-                        
+
                         <!-- Стиль для элементов дерева -->
                         <Style TargetType="TreeViewItem">
                             <Setter Property="IsExpanded" Value="True"/>
@@ -556,7 +556,7 @@
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="*"/>
                                             </Grid.RowDefinitions>
-                                            
+
                                             <!-- Кнопка раскрытия (стрелочка) -->
                                             <ToggleButton x:Name="Expander" 
                                                           ClickMode="Press" 
@@ -580,7 +580,7 @@
                                                     </ControlTemplate>
                                                 </ToggleButton.Template>
                                             </ToggleButton>
-                                            
+
                                             <!-- Содержимое элемента -->
                                             <Border x:Name="Bd" 
                                                     Grid.Column="1" 
@@ -593,7 +593,7 @@
                                                                   ContentSource="Header" 
                                                                   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
                                             </Border>
-                                            
+
                                             <!-- Дочерние элементы -->
                                             <ItemsPresenter x:Name="ItemsHost" 
                                                             Grid.Column="1" 
@@ -751,17 +751,17 @@
 
                     <!-- Шапка кода и панель управления шрифтом -->
                     <Grid Grid.Row="0" Margin="0,0,0,10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="Код:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC" FontSize="14"/>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Код:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC" FontSize="14"/>
 
-                    <!-- Панель управления шрифтом -->
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,5">
-                        <TextBlock Text="Шрифт:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#CCCCCC"/>
-                        <ComboBox x:Name="FontFamilyComboBox"
+                        <!-- Панель управления шрифтом -->
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,5">
+                            <TextBlock Text="Шрифт:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#CCCCCC"/>
+                            <ComboBox x:Name="FontFamilyComboBox"
                               SelectionChanged="FontFamilyComboBox_SelectionChanged"
                               Width="120"
                               Margin="0,0,10,0"
@@ -769,8 +769,8 @@
                               Style="{StaticResource ComboBoxStyle}" Height="22"
                              />
 
-                        <TextBlock Text="Размер:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#CCCCCC"/>
-                        <ComboBox x:Name="FontSizeComboBox"
+                            <TextBlock Text="Размер:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#CCCCCC"/>
+                            <ComboBox x:Name="FontSizeComboBox"
                               SelectionChanged="FontSizeComboBox_SelectionChanged"
                               Width="42"
                               Margin="0,0,10,0"
@@ -778,7 +778,7 @@
                               Style="{StaticResource ComboBoxStyle}" Height="22"
                              />
 
-                        <CheckBox x:Name="WordWrapCheckBox"
+                            <CheckBox x:Name="WordWrapCheckBox"
                               Content="Перенос строк"
                               Checked="WordWrapCheckBox_Changed"
                               Unchecked="WordWrapCheckBox_Changed"
@@ -787,13 +787,36 @@
                               Foreground="#CCCCCC"
                               Margin="10,0,0,0"/>
 
-                        <TextBlock Text="Синтаксис:" VerticalAlignment="Center" Margin="15,0,5,0" Foreground="#CCCCCC"/>
-                        <ComboBox x:Name="SyntaxHighlightingComboBox"
+                            <TextBlock Text="Синтаксис:" VerticalAlignment="Center" Margin="15,0,5,0" Foreground="#CCCCCC"/>
+                            <ComboBox x:Name="SyntaxHighlightingComboBox"
                                SelectionChanged="SyntaxHighlightingComboBox_SelectionChanged"
+                               SelectedValuePath="Tag"
                                Width="160"
                                FontSize="12"
-                               Style="{StaticResource ComboBoxStyle}" Height="22"/>
-                        <Button Content="XSHD"
+                               Style="{StaticResource ComboBoxStyle}" Height="22">
+                                <ComboBoxItem Tag="Dark1C">Темная (1C)</ComboBoxItem>
+                                <ComboBoxItem Tag="DarkCSharp">Темная С#</ComboBoxItem>
+                                <ComboBoxItem Tag="DarkCpp">Темная C++</ComboBoxItem>
+                                <ComboBoxItem Tag="DarkXML">Темная (XML)</ComboBoxItem>
+                                <ComboBoxItem Tag="DarkHTML">Темная (HTML)</ComboBoxItem>
+                                <ComboBoxItem Tag="LightCSharp">Светлая С#</ComboBoxItem>
+                                <ComboBoxItem Tag="LightCpp">Светлая C++</ComboBoxItem>
+                                <ComboBoxItem Tag="Standart1C">Стандартная (1C)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartCSharp">Стандартная (C#)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartCpp">Стандартная (C++)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartJava">Стандартная (Java)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartJS">Стандартная (JavaScript)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartHTML">Стандартная (HTML)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartXML">Стандартная (XML)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartCSS">Стандартная (CSS)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartPHP">Стандартная (PHP)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartPS">Стандартная (PowerShell)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartSQL">Стандартная (SQL)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartVB">Стандартная (VB)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartASP">Стандартная (ASP/XHTML)</ComboBoxItem>
+                                <ComboBoxItem Tag="StandartPatch">Стандартная (Patch)</ComboBoxItem>
+                            </ComboBox>
+                            <Button Content="XSHD"
                                 Click="OpenXshdEditor_Click"
                                 Width="58"
                                 Height="22"
@@ -801,40 +824,44 @@
                                 FontSize="11"
                                 ToolTip="Открыть визуальный редактор XSHD"
                                 Style="{StaticResource TitleBarButtonStyle}"/>
-                    </StackPanel>
-
-                    <!-- Панель кнопок -->
-                    <Grid Grid.Row="2" Margin="0,0,0,5">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
-                            <Button Click="UndoMenuItem_Click" Content="↩️" Width="30" Margin="2" ToolTip="Отменить" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="RedoMenuItem_Click" Content="↪️" Width="30" Margin="2" ToolTip="Повторить" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="CutMenuItem_Click" Content="✂️" Width="30" Margin="2" ToolTip="Вырезать" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="CopyMenuItem_Click" Content="📋" Width="30" Margin="2" ToolTip="Копировать" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="PasteMenuItem_Click" Content="📄" Width="30" Margin="2" ToolTip="Вставить" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="SelectAllMenuItem_Click" Content="🔲" Width="30" Margin="2" ToolTip="Выделить все" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="OpenFile_Click" Content="📂" Width="30" Margin="2" ToolTip="Открыть..." Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить ..." Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="ExportData_Click" Content="⇧" Width="30" Margin="2" ToolTip="Экспорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="ImportData_Click" Content="⇩" Width="30" Margin="2" ToolTip="Импорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="ExportSelectedCategory_Click" Content="🗂" Width="30" Margin="2" ToolTip="Экспорт выбранной категории" Style="{StaticResource TitleBarButtonStyle}"/>
-
-                            <Button Content="🖌️" ToolTip="Изменить фон"  Width="30" Margin="2" Click="ChangeBackground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="🎨" ToolTip="Изменить цвет текста"  Width="30" Margin="2" Click="ChangeForeground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="𝐁" FontWeight="Bold" ToolTip="Жирный" Width="30" Margin="2" Click="MakeBold_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="𝐼" FontStyle="Italic" ToolTip="Курсив" Width="30" Margin="2" Click="MakeItalic_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="U" ToolTip="Подчёркнутый" Width="30" Margin="2" Click="MakeUnderline_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="❌" ToolTip="Очистить стиль" Width="30" Margin="2" Click="ClearStyle_Click" Style="{StaticResource TitleBarButtonStyle}"/>
                         </StackPanel>
 
-                        <!-- Панель поиска -->
-                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0" >
+                        <!-- Панель кнопок -->
+                        <Grid Grid.Row="2" Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="149*"/>
+                                <ColumnDefinition Width="32*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5" Grid.ColumnSpan="2">
+                                <Button Click="UndoMenuItem_Click" Content="↩️" Width="30" Margin="2" ToolTip="Отменить" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="RedoMenuItem_Click" Content="↪️" Width="30" Margin="2" ToolTip="Повторить" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="CutMenuItem_Click" Content="✂️" Width="30" Margin="2" ToolTip="Вырезать" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="CopyMenuItem_Click" Content="📋" Width="30" Margin="2" ToolTip="Копировать" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="PasteMenuItem_Click" Content="📄" Width="30" Margin="2" ToolTip="Вставить" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="SelectAllMenuItem_Click" Content="🔲" Width="30" Margin="2" ToolTip="Выделить все" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="OpenFile_Click" Content="📂" Width="30" Margin="2" ToolTip="Открыть..." Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить ..." Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="ExportData_Click" Content="⇧" Width="30" Margin="2" ToolTip="Экспорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="ImportData_Click" Content="⇩" Width="30" Margin="2" ToolTip="Импорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="ExportSelectedCategory_Click" Content="🗂" Width="30" Margin="2" ToolTip="Экспорт выбранной категории" Style="{StaticResource TitleBarButtonStyle}"/>
+
+                                <Button Content="🖌️" ToolTip="Изменить фон"  Width="30" Margin="2" Click="ChangeBackground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Content="🎨" ToolTip="Изменить цвет текста"  Width="30" Margin="2" Click="ChangeForeground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Content="𝐁" FontWeight="Bold" ToolTip="Жирный" Width="30" Margin="2" Click="MakeBold_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Content="𝐼" FontStyle="Italic" ToolTip="Курсив" Width="30" Margin="2" Click="MakeItalic_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Content="U" ToolTip="Подчёркнутый" Width="30" Margin="2" Click="MakeUnderline_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Content="❌" ToolTip="Очистить стиль" Width="30" Margin="2" Click="ClearStyle_Click" Style="{StaticResource TitleBarButtonStyle}"/>
+                            </StackPanel>
+
+                            <!-- Панель поиска -->
+                            <StackPanel Orientation="Horizontal" Margin="0,30,0,0" Grid.ColumnSpan="2" Grid.RowSpan="2" >
                                 <TextBlock Text="🔍" VerticalAlignment="Center" Margin="2,0,5,0" Foreground="{DynamicResource DictTextSecondary}" />
-                            <TextBox x:Name="SearchInTextBox"
+                                <TextBox x:Name="SearchInTextBox"
                                      Width="200"
                                      Height="26"
                                      Padding="5,3"
@@ -846,8 +873,8 @@
                                      TextChanged="SearchInTextBox_TextChanged"/>
                                 <Button Click="ClearSearch_Click" Content="❌" Width="30" Height="26" Margin="5,0,2,0" ToolTip="Предыдущее (Shift+F3)" Style="{StaticResource TitleBarButtonStyle}"/>
                                 <Button Click="FindPrevious_Click" Content="▲" Width="30" Height="26" Margin="5,0,2,0" ToolTip="Предыдущее (Shift+F3)" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="FindNext_Click" Content="▼" Width="30" Height="26" Margin="2,0,5,0" ToolTip="Следующее (F3)" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <CheckBox x:Name="MatchCaseCheckBox"
+                                <Button Click="FindNext_Click" Content="▼" Width="30" Height="26" Margin="2,0,5,0" ToolTip="Следующее (F3)" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <CheckBox x:Name="MatchCaseCheckBox"
                                       Content="Аа"
                                       ToolTip="Учитывать регистр"
                                       VerticalAlignment="Center"
@@ -856,18 +883,18 @@
                                       Margin="5,0,10,0"
                                       Checked="SearchOptions_Changed"
                                       Unchecked="SearchOptions_Changed"/>
-                            <TextBlock x:Name="SearchResultsTextBlock"
+                                <TextBlock x:Name="SearchResultsTextBlock"
                                        Text=""
                                        VerticalAlignment="Center"
                                        Foreground="{DynamicResource DictTextSecondary}"
                                        FontSize="11"
                                        Margin="5,0,0,0"/>
-                        </StackPanel>
+                            </StackPanel>
+                        </Grid>
                     </Grid>
-                </Grid>
 
-                <!-- Текстовый редактор кода (3/3 от высоты кода) -->
-                <avalonEdit:TextEditor Grid.Row="4" x:Name="CodeTextBox"
+                    <!-- Текстовый редактор кода (3/3 от высоты кода) -->
+                    <avalonEdit:TextEditor Grid.Row="4" x:Name="CodeTextBox"
                                    FontFamily="Consolas"
                                    FontSize="12"
                                    ShowLineNumbers="True"
@@ -880,81 +907,81 @@
                                    Margin="0,0,0,10"
                                    VerticalScrollBarVisibility="Auto"
                                    HorizontalScrollBarVisibility="Auto">
-                    <avalonEdit:TextEditor.ContextMenu>
-                        <ContextMenu 
+                        <avalonEdit:TextEditor.ContextMenu>
+                            <ContextMenu 
                                  BorderThickness="1">
-                            <MenuItem Header="Отменить" Click="UndoMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="Undo" 
+                                <MenuItem Header="Отменить" Click="UndoMenuItem_Click">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="Undo" 
                                     Width="16" 
                                     Height="16" 
                                    />
-                                </MenuItem.Icon>
-                            </MenuItem>
+                                    </MenuItem.Icon>
+                                </MenuItem>
 
-                            <MenuItem Header="Повторить" Click="RedoMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="Redo" 
+                                <MenuItem Header="Повторить" Click="RedoMenuItem_Click">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="Redo" 
                                     Width="16" 
                                     Height="16" 
                                    />
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <Separator/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator/>
 
 
-                            <MenuItem Header="Копировать" Click="CopyMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="ContentCopy" 
+                                <MenuItem Header="Копировать" Click="CopyMenuItem_Click">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="ContentCopy" 
                                      Width="16" 
                                       Height="16" 
                                       />
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Header="Вырезать" Click="CutMenuItem_Click" >
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Вырезать" Click="CutMenuItem_Click" >
 
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="ContentCut" 
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="ContentCut" 
                                     Width="16" 
                                     Height="16" 
                                    />
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Header="Вставить" Click="PasteMenuItem_Click">
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Вставить" Click="PasteMenuItem_Click">
 
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="ContentPaste" 
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="ContentPaste" 
                                      Width="16" 
                                       Height="16" 
                                     />
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            
-                            <Separator/>
-                            
-                            <MenuItem Header="Удалить выделенное" Click="DeleteMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="TrashCanOutline" 
+                                    </MenuItem.Icon>
+                                </MenuItem>
+
+                                <Separator/>
+
+                                <MenuItem Header="Удалить выделенное" Click="DeleteMenuItem_Click">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="TrashCanOutline" 
                                      Width="16" 
                                      Height="16" 
                                    />
-                                    
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <Separator/>
-                            <MenuItem Header="Выделить всё" Click="SelectAllMenuItem_Click" >
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="Select" 
+
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator/>
+                                <MenuItem Header="Выделить всё" Click="SelectAllMenuItem_Click" >
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="Select" 
                                      Width="16" 
                                      Height="16" 
                                      />
 
-                                </MenuItem.Icon>
-                            </MenuItem>
-                        </ContextMenu>
-                    </avalonEdit:TextEditor.ContextMenu>
-                </avalonEdit:TextEditor>
-                  
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </avalonEdit:TextEditor.ContextMenu>
+                    </avalonEdit:TextEditor>
+
                 </Grid>
                 <!-- Теги -->
                 <StackPanel Grid.Row="5">
