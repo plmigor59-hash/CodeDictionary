@@ -498,7 +498,10 @@
                         <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
                             <StackPanel Orientation="Horizontal" Margin="2">
                                 <TextBlock Text="📄" Margin="0,0,5,0" Foreground="{DynamicResource DictAccent}"/>
-                                <TextBlock Text="{Binding Title}" Foreground="{DynamicResource DictTextPrimary}"/>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource DictTextPrimary}"/>
+                                    <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource DictTextSecondary}" FontSize="11"/>
+                                </StackPanel>
                             </StackPanel>
                         </DataTemplate>
                         <!-- Шаблон для категории (узел) -->

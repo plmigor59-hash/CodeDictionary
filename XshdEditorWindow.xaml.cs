@@ -4,6 +4,9 @@ using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
 using System.Xml;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.IO;
 
 namespace XshdEditor
 {
@@ -171,11 +174,19 @@ namespace XshdEditor
                 _viewModel.Save(targetPath);
                 _filePath = targetPath;
 
-                HighlightingManager.Instance.RegisterHighlighting(
-                    _viewModel.Name,
-                    _viewModel.Extensions.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
-                    LoadHighlightingDefinition(targetPath)
-                );
+                var def = LoadHighlightingDefinition(targetPath);
+                if (def != null)
+                {
+                    HighlightingManager.Instance.RegisterHighlighting(
+                        _viewModel.Name,
+                        _viewModel.Extensions.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+                        def
+                    );
+                }
+                else
+                {
+                    MessageBox.Show("Не удалось загрузить созданную подсветку. Файл сохранилcя, проверьте XSHD.", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
 
                 MessageBox.Show("Файл успешно сохранен!", "Успех",
                     MessageBoxButton.OK, MessageBoxImage.Information);
@@ -196,11 +207,78 @@ namespace XshdEditor
             Close();
         }
 
-        private static IHighlightingDefinition LoadHighlightingDefinition(string filePath)
+        private static IHighlightingDefinition? LoadHighlightingDefinition(string filePath)
         {
             using var reader = XmlReader.Create(filePath);
             var xshd = HighlightingLoader.LoadXshd(reader);
-            return HighlightingLoader.Load(xshd, HighlightingManager.Instance);
+
+            // Basic validations: ensure there are color definitions and a Main RuleSet
+            var problems = new System.Text.StringBuilder();
+            var colorNames = xshd.Elements.OfType<XshdColor>().Select(c => c.Name).Where(n => !string.IsNullOrEmpty(n)).ToList();
+            var ruleSets = xshd.Elements.OfType<XshdRuleSet>().ToList();
+
+            if (!colorNames.Any())
+            {
+                problems.AppendLine("No <Color> definitions found in XSHD.");
+            }
+
+            if (!ruleSets.Any(rs => string.Equals(rs.Name, "Main", StringComparison.OrdinalIgnoreCase)))
+            {
+                problems.AppendLine("Missing RuleSet with name 'Main'.");
+            }
+
+            if (problems.Length > 0)
+            {
+                try
+                {
+                    var temp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), System.IO.Path.GetFileName(filePath));
+                    System.IO.File.Copy(filePath, temp, true);
+                    MessageBox.Show($"Проблемы в XSHD:\n{problems}\nФайл сохранён для отладки: {temp}", "Ошибка подсветки", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch
+                {
+                    MessageBox.Show($"Проблемы в XSHD:\n{problems}", "Ошибка подсветки", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+                return null;
+            }
+
+            try
+            {
+                return HighlightingLoader.Load(xshd, HighlightingManager.Instance);
+            }
+            catch (ICSharpCode.AvalonEdit.Highlighting.HighlightingDefinitionInvalidException ex)
+            {
+                // Save a copy for inspection and show details to the user
+                try
+                {
+                    var temp = Path.Combine(Path.GetTempPath(), Path.GetFileName(filePath));
+                    File.Copy(filePath, temp, true);
+                    MessageBox.Show($"Ошибка загрузки подсветки: {ex.Message}\nФайл сохранён: {temp}", "Ошибка подсветки", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch
+                {
+                    MessageBox.Show($"Ошибка загрузки подсветки: {ex.Message}", "Ошибка подсветки", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                // Save full exception stack to temp file for debugging
+                try
+                {
+                    var logPath = Path.Combine(Path.GetTempPath(), $"xshd_error_{System.Guid.NewGuid()}.txt");
+                    File.WriteAllText(logPath, ex.ToString());
+                    MessageBox.Show($"Ошибка при загрузке подсветки: {ex.Message}\nПолный стек сохранён: {logPath}", "Ошибка подсветки", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch
+                {
+                    MessageBox.Show($"Ошибка при загрузке подсветки: {ex.Message}", "Ошибка подсветки", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+                return null;
+            }
         }
     }
 }

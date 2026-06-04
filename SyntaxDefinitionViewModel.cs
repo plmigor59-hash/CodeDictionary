@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Xml;
+using System.IO;
+using System.Linq;
 
 namespace XshdEditor
 {
@@ -72,65 +74,77 @@ namespace XshdEditor
 
         public void Save(string filePath)
         {
-            var xshd = new XshdSyntaxDefinition
-            {
-                Name = this.Name
-            };
-
-            if (!string.IsNullOrEmpty(Extensions))
-            {
-                foreach (var ext in Extensions.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                {
-                    xshd.Extensions.Add(ext.Trim());
-                }
-            }
-
-            foreach (var colorRule in Colors)
-            {
-                var xshdColor = new XshdColor
-                {
-                    Name = colorRule.Name,
-                    ExampleText = colorRule.ExampleText
-                };
-
-                if (!string.IsNullOrEmpty(colorRule.Foreground) && colorRule.Foreground != "#00000000")
-                {
-                    xshdColor.Foreground = CreateHighlightingBrush(colorRule.Foreground);
-                }
-
-                if (!string.IsNullOrEmpty(colorRule.Background) && colorRule.Background != "#00000000")
-                {
-                    xshdColor.Background = CreateHighlightingBrush(colorRule.Background);
-                }
-
-                if (!string.IsNullOrEmpty(colorRule.FontWeight) && colorRule.FontWeight != "Normal")
-                {
-                    xshdColor.FontWeight = ConvertToFontWeight(colorRule.FontWeight);
-                }
-
-                if (!string.IsNullOrEmpty(colorRule.FontStyle) && colorRule.FontStyle != "Normal")
-                {
-                    xshdColor.FontStyle = ConvertToFontStyle(colorRule.FontStyle);
-                }
-
-                xshd.Elements.Add(xshdColor);
-            }
-
-            // Ensure there is a main RuleSet named "Main" so HighlightingLoader can find it
-            // without this the loader may throw "Could not find main RuleSet." when opening the XSHD
-            var mainRuleSet = new XshdRuleSet { Name = "Main" };
-            xshd.Elements.Add(mainRuleSet);
-
             var settings = new XmlWriterSettings
             {
                 Indent = true,
                 Encoding = System.Text.Encoding.UTF8
             };
 
+            // Write XSHD manually to ensure RuleSet content is present and compatible
             using (var writer = XmlWriter.Create(filePath, settings))
             {
-                var visitor = new SaveXshdVisitor(writer);
-                visitor.WriteDefinition(xshd);
+                writer.WriteStartDocument();
+                writer.WriteStartElement("SyntaxDefinition", "http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008");
+                writer.WriteAttributeString("name", string.IsNullOrEmpty(this.Name) ? "" : this.Name);
+                if (!string.IsNullOrEmpty(Extensions))
+                {
+                    // use semicolon-separated extensions
+                    var exts = Extensions.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim());
+                    writer.WriteAttributeString("extensions", string.Join(";", exts));
+                }
+
+                // Write Color definitions
+                foreach (var colorRule in Colors)
+                {
+                    writer.WriteStartElement("Color");
+                    writer.WriteAttributeString("name", colorRule.Name ?? string.Empty);
+                    if (!string.IsNullOrEmpty(colorRule.Foreground) && colorRule.Foreground != "#00000000")
+                        writer.WriteAttributeString("foreground", colorRule.Foreground);
+                    if (!string.IsNullOrEmpty(colorRule.Background) && colorRule.Background != "#00000000")
+                        writer.WriteAttributeString("background", colorRule.Background);
+                    if (!string.IsNullOrEmpty(colorRule.FontStyle) && colorRule.FontStyle != "Normal")
+                    {
+                        var fs = ConvertToFontStyle(colorRule.FontStyle);
+                        if (fs.HasValue)
+                        {
+                            // write canonical name in lowercase like "italic"/"normal"/"oblique"
+                            writer.WriteAttributeString("fontStyle", fs.Value.ToString().ToLower());
+                        }
+                        else
+                        {
+                            // fallback: convert to lowercase
+                            writer.WriteAttributeString("fontStyle", colorRule.FontStyle.ToLower());
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(colorRule.FontWeight) && colorRule.FontWeight != "Normal")
+                    {
+                        var fw = ConvertToFontWeight(colorRule.FontWeight);
+                        if (fw.HasValue)
+                        {
+                            writer.WriteAttributeString("fontWeight", fw.Value.ToString().ToLower());
+                        }
+                        else
+                        {
+                            writer.WriteAttributeString("fontWeight", colorRule.FontWeight.ToLower());
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(colorRule.ExampleText))
+                        writer.WriteAttributeString("exampleText", colorRule.ExampleText);
+                    writer.WriteEndElement();
+                }
+
+                // Write basic RuleSets
+                writer.WriteStartElement("RuleSet");
+                writer.WriteAttributeString("ignoreCase", "true");
+                writer.WriteEndElement(); // empty RuleSet
+
+                writer.WriteStartElement("RuleSet");
+                writer.WriteAttributeString("name", "Main");
+                writer.WriteAttributeString("ignoreCase", "true");
+                writer.WriteEndElement(); // Main RuleSet
+
+                writer.WriteEndElement(); // SyntaxDefinition
+                writer.WriteEndDocument();
             }
         }
 
