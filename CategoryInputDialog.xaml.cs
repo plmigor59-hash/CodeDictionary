@@ -37,7 +37,7 @@ public partial class CategoryInputDialog : Window
     {
         if (string.IsNullOrWhiteSpace(CategoryNameTextBox.Text))
         {
-            MessageBox.Show("Введите название категории.", "Проверка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            CustomMessageBox.Show("Введите название категории.", "Проверка", CustomMessageBoxType.Warning);
             return;
         }
 
