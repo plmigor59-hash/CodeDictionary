@@ -82,9 +82,9 @@ namespace CodeDictionary
         {
             var isDark = theme == AppTheme.Dark;
 
-            SetBrush("DictSurface", isDark ? Theme.Dark.Background : Theme.Light.Background);
+            SetBrush("DictSurface", isDark ? "#202A38" : "#F5F5F5");
             SetBrush("DictSurfaceStrong", isDark ? "#273447" : "#F5F5F5");
-            SetBrush("DictBorder", isDark ? Theme.Dark.Border : Theme.Light.Border);
+            SetBrush("DictBorder", isDark ? "#202A38" : "#CCCCCC");
             SetBrush("DictCardBackground", isDark ? "#202A38" : "#FFFFFF");
             SetBrush("DictTitleBackground", isDark ? "#A51A2534" : "#EDEDED");
             SetBrush("DictStatusBackground", isDark ? "#132f4b" : "#EAF3FD");

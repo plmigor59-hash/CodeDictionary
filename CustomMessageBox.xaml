@@ -16,7 +16,7 @@
       
         <SolidColorBrush x:Key="DictSurface" Color="#202A38"/>
         <SolidColorBrush x:Key="DictSurfaceStrong" Color="#273447"/>
-        <SolidColorBrush x:Key="DictBorder" Color="#36465E"/>
+        <SolidColorBrush x:Key="DictBorder" Color="#333B42"/>
         <SolidColorBrush x:Key="DictCardBackground" Color="#202A38"/>
         <SolidColorBrush x:Key="DictTitleBackground" Color="#A51A2534"/>
         <SolidColorBrush x:Key="DictStatusBackground" Color="#132f4b"/>

@@ -58,7 +58,7 @@ public class SnackbarNotification
         {
             Text = icon,
             Foreground = type == NotificationType.Warning ? Brushes.Black : Brushes.White,
-            FontSize = 16,
+            FontSize = 14,
             Margin = new Thickness(0, 0, 8, 0)
         };
 
@@ -66,7 +66,7 @@ public class SnackbarNotification
         {
             Text = message,
             Foreground = type == NotificationType.Warning ? Brushes.Black : Brushes.White,
-            FontSize = 16
+            FontSize = 14
         };
 
         stackPanel.Children.Add(iconText);
