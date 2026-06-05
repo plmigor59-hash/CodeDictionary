@@ -27,7 +27,7 @@
 	<Color name="TypeKeywords" foreground="#0000FF" />
 	<Color name="SemanticKeywords" foreground="#0000FF" />
 
-	<RuleSet ignoreCase="false">
+	<RuleSet ignoreCase="true">
 		<Span color="Comment" multiline="true">
 			<Begin>/\*</Begin>
 			<End>\*/</End>
@@ -138,6 +138,10 @@
 			<Word>signed</Word>
 			<Word>unsigned</Word>
 			<Word>void</Word>
+			<Word>LRESULT</Word>
+			<Word>CALLBACK</Word>
+			<Word>HBITMAP</Word>
+			<Word>std::wstring</Word>
 			<Word>auto</Word>
 		</Keywords>
 

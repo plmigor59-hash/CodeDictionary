@@ -1386,6 +1386,9 @@ public partial class MainWindow : Window
             return;
         }
 
+      
+
+
         _currentEntry.Title = TitleTextBox.Text;
         _currentEntry.Description = DescriptionTextBox.Text;
         _currentEntry.Code = CodeTextBox.Text;
@@ -1406,6 +1409,8 @@ public partial class MainWindow : Window
         RefreshEntriesList();
 
         _snackbar.Show(CodeTextBox, "Запись сохранена", NotificationType.Success, 1.5);
+
+      
     }
 
 

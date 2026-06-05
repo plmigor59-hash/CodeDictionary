@@ -3,7 +3,7 @@
 	<Color name="Comment" foreground="#6A9955" fontStyle="italic" />
 	<Color name="String" foreground="#CE9178" />
 	<Color name="Char" foreground="#CE9178" />
-	<Color name="Preprocessor" foreground="#9B9B9B" />
+	<Color name="Preprocessor" foreground="#C586C0" />
 	<Color name="Punctuation" foreground="#D4D4D4" />
 	<Color name="ValueTypes" foreground="#4EC9B0" fontWeight="normal" />
 	<Color name="ReferenceTypes" foreground="#4EC9B0" />
@@ -25,7 +25,9 @@
 	<Color name="GetSetAddRemove" foreground="#569CD6" />
 	<Color name="TrueFalse" foreground="#569CD6" />
 	<Color name="TypeKeywords" foreground="#569CD6" />
-	<Color name="SemanticKeywords" foreground="#569CD6" />
+	<Color name="Function" foreground="#DCDCAA" />
+	<Color name="Class" foreground="#4EC9B0" />
+	
 
 	<RuleSet ignoreCase="false">
 		<Span color="Comment" multiline="true">
