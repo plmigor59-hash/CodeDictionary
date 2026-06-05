@@ -713,18 +713,12 @@ public partial class MainWindow : Window
         {
             CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
         }
-        else if (selected == "Светлая С#")
-        {
-            CodeTextBox.SyntaxHighlighting = _lightCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
-        }
+       
         else if (selected == "Темная C++")
         {
             CodeTextBox.SyntaxHighlighting = _darkCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
         }
-        else if (selected == "Светлая C++")
-        {
-            CodeTextBox.SyntaxHighlighting = _lightCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
-        }
+       
         else if (selected == "Стандартная (C++)")
         {
             CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C++");
@@ -999,8 +993,7 @@ public partial class MainWindow : Window
              UpdateCodeEditorColors();
 
             SyntaxHighlightingComboBox?.Items.Clear();
-            SyntaxHighlightingComboBox?.Items.Add("Светлая С#");
-            SyntaxHighlightingComboBox?.Items.Add("Светлая C++");
+           
             SyntaxHighlightingComboBox?.Items.Add("Стандартная (1C)");
             SyntaxHighlightingComboBox?.Items.Add("Стандартная (C#)");
             SyntaxHighlightingComboBox?.Items.Add("Стандартная (C++)");

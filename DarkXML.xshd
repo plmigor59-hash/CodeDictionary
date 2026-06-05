@@ -2,38 +2,98 @@
 <SyntaxDefinition name="XML Dark" 
     xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
     
-    <!-- Определяем цвета для тёмной темы -->
-	
-    <Color name="Comment" foreground="#6A9955" exampleText="&lt;!-- comment --&gt;" />
-    <Color name="Tag" foreground="#569CD6" exampleText="&lt;element&gt;" />
-    <Color name="AttributeName" foreground="#9CDCFE" exampleText="name=" />
-    <Color name="AttributeValue" foreground="#CE9178" exampleText="&quot;value&quot;" />
-    <Color name="CData" foreground="#D69D85" exampleText="&lt;![CDATA[...]]&gt;" />
+    <!-- ============================================ -->
+    <!-- ЦВЕТА (как в Visual Studio Code Dark+)       -->
+    <!-- ============================================ -->
+    
+    <Color name="Comment" foreground="#6A9955" />
+    <Color name="XmlDocTag" foreground="#608B4E" />
+    <Color name="CData" foreground="#D69D85" />
+    <Color name="ProcessingInstruction" foreground="#C586C0" />
+    
+    <Color name="Tag" foreground="#569CD6" />
+    <Color name="TagName" foreground="#569CD6" />
+    <Color name="TagEnd" foreground="#569CD6" />
+    <Color name="AttributeName" foreground="#9CDCFE" />
+    <Color name="AttributeValue" foreground="#CE9178" />
+    
+    <Color name="Entity" foreground="#D7BA7D" />
+    <Color name="Namespace" foreground="#4EC9B0" />
+    
+    <Color name="DocType" foreground="#608B4E" />
+    <Color name="XmlDeclaration" foreground="#569CD6" />
+    
+    <!-- ============================================ -->
+    <!-- ПРАВИЛА                                       -->
+    <!-- ============================================ -->
     
     <RuleSet>
-        <!-- Комментарии -->
-        <Span color="Comment" begin="&lt;!--" end="--&gt;" />
         
-        <!-- CDATA секции -->
-        <Span color="CData" begin="&lt;!\[CDATA\[" end="\]\]&gt;" />
+        <!-- XML Declaration -->
+        <Span begin="&lt;\?" end="\?&gt;" ruleSet="XmlDeclSet" />
         
-        <!-- Открывающий тег -->
-        <Span color="Tag" begin="&lt;[A-Za-z_][A-Za-z0-9_\-\.]*" end="&gt;">
+        <!-- DOCTYPE -->
+        <Span begin="&lt;!DOCTYPE" end="&gt;" ruleSet="DocTypeSet" />
+        
+        <!-- Comments -->
+        <Span begin="&lt;!--" end="--&gt;" color="Comment" />
+        
+        <!-- CDATA -->
+        <Span begin="&lt;!\[CDATA\[" end="\]\]&gt;" color="CData" />
+        
+        <!-- Processing Instructions -->
+        <Span begin="&lt;\?" end="\?&gt;" color="ProcessingInstruction" />
+        
+        <!-- Opening Tag -->
+        <Span begin="&lt;[A-Za-z_]" end="&gt;" ruleSet="TagSet" />
+        
+        <!-- Closing Tag -->
+        <Span begin="&lt;/[A-Za-z_]" end="&gt;" ruleSet="ClosingTagSet" />
+        
+        <!-- Self-closing Tag -->
+        <Span begin="&lt;[A-Za-z_][^&gt;]*/&gt;" color="Tag" />
+        
+        <!-- HTML Entities -->
+        <Span begin="&amp;" end=";" color="Entity" />
+        
+    </RuleSet>
+    
+    <!-- ============================================ -->
+    <!-- ВЛОЖЕННЫЕ НАБОРЫ ПРАВИЛ                      -->
+    <!-- ============================================ -->
+    
+    <RuleSet name="XmlDeclSet">
+        <Span color="XmlDeclaration" begin="xml" end="" />
+        <Span color="AttributeName" begin="version|encoding|standalone" end="=" />
+        <Span color="AttributeValue" begin="&quot;" end="&quot;" />
+        <Span color="AttributeValue" begin="'" end="'" />
+    </RuleSet>
+    
+    <RuleSet name="DocTypeSet">
+        <Span color="DocType" begin="!DOCTYPE" end="" />
+        <Span color="AttributeName" begin="SYSTEM|PUBLIC" end="" />
+        <Span color="AttributeValue" begin="&quot;" end="&quot;" />
+        <Span color="AttributeValue" begin="'" end="'" />
+    </RuleSet>
+    
+    <RuleSet name="TagSet">
+        <Span color="TagName" begin="[A-Za-z_][A-Za-z0-9_\-\.]*" end="\s|&gt;" />
+        <Span color="Namespace" begin="xmlns(:[A-Za-z_][A-Za-z0-9_\-\.]*)?" end="=" />
+        <Span color="AttributeName" begin="[A-Za-z_][A-Za-z0-9_\-\.:]*" end="=" />
+        <Span color="AttributeValue" begin="&quot;" end="&quot;">
             <RuleSet>
-                <!-- Атрибуты внутри тега -->
-                <Span color="AttributeName" begin="[A-Za-z_][A-Za-z0-9_\-\.]*" end="=" />
-                <Span color="AttributeValue" begin="&quot;" end="&quot;" />
-                <Span color="AttributeValue" begin="'" end="'" />
+                <Span color="Entity" begin="&amp;" end=";" />
             </RuleSet>
         </Span>
-	    
-        <!-- Закрывающий тег -->
-        <Span color="Tag" begin="&lt;/[A-Za-z_][A-Za-z0-9_\-\.]*" end="&gt;" />
-        
-        <!-- Самозакрывающийся тег -->
-        <Span color="Tag" begin="&lt;[A-Za-z_][A-Za-z0-9_\-\.]*[^&gt;]*/&gt;" end="" />
-		
-		
-		
+        <Span color="AttributeValue" begin="'" end="'">
+            <RuleSet>
+                <Span color="Entity" begin="&amp;" end=";" />
+            </RuleSet>
+        </Span>
+    </RuleSet>
+    
+    <RuleSet name="ClosingTagSet">
+        <Span color="TagName" begin="/[A-Za-z_][A-Za-z0-9_\-\.]*" end="&gt;" />
+        <Span color="TagEnd" begin="&gt;" end="" />
     </RuleSet>
 </SyntaxDefinition>
