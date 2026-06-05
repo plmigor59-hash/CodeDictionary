@@ -1,4 +1,5 @@
 using CodeDictionary.Models;
+using CodeDictionary.Properties;
 using CodeDictionary.Services;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
@@ -13,10 +14,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Input;
-using System.Xml;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Xml;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace CodeDictionary;
@@ -57,6 +58,7 @@ public partial class MainWindow : Window
       
 
         InitializeComponent();
+        LoadWindowState();
         _dataService = new DataService();
         _data = new CodeDictionaryData();
         _filteredEntries = new List<CodeEntry>();
@@ -81,7 +83,63 @@ public partial class MainWindow : Window
 
     }
 
- 
+
+
+    private void LoadWindowState()
+    {
+        // Проверяем, что настройки существуют
+        if (Settings.Default.WindowTop >= 0 && Settings.Default.WindowLeft >= 0)
+        {
+            this.Top = Settings.Default.WindowTop;
+            this.Left = Settings.Default.WindowLeft;
+        }
+
+        this.Width = Settings.Default.WindowWidth;
+        this.Height = Settings.Default.WindowHeight;
+        this.WindowState = ParseWindowState(Settings.Default.WindowState);
+
+        // Проверяем, попадает ли окно на экран
+        var screen = System.Windows.Forms.Screen.FromPoint(new System.Drawing.Point((int)this.Left, (int)this.Top));
+        if (this.Left + this.Width < screen.WorkingArea.Left ||
+            this.Left > screen.WorkingArea.Right ||
+            this.Top + this.Height < screen.WorkingArea.Top ||
+            this.Top > screen.WorkingArea.Bottom)
+        {
+            // Если окно за пределами экрана — показываем по центру
+            this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+    }
+
+    // Сохранение состояния перед закрытием
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        // Сохраняем только если окно не свернуто
+        if (this.WindowState != WindowState.Minimized)
+        {
+            // Сохраняем позицию и размер
+            Settings.Default.WindowTop = this.Top;
+            Settings.Default.WindowLeft = this.Left;
+            Settings.Default.WindowWidth = this.Width;
+            Settings.Default.WindowHeight = this.Height;
+            Settings.Default.WindowState = this.WindowState.ToString();
+
+            Settings.Default.Save(); // Сохраняем в файл
+        }
+
+        base.OnClosing(e);
+    }
+
+    private WindowState ParseWindowState(string state)
+    {
+        return state switch
+        {
+            "Maximized" => WindowState.Maximized,
+            "Minimized" => WindowState.Minimized,
+            _ => WindowState.Normal
+        };
+    
+    }
+
     private void ApplyStyleToSelection(string backgroundColor = null, string foregroundColor = null,
                                           bool? bold = null, bool? italic = null, bool? underline = null,
                                           string fontFamily = null, double? fontSize = null)
