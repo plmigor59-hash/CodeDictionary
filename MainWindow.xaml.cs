@@ -274,7 +274,7 @@ public partial class MainWindow : Window
         {
             if (tab.Entry != null)
             {
-                MoveEditorTabToFront(tab);
+                //MoveEditorTabToFront(tab);
             }
 
             _activeEditorTab = tab;
@@ -677,19 +677,21 @@ public partial class MainWindow : Window
 
                 return;
 
-                _currentFilePath = openFileDialog.FileName;
+              
+                //_currentFilePath = openFileDialog.FileName;
+              
 
-                // Загружаем файл с определением кодировки (автоматическая)
-                using (var stream = new FileStream(_currentFilePath, FileMode.Open, FileAccess.Read))
-                {
-                    CodeTextBox.Load(stream);
-                }
+                //// Загружаем файл с определением кодировки (автоматическая)
+                //using (var stream = new FileStream(_currentFilePath, FileMode.Open, FileAccess.Read))
+                //{
+                //    CodeTextBox.Load(stream);
+                //}
 
-                // Обновляем заголовок окна или статус
-                //this.Title = $"{Path.GetFileName(_currentFilePath)} - Мой редактор";
+                //// Обновляем заголовок окна или статус
+                ////this.Title = $"{Path.GetFileName(_currentFilePath)} - Мой редактор";
 
-                // Показываем уведомление об успехе
-                _snackbar.Show(CodeTextBox, $"Файл '{Path.GetFileName(_currentFilePath)}' успешно открыт", NotificationType.Success, 1.5);
+                //// Показываем уведомление об успехе
+                //_snackbar.Show(CodeTextBox, $"Файл '{Path.GetFileName(_currentFilePath)}' успешно открыт", NotificationType.Success, 1.5);
             }
 
 
