@@ -317,14 +317,14 @@ public partial class MainWindow : Window
         }
     }
 
-    private void MoveEditorTabToFront(EditorTabModel tab)
-    {
-        var currentIndex = _editorTabs.IndexOf(tab);
-        if (currentIndex > 0)
-        {
-            _editorTabs.Move(currentIndex, 0);
-        }
-    }
+    //private void MoveEditorTabToFront(EditorTabModel tab)
+    //{
+    //    var currentIndex = _editorTabs.IndexOf(tab);
+    //    if (currentIndex > 0)
+    //    {
+    //        _editorTabs.Move(currentIndex, 0);
+    //    }
+    //}
 
     private EditorTabModel? FindEditorTab(string filePath)
     {
@@ -678,20 +678,6 @@ public partial class MainWindow : Window
                 return;
 
               
-                //_currentFilePath = openFileDialog.FileName;
-              
-
-                //// Загружаем файл с определением кодировки (автоматическая)
-                //using (var stream = new FileStream(_currentFilePath, FileMode.Open, FileAccess.Read))
-                //{
-                //    CodeTextBox.Load(stream);
-                //}
-
-                //// Обновляем заголовок окна или статус
-                ////this.Title = $"{Path.GetFileName(_currentFilePath)} - Мой редактор";
-
-                //// Показываем уведомление об успехе
-                //_snackbar.Show(CodeTextBox, $"Файл '{Path.GetFileName(_currentFilePath)}' успешно открыт", NotificationType.Success, 1.5);
             }
 
 
@@ -1962,55 +1948,84 @@ public partial class MainWindow : Window
 
 
 
-    private async void SaveEntry_Click(object sender, RoutedEventArgs e)
-    {
-        var activeTab = GetActiveEditorTab();
-        var entry = activeTab?.Entry;
+private async void SaveEntry_Click(object sender, RoutedEventArgs e)
+     {
+         var activeTab = GetActiveEditorTab();
 
-        if (entry == null)
-        {
-            ShowAlert("Выберите или создайте запись", isError: true);
-            return;
+         // Если это вкладка файла без привязанной записи - создаем новую запись
+         if (activeTab != null && activeTab.Entry == null && activeTab.IsFromFile)
+         {
+             var entry = new CodeEntry
+             {
+                 Title = Path.GetFileNameWithoutExtension(activeTab.FilePath),
+                 Description = "",
+                 Code = CodeTextBox.Text,
+                 Category = NormalizeCategoryPath(CategoryComboBox.Text),
+                 Tags = Array.Empty<string>().ToList(),
+                 Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty
+             };
 
-        }
+             _data.Entries.Add(entry);
+             activeTab.Entry = entry;
+             activeTab.FilePath = null;
+             activeTab.Title = entry.Title;
+             activeTab.IsDirty = false;
+             activeTab.NotifyHeaderChanged();
 
-        if (string.IsNullOrWhiteSpace(TitleTextBox.Text))
-        {
-            ShowAlert("Введите название", isError: true);
-            return;
-        }
+             _currentEntry = entry;
+             SaveSegmentsToEntry();
+             await _dataService.SaveDataAsync(_data);
+             RefreshEntriesList();
+             _snackbar.Show(CodeTextBox, "Файл сохранен как запись", NotificationType.Success, 1.5);
+             return;
+         }
 
-      
+         var entryFromTab = activeTab?.Entry;
+
+         if (entryFromTab == null)
+         {
+             ShowAlert("Выберите или создайте запись", isError: true);
+             return;
+
+         }
+
+         if (string.IsNullOrWhiteSpace(TitleTextBox.Text))
+         {
+             ShowAlert("Введите название", isError: true);
+             return;
+         }
+
+       
 
 
-        entry.Title = TitleTextBox.Text;
-        entry.Description = DescriptionTextBox.Text;
-        entry.Code = CodeTextBox.Text;
-        entry.Category = NormalizeCategoryPath(CategoryComboBox.Text);
-        entry.Tags = TagsTextBox.Text
-            .Split(',')
-            .Select(t => t.Trim())
-            .Where(t => !string.IsNullOrWhiteSpace(t))
-            .ToList();
-        entry.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
-        entry.ModifiedAt = DateTime.Now;
-        
-        if (activeTab != null)
-        {
-            activeTab.Title = entry.Title;
-            activeTab.SyntaxName = entry.Syntax;
-            activeTab.IsDirty = false;
-        }
+         entryFromTab.Title = TitleTextBox.Text;
+         entryFromTab.Description = DescriptionTextBox.Text;
+         entryFromTab.Code = CodeTextBox.Text;
+         entryFromTab.Category = NormalizeCategoryPath(CategoryComboBox.Text);
+         entryFromTab.Tags = TagsTextBox.Text
+             .Split(',')
+             .Select(t => t.Trim())
+             .Where(t => !string.IsNullOrWhiteSpace(t))
+             .ToList();
+         entryFromTab.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
+         entryFromTab.ModifiedAt = DateTime.Now;
+         
+         if (activeTab != null)
+         {
+             activeTab.Title = entryFromTab.Title;
+             activeTab.SyntaxName = entryFromTab.Syntax;
+             activeTab.IsDirty = false;
+         }
 
-        _currentEntry = entry;
-        SaveSegmentsToEntry();
+         _currentEntry = entryFromTab;
+         SaveSegmentsToEntry();
 
-        EnsureCategoryPathExists(entry.Category);
+         EnsureCategoryPathExists(entryFromTab.Category);
 
-        await _dataService.SaveDataAsync(_data);
-        RefreshEntriesList();
+         await _dataService.SaveDataAsync(_data);
+         RefreshEntriesList();
 
-        _snackbar.Show(CodeTextBox, "Запись сохранена", NotificationType.Success, 1.5);
+         _snackbar.Show(CodeTextBox, "Запись сохранена", NotificationType.Success, 1.5);
 
       
     }

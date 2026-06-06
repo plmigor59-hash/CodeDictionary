@@ -44,6 +44,7 @@ public class EditorTabModel : INotifyPropertyChanged
             OnPropertyChanged();
             OnPropertyChanged(nameof(DisplayName));
             OnPropertyChanged(nameof(Header));
+            OnPropertyChanged(nameof(IsFromFile));
         }
     }
 
@@ -103,7 +104,9 @@ public class EditorTabModel : INotifyPropertyChanged
         ? Path.GetFileName(FilePath)
         : Title;
 
-    public string Header => IsDirty ? $"{DisplayName} *" : DisplayName;
+    public string Header => IsDirty ?  $"{DisplayName} *" : DisplayName;
+
+    public bool IsFromFile => !string.IsNullOrWhiteSpace(_filePath);
 
     public bool IsClosable => _isClosable;
 

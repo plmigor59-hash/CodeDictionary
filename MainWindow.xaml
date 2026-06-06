@@ -210,7 +210,7 @@
             </Setter>
         </Style>
 
-        <Style x:Key="EditorTabItemStyle" TargetType="TabItem">
+<Style x:Key="EditorTabItemStyle" TargetType="TabItem">
             <Setter Property="Foreground" Value="{DynamicResource DictTextSecondary}"/>
             <Setter Property="Background" Value="{DynamicResource DictSurface}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource DictBorder}"/>
@@ -230,13 +230,22 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <ContentPresenter Grid.Column="0"
+                                <materialIcons:MaterialIcon x:Name="FileIndicator"
+                                                            Kind="FileOutline"
+                                                            Width="16"
+                                                            Height="16"
+                                                            Margin="0,0,4,0"
+                                                            VerticalAlignment="Center"
+                                                            Visibility="Collapsed"
+                                                            Foreground="{DynamicResource DictSuccess}"/>
+                                <ContentPresenter Grid.Column="1"
                                                   HorizontalAlignment="Center"
                                                   VerticalAlignment="Center"
                                                   ContentSource="Header"
                                                   RecognizesAccessKey="True"/>
-                                <Button Grid.Column="1"
+                                <Button Grid.Column="2"
                                         x:Name="CloseButton"
                                         Content="×"
                                         Width="18"
@@ -272,6 +281,9 @@
                                 <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource DictAccent}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
                             </Trigger>
+                            <DataTrigger Binding="{Binding IsFromFile}" Value="True">
+                                <Setter TargetName="FileIndicator" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="TabBorder" Property="Background" Value="#334055"/>
                                 <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
