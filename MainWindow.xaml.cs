@@ -95,7 +95,7 @@ public partial class MainWindow : Window
     {
         _editorTabs.Clear();
 
-        _entryEditorTab = new EditorTabModel("Запись");
+        _entryEditorTab = new EditorTabModel("Запись", isClosable: false);
         _editorTabs.Add(_entryEditorTab);
 
         if (EditorTabs != null)
@@ -131,6 +131,64 @@ public partial class MainWindow : Window
     private EditorTabModel? GetActiveEditorTab()
     {
         return _activeEditorTab ?? _entryEditorTab;
+    }
+
+    private void CloseTabButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not EditorTabModel tab)
+        {
+            return;
+        }
+
+        CloseEditorTab(tab);
+        e.Handled = true;
+    }
+
+    private void CloseEditorTab(EditorTabModel tab)
+    {
+        if (!tab.IsClosable)
+        {
+            return;
+        }
+
+        if (tab.IsDirty &&
+            !CustomMessageBox.ShowQuestion($"Закрыть вкладку '{tab.DisplayName}' без сохранения?", "Подтверждение"))
+        {
+            return;
+        }
+
+        var wasActive = ReferenceEquals(_activeEditorTab, tab);
+        var tabIndex = _editorTabs.IndexOf(tab);
+        if (tabIndex < 0)
+        {
+            return;
+        }
+
+        _editorTabs.RemoveAt(tabIndex);
+
+        if (_editorTabs.Count == 0)
+        {
+            InitializeEditorTabs();
+            return;
+        }
+
+        if (wasActive)
+        {
+            var nextIndex = Math.Min(tabIndex, _editorTabs.Count - 1);
+            ActivateEditorTab(_editorTabs[nextIndex]);
+        }
+        else
+        {
+            RefreshEditorTabHeaders();
+        }
+    }
+
+    private void RefreshEditorTabHeaders()
+    {
+        foreach (var tab in _editorTabs)
+        {
+            tab.NotifyHeaderChanged();
+        }
     }
 
     private void ActivateEditorTab(EditorTabModel? tab, bool selectInTabControl = true)
@@ -201,7 +259,7 @@ public partial class MainWindow : Window
         }
 
         var content = File.ReadAllText(filePath);
-        var tab = new EditorTabModel(Path.GetFileName(filePath), filePath, GetSyntaxSelectionForFile(filePath), content);
+        var tab = new EditorTabModel(Path.GetFileName(filePath), filePath, GetSyntaxSelectionForFile(filePath), content, isClosable: true);
         tab.MarkSaved();
         _editorTabs.Add(tab);
         ActivateEditorTab(tab);
@@ -628,6 +686,11 @@ public partial class MainWindow : Window
                     writer.Write(CodeTextBox.SelectedText);
                 }
 
+                if (EditorTabs != null)
+                {
+                    EditorTabs.SelectedItem = activeTab;
+                }
+
                 _snackbar.Show(CodeTextBox, "Выделенный текст успешно сохранён", NotificationType.Success, 1.5);
             }
             else
@@ -635,6 +698,11 @@ public partial class MainWindow : Window
                 using (var stream = new FileStream(activeTab.FilePath, FileMode.Create, FileAccess.Write))
                 {
                     CodeTextBox.Save(stream);
+                }
+
+                if (EditorTabs != null)
+                {
+                    EditorTabs.SelectedItem = activeTab;
                 }
 
                 _snackbar.Show(CodeTextBox, "Файл успешно сохранён", NotificationType.Success, 1.5);

@@ -12,12 +12,14 @@ public class EditorTabModel : INotifyPropertyChanged
     private string _title;
     private bool _isDirty;
     private string? _syntaxName;
+    private readonly bool _isClosable;
 
-    public EditorTabModel(string title, string? filePath = null, string? syntaxName = null, string? content = null)
+    public EditorTabModel(string title, string? filePath = null, string? syntaxName = null, string? content = null, bool isClosable = true)
     {
         _title = title;
         _filePath = filePath;
         _syntaxName = syntaxName;
+        _isClosable = isClosable;
         Document = new TextDocument(content ?? string.Empty);
     }
 
@@ -98,9 +100,16 @@ public class EditorTabModel : INotifyPropertyChanged
 
     public string Header => IsDirty ? $"{DisplayName} *" : DisplayName;
 
+    public bool IsClosable => _isClosable;
+
     public void MarkSaved()
     {
         IsDirty = false;
+    }
+
+    public void NotifyHeaderChanged()
+    {
+        OnPropertyChanged(nameof(Header));
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)

@@ -226,10 +226,45 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="8,8,0,0"
                                 Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              ContentSource="Header"
-                                              RecognizesAccessKey="True"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter Grid.Column="0"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  ContentSource="Header"
+                                                  RecognizesAccessKey="True"/>
+                                <Button Grid.Column="1"
+                                        x:Name="CloseButton"
+                                        Content="×"
+                                        Width="18"
+                                        Height="18"
+                                        Margin="8,0,0,0"
+                                        Padding="0"
+                                        FontSize="12"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Foreground="{DynamicResource DictTextSecondary}"
+                                        Cursor="Hand"
+                                        Click="CloseTabButton_Click">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource TitleBarButtonStyle}">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource DictTextSecondary}"/>
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsClosable}" Value="False">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
@@ -970,7 +1005,6 @@
                 <TabControl Grid.Row="1"
                             x:Name="EditorTabs"
                             Margin="0,0,0,8"
-                            SelectedIndex="0"
                             SelectionChanged="EditorTabs_SelectionChanged"
                             ItemContainerStyle="{StaticResource EditorTabItemStyle}"
                             Background="Transparent"
