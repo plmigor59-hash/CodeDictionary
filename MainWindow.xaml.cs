@@ -92,7 +92,7 @@ public partial class MainWindow : Window
         TitleTextBox.TextChanged += EntryField_TextChanged;
         DescriptionTextBox.TextChanged += EntryField_TextChanged;
         TagsTextBox.TextChanged += EntryField_TextChanged;
-        CategoryComboBox.TextChanged += EntryField_TextChanged;
+        //CategoryComboBox.TextChanged += EntryField_TextChanged;
 
     }
 
@@ -269,6 +269,11 @@ public partial class MainWindow : Window
         _isSwitchingEditorTab = true;
         try
         {
+            if (tab.Entry != null)
+            {
+                MoveEditorTabToFront(tab);
+            }
+
             _activeEditorTab = tab;
             _textSegments = tab.Segments;
 
@@ -306,6 +311,15 @@ public partial class MainWindow : Window
         finally
         {
             _isSwitchingEditorTab = false;
+        }
+    }
+
+    private void MoveEditorTabToFront(EditorTabModel tab)
+    {
+        var currentIndex = _editorTabs.IndexOf(tab);
+        if (currentIndex > 0)
+        {
+            _editorTabs.Move(currentIndex, 0);
         }
     }
 
@@ -1594,7 +1608,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        OpenEntryTab(viewEntry.Entry);
+        LoadEntryToForm(viewEntry.Entry);
         e.Handled = true;
     }
 
@@ -2034,7 +2048,7 @@ public partial class MainWindow : Window
         _appState.SelectedCategory = !string.IsNullOrWhiteSpace(_selectedCategoryPath)
             ? _selectedCategoryPath
             : _currentEntry?.Category ?? "";
-        _appState.SelectedEntryId = _currentEntry?.Id;
+        _appState.SelectedEntryId = GetActiveEditorTab()?.Entry?.Id ?? _currentEntry?.Id;
         _appState.IsLightTheme = ThemeCheckBox.IsChecked == true;
 
         await _dataService.SaveStateAsync(_appState);
