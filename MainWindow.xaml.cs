@@ -352,7 +352,7 @@ public partial class MainWindow : Window
     // 💾 СОХРАНИТЬ (если путь уже есть, иначе Сохранить как...)
     private void SaveFile_Click(object sender, RoutedEventArgs e)
     {
-        SaveEntry_Click(sender, e);
+        SaveAsFile_Click(sender, e);
 
         if (string.IsNullOrEmpty(_currentFilePath))
         {

@@ -811,8 +811,8 @@
                             <Button Click="CopyMenuItem_Click" Content="📋" Width="30" Margin="2" ToolTip="Копировать" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="PasteMenuItem_Click" Content="📄" Width="30" Margin="2" ToolTip="Вставить" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="SelectAllMenuItem_Click" Content="🔲" Width="30" Margin="2" ToolTip="Выделить все" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="OpenFile_Click" Content="📂" Width="30" Margin="2" ToolTip="Открыть..." Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить ..." Style="{StaticResource TitleBarButtonStyle}"/>
+                            <Button Click="OpenFile_Click" Content="📂" Width="30" Margin="2"   ToolTip="Открыть..." Style="{StaticResource TitleBarButtonStyle}" Foreground="#FF12902B"/>
+                            <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить ..." Style="{StaticResource TitleBarButtonStyle}" Foreground="#FF19E2CB"/>
                             <Button Click="ExportData_Click" Content="⇧" Width="30" Margin="2" ToolTip="Экспорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="ImportData_Click" Content="⇩" Width="30" Margin="2" ToolTip="Импорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="ExportSelectedCategory_Click" Content="🗂" Width="30" Margin="2" ToolTip="Экспорт выбранной категории" Style="{StaticResource TitleBarButtonStyle}"/>
@@ -822,8 +822,9 @@
                             <Button Content="𝐁" FontWeight="Bold" ToolTip="Жирный" Width="30" Margin="2" Click="MakeBold_Click" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Content="𝐼" FontStyle="Italic" ToolTip="Курсив" Width="30" Margin="2" Click="MakeItalic_Click" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Content="U" ToolTip="Подчёркнутый" Width="30" Margin="2" Click="MakeUnderline_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="❌" ToolTip="Очистить стиль" Width="30" Margin="2" Click="ClearStyle_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                        </StackPanel>
+                             <Button Content="✘" ToolTip="Очистить стиль" Width="30" Margin="2" Click="ClearStyle_Click" Style="{StaticResource TitleBarButtonStyle}" Foreground="#FFEC3E0B"/>
+                              
+                            </StackPanel>
 
                         <!-- Панель поиска -->
                             <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0" >
@@ -841,7 +842,7 @@
                                      VerticalContentAlignment="Center"
                                      KeyDown="SearchInTextBox_KeyDown"
                                      TextChanged="SearchInTextBox_TextChanged"/>
-                                <Button Click="ClearSearch_Click" Content="❌" Width="30" Height="26" Margin="5,0,2,0" ToolTip="Предыдущее (Shift+F3)" Style="{StaticResource TitleBarButtonStyle}"/>
+                                <Button Click="ClearSearch_Click" Content="✘" Width="30" Height="26" Margin="5,0,2,0" ToolTip="Очистить поиск " Style="{StaticResource TitleBarButtonStyle}" Foreground="#FFED360C"/>
                                 <Button Click="FindPrevious_Click" Content="▲" Width="30" Height="26" Margin="5,0,2,0" ToolTip="Предыдущее (Shift+F3)" Style="{StaticResource TitleBarButtonStyle}"/>
                             <Button Click="FindNext_Click" Content="▼" Width="30" Height="26" Margin="2,0,5,0" ToolTip="Следующее (F3)" Style="{StaticResource TitleBarButtonStyle}"/>
                             <CheckBox x:Name="MatchCaseCheckBox"
