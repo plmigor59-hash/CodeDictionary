@@ -610,6 +610,7 @@
                       Grid.Row="3"
                       SelectedItemChanged="EntriesTreeView_SelectedItemChanged"
                       PreviewMouseLeftButtonDown="EntriesTreeView_PreviewMouseLeftButtonDown"
+                      MouseDoubleClick="EntriesTreeView_MouseDoubleClick"
                       PreviewMouseMove="EntriesTreeView_PreviewMouseMove"
                       AllowDrop="True"
                       DragOver="EntriesTreeView_DragOver"

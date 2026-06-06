@@ -52,6 +52,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<EditorTabModel> _editorTabs = new();
     private EditorTabModel? _activeEditorTab;
     private EditorTabModel? _entryEditorTab;
+    private bool _ignoreTreeSelectionChange;
     private bool _isSwitchingEditorTab;
     private bool _isUpdatingEditorContent;
     private bool _suppressSyntaxSelectionChange;
@@ -88,6 +89,10 @@ public partial class MainWindow : Window
 
         // Подписываемся на изменения текста
         CodeTextBox.TextChanged += CodeTextBox_TextChanged;
+        TitleTextBox.TextChanged += EntryField_TextChanged;
+        DescriptionTextBox.TextChanged += EntryField_TextChanged;
+        TagsTextBox.TextChanged += EntryField_TextChanged;
+        CategoryComboBox.TextChanged += EntryField_TextChanged;
 
     }
 
@@ -107,6 +112,33 @@ public partial class MainWindow : Window
         ActivateEditorTab(_entryEditorTab, selectInTabControl: false);
     }
 
+    private EditorTabModel? FindEntryTab(Guid entryId)
+    {
+        return _editorTabs.FirstOrDefault(tab => tab.Entry?.Id == entryId);
+    }
+
+    private EditorTabModel OpenEntryTab(CodeEntry entry)
+    {
+        var existingTab = FindEntryTab(entry.Id);
+        if (existingTab != null)
+        {
+            ActivateEditorTab(existingTab);
+            return existingTab;
+        }
+
+        var tab = new EditorTabModel(entry.Title, syntaxName: entry.Syntax, isClosable: true)
+        {
+            Entry = entry
+        };
+
+        tab.Document.Text = entry.Code;
+        tab.MarkSaved();
+        LoadSegmentsIntoTab(tab, entry);
+        _editorTabs.Add(tab);
+        ActivateEditorTab(tab);
+        return tab;
+    }
+
     private void CodeTextBox_TextChanged(object? sender, EventArgs e)
     {
         if (_isSwitchingEditorTab || _isUpdatingEditorContent || _activeEditorTab == null)
@@ -115,7 +147,43 @@ public partial class MainWindow : Window
         }
 
         _activeEditorTab.IsDirty = true;
+        SyncActiveEntryTabFromForm();
         UpdateSegmentsAfterTextChange();
+    }
+
+    private void EntryField_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (_isSwitchingEditorTab || _isUpdatingEditorContent)
+        {
+            return;
+        }
+
+        SyncActiveEntryTabFromForm();
+    }
+
+    private void SyncActiveEntryTabFromForm()
+    {
+        var activeTab = GetActiveEditorTab();
+        if (activeTab?.Entry == null)
+        {
+            return;
+        }
+
+        var entry = activeTab.Entry;
+        entry.Title = TitleTextBox.Text;
+        entry.Description = DescriptionTextBox.Text;
+        entry.Code = CodeTextBox.Text;
+        entry.Category = NormalizeCategoryPath(CategoryComboBox.Text);
+        entry.Tags = TagsTextBox.Text
+            .Split(',')
+            .Select(tag => tag.Trim())
+            .Where(tag => !string.IsNullOrWhiteSpace(tag))
+            .ToList();
+        entry.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
+        activeTab.Title = entry.Title;
+        activeTab.SyntaxName = entry.Syntax;
+        activeTab.IsDirty = true;
+        _currentEntry = entry;
     }
 
     private void EditorTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1093,6 +1161,11 @@ public partial class MainWindow : Window
         if (_activeEditorTab != null)
         {
             _activeEditorTab.SyntaxName = selectedSyntax;
+            if (_activeEditorTab.Entry != null)
+            {
+                _activeEditorTab.Entry.Syntax = selectedSyntax ?? string.Empty;
+                _activeEditorTab.IsDirty = true;
+            }
         }
 
         ApplySyntaxHighlighting(selectedSyntax);
@@ -1495,10 +1568,14 @@ public partial class MainWindow : Window
 
     private void EntriesTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
+        if (_ignoreTreeSelectionChange)
+        {
+            _ignoreTreeSelectionChange = false;
+            return;
+        }
+
         if (e.NewValue is CodeEntryViewModel viewEntry)
         {
-            _currentEntry = viewEntry.Entry;
-            LoadEntryToForm(_currentEntry);
             return;
         }
 
@@ -1507,6 +1584,18 @@ public partial class MainWindow : Window
             _selectedCategoryPath = categoryNode.FullPath;
             CategoryComboBox.Text = categoryNode.FullPath;
         }
+    }
+
+    private void EntriesTreeView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        var treeViewItem = FindParent<TreeViewItem>(e.OriginalSource as DependencyObject);
+        if (treeViewItem?.DataContext is not CodeEntryViewModel viewEntry)
+        {
+            return;
+        }
+
+        OpenEntryTab(viewEntry.Entry);
+        e.Handled = true;
     }
 
     private void EntriesTreeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -1652,13 +1741,13 @@ public partial class MainWindow : Window
 
     private void LoadEntryToForm(CodeEntry entry)
     {
-        ActivateEditorTab(_entryEditorTab);
+        var entryTab = OpenEntryTab(entry);
+        ActivateEditorTab(entryTab);
         _isUpdatingEditorContent = true;
         try
         {
             TitleTextBox.Text = entry.Title;
             DescriptionTextBox.Text = entry.Description;
-            CodeTextBox.Text = entry.Code;
             CategoryComboBox.Text = NormalizeCategoryPath(entry.Category);
             TagsTextBox.Text = string.Join(", ", entry.Tags);
 
@@ -1670,7 +1759,6 @@ public partial class MainWindow : Window
                 SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
             }
 
-            LoadSegmentsFromEntry();
             ClearSearch();
         }
         finally
@@ -1678,34 +1766,17 @@ public partial class MainWindow : Window
             _isUpdatingEditorContent = false;
         }
 
-        _activeEditorTab?.MarkSaved();
+        _currentEntry = entryTab.Entry;
+        entryTab.MarkSaved();
     }
 
     private void AddEntry_Click(object sender, RoutedEventArgs e)
     {
-        ActivateEditorTab(_entryEditorTab);
-
-        _currentEntry = new CodeEntry();
-        _data.Entries.Add(_currentEntry);
-        _isUpdatingEditorContent = true;
-        try
-        {
-            TitleTextBox.Text = "";
-            DescriptionTextBox.Text = "";
-            CodeTextBox.Text = "";
-            CategoryComboBox.Text = _selectedCategoryPath;
-            TagsTextBox.Text = "";
-            RefreshCategoryFilter();
-
-            ClearSearch();
-            TitleTextBox.Focus();
-        }
-        finally
-        {
-            _isUpdatingEditorContent = false;
-        }
-
-        _activeEditorTab?.MarkSaved();
+        var newEntry = new CodeEntry();
+        _data.Entries.Add(newEntry);
+        _currentEntry = newEntry;
+        LoadEntryToForm(newEntry);
+        TitleTextBox.Focus();
     }
 
     private void ClearEditingForm()
@@ -1831,6 +1902,35 @@ public partial class MainWindow : Window
     }
 
     // Применение форматирования к редактору (если нужно)
+    private void LoadSegmentsIntoTab(EditorTabModel tab, CodeEntry entry)
+    {
+        tab.Segments.Clear();
+
+        if (string.IsNullOrEmpty(entry.FormattingData))
+        {
+            return;
+        }
+
+        try
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            var container = JsonSerializer.Deserialize<FormattingContainer>(entry.FormattingData, options);
+            if (container?.Segments != null)
+            {
+                tab.Segments.AddRange(container.Segments);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Ошибка загрузки форматирования: {ex.Message}");
+            tab.Segments.Clear();
+        }
+    }
+
     private void ApplySegmentsToEditor()
     {
         // Здесь ваша логика отрисовки сегментов
@@ -1845,9 +1945,10 @@ public partial class MainWindow : Window
 
     private async void SaveEntry_Click(object sender, RoutedEventArgs e)
     {
-        ActivateEditorTab(_entryEditorTab);
+        var activeTab = GetActiveEditorTab();
+        var entry = activeTab?.Entry;
 
-        if (_currentEntry == null)
+        if (entry == null)
         {
             ShowAlert("Выберите или создайте запись", isError: true);
             return;
@@ -1863,21 +1964,29 @@ public partial class MainWindow : Window
       
 
 
-        _currentEntry.Title = TitleTextBox.Text;
-        _currentEntry.Description = DescriptionTextBox.Text;
-        _currentEntry.Code = CodeTextBox.Text;
-        _currentEntry.Category = NormalizeCategoryPath(CategoryComboBox.Text);
-        _currentEntry.Tags = TagsTextBox.Text
+        entry.Title = TitleTextBox.Text;
+        entry.Description = DescriptionTextBox.Text;
+        entry.Code = CodeTextBox.Text;
+        entry.Category = NormalizeCategoryPath(CategoryComboBox.Text);
+        entry.Tags = TagsTextBox.Text
             .Split(',')
             .Select(t => t.Trim())
             .Where(t => !string.IsNullOrWhiteSpace(t))
             .ToList();
-        _currentEntry.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
-        _currentEntry.ModifiedAt = DateTime.Now;
+        entry.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
+        entry.ModifiedAt = DateTime.Now;
         
+        if (activeTab != null)
+        {
+            activeTab.Title = entry.Title;
+            activeTab.SyntaxName = entry.Syntax;
+            activeTab.IsDirty = false;
+        }
+
+        _currentEntry = entry;
         SaveSegmentsToEntry();
 
-        EnsureCategoryPathExists(_currentEntry.Category);
+        EnsureCategoryPathExists(entry.Category);
 
         await _dataService.SaveDataAsync(_data);
         RefreshEntriesList();
@@ -1892,9 +2001,10 @@ public partial class MainWindow : Window
 
     private async void DeleteEntry_Click(object sender, RoutedEventArgs e)
     {
-        ActivateEditorTab(_entryEditorTab);
+        var activeTab = GetActiveEditorTab();
+        var entry = activeTab?.Entry;
 
-        if (_currentEntry == null)
+        if (entry == null)
         {
             ShowAlert("Выберите запись для удаления", isError: true);
             return;

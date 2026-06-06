@@ -1,5 +1,6 @@
 using CodeDictionary;
 using ICSharpCode.AvalonEdit.Document;
+using CodeDictionary.Models;
 using System.IO;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -93,6 +94,10 @@ public class EditorTabModel : INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
+
+    public CodeEntry? Entry { get; set; }
+
+    public bool IsEntryTab => Entry != null;
 
     public string DisplayName => !string.IsNullOrWhiteSpace(FilePath)
         ? Path.GetFileName(FilePath)
