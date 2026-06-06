@@ -1504,20 +1504,47 @@
 
                 </Grid>
                 <!--  Теги  -->
-                <StackPanel Grid.Row="5">
+                <Grid Grid.Row="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Текст "Теги:" -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- TextBox (растягивается) -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Кнопка -->
+                    </Grid.ColumnDefinitions>
+
                     <TextBlock
-                        Margin="0,0,0,5"
-                        FontWeight="Bold"
-                        Foreground="#CCCCCC"
-                        Text="Теги (через запятую):" />
+        Grid.Column="0"
+        Margin="10,0,10,5"
+        VerticalAlignment="Center"
+        FontWeight="Bold"
+        Foreground="#CCCCCC"
+        Text="Теги (через запятую):" />
+
                     <TextBox
-                        x:Name="TagsTextBox"
-                        Padding="5"
-                        Background="#3C3C3C"
-                        BorderBrush="#555555"
-                        FontSize="14"
-                        Foreground="#CCCCCC" />
-                </StackPanel>
+        x:Name="TagsTextBox"
+        Grid.Column="1"
+        Padding="5"
+        Background="#3C3C3C"
+        BorderBrush="#555555"
+        FontSize="14"
+        Foreground="#CCCCCC" />
+
+                    <Button 
+        Grid.Column="2"
+        Margin="10,0,10,5"
+        Width="103"
+        Height="30"
+        Padding="10,5"
+        Background="#F6AF3C"
+        BorderThickness="0"
+        Click="CloseButton_Click"
+        Content="🔚  Закрыть"
+        Cursor="Hand"
+        Foreground="White"
+        Style="{StaticResource ActionButtonStyle}" />
+                </Grid>
 
             </Grid>
         </Grid>

@@ -7,8 +7,10 @@ using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -18,7 +20,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using System.Xml;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace CodeDictionary;
@@ -56,7 +60,6 @@ public partial class MainWindow : Window
     private bool _isSwitchingEditorTab;
     private bool _isUpdatingEditorContent;
     private bool _suppressSyntaxSelectionChange;
-
 
     public MainWindow()
 
@@ -103,13 +106,13 @@ public partial class MainWindow : Window
     {
         _editorTabs.Clear();
 
-        //_entryEditorTab = new EditorTabModel("Запись", isClosable: false);
-        //_editorTabs.Add(_entryEditorTab);
+       
 
         if (EditorTabs != null)
         {
             EditorTabs.ItemsSource = _editorTabs;
             EditorTabs.SelectedItem = _entryEditorTab;
+         
         }
 
         ActivateEditorTab(_entryEditorTab, selectInTabControl: false);
@@ -142,6 +145,7 @@ public partial class MainWindow : Window
         return tab;
     }
 
+   
     private void CodeTextBox_TextChanged(object? sender, EventArgs e)
     {
         if (_isSwitchingEditorTab || _isUpdatingEditorContent || _activeEditorTab == null)
@@ -187,20 +191,33 @@ public partial class MainWindow : Window
         activeTab.SyntaxName = entry.Syntax;
         activeTab.IsDirty = true;
         _currentEntry = entry;
+        //FindAndFocusItem(string.IsNullOrWhiteSpace(entry.Title) ? "Без названия" : entry.Title);
+
+
     }
 
     private void EditorTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        //string _currentSelection = $"{string.Join(", ", e.AddedItems.Cast<EditorTabModel>().Select(t => t.Title))} ";
+        ////string _currentSelection= "HTML";
+        //////MessageBox.Show(_currentSelection);
+
+
+        //FindTreeViewItemRecursive(EntriesTreeView, item => item.Header?.ToString() == _currentSelection);
+
+
+
         if (_isSwitchingEditorTab || EditorTabs?.SelectedItem is not EditorTabModel tab)
         {
             return;
         }
-
+      
         ActivateEditorTab(tab, selectInTabControl: false);
     }
 
     private EditorTabModel? GetActiveEditorTab()
     {
+        //FindAndFocusItem(_activeEditorTab?.Title ?? string.Empty);
         return _activeEditorTab ?? _entryEditorTab;
     }
 
@@ -240,6 +257,7 @@ public partial class MainWindow : Window
         if (_editorTabs.Count == 0)
         {
             InitializeEditorTabs();
+            ClearEditingForm();
             return;
         }
 
@@ -289,7 +307,14 @@ public partial class MainWindow : Window
 
             _suppressSyntaxSelectionChange = true;
 
-            //TitleTextBox.Text = tab.Title;
+            var currentIndex = _editorTabs.IndexOf(tab);
+                if (currentIndex >= 0)
+                {
+                TitleTextBox.Text = this.Title;
+            }
+
+            
+
             try
             {
                 if (!string.IsNullOrWhiteSpace(tab.SyntaxName))
@@ -390,10 +415,7 @@ public partial class MainWindow : Window
         {
             CodeTextBox.SyntaxHighlighting = _darkCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
         }
-        else if (syntax == "Стандартная (C++)")
-        {
-            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C++");
-        }
+        
         else if (syntax == "Темная (1C)")
         {
             CodeTextBox.SyntaxHighlighting = _dark1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
@@ -405,6 +427,10 @@ public partial class MainWindow : Window
         else if (syntax == "Темная (HTML)")
         {
             CodeTextBox.SyntaxHighlighting = _darkHTMLHigh ?? HighlightingManager.Instance.GetDefinition("HTML Dark");
+        }
+        else if (syntax == "Стандартная (C#)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
         }
         else if (syntax == "Стандартная (1C)")
         {
@@ -987,22 +1013,7 @@ public partial class MainWindow : Window
             _darkCSharpHighlighting = null;
         }
 
-        try
-        {
-            var lightXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LightCSharp.xshd");
-            if (System.IO.File.Exists(lightXshdPath))
-            {
-                using (var reader = new XmlTextReader(lightXshdPath))
-                {
-                    _lightCSharpHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
-                }
-            }
-        }
-        catch
-        {
-            _lightCSharpHighlighting = null;
-        }
-
+        
         // Если не удалось загрузить кастомную светлую тему, используем стандартную
         if (_lightCSharpHighlighting == null)
         {
@@ -1025,22 +1036,7 @@ public partial class MainWindow : Window
             _darkCppHighlighting = null;
         }
 
-        try
-        {
-            var lightCppPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LightCpp.xshd");
-            if (System.IO.File.Exists(lightCppPath))
-            {
-                using (var reader = new XmlTextReader(lightCppPath))
-                {
-                    _lightCppHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
-                }
-            }
-        }
-        catch
-        {
-            _lightCppHighlighting = null;
-
-        }
+        
 
         if (_lightCppHighlighting == null)
         {
@@ -1399,11 +1395,11 @@ public partial class MainWindow : Window
             if (SyntaxHighlightingComboBox != null)
             {
                 var selected = SyntaxHighlightingComboBox.SelectedItem?.ToString();
-                if (selected == "LightCSharp" || selected == "Стандартная (C#)")
+                if ( selected == "Стандартная (C#)")
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 0; // DarkCSharp
                 }
-                else if (selected == "LightCpp" || selected == "Стандартная (C++)")
+                else if ( selected == "Стандартная (C++)")
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 2; // DarkCpp
                 }
@@ -1484,13 +1480,13 @@ public partial class MainWindow : Window
             if (SyntaxHighlightingComboBox != null)
             {
                 var selected = SyntaxHighlightingComboBox.SelectedItem?.ToString();
-                if (selected == "DarkCSharp" || selected == "Стандартная (C#)")
+                if (selected == "LightCSharp")
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 1; // LightCSharp
                 }
-                else if (selected == "DarkCpp" || selected == "Стандартная (C++)")
+                else if (selected == "LightCpp")
                 {
-                    SyntaxHighlightingComboBox.SelectedIndex = 3; // LightCpp
+                    SyntaxHighlightingComboBox.SelectedIndex = 2; // LightCpp
                 }
                 else if (string.IsNullOrEmpty(selected))
                 {
@@ -1781,6 +1777,8 @@ public partial class MainWindow : Window
         var newEntry = new CodeEntry();
         _data.Entries.Add(newEntry);
         _currentEntry = newEntry;
+        _entryEditorTab = OpenEntryTab(newEntry); 
+        _isUpdatingEditorContent = true;
         LoadEntryToForm(newEntry);
         TitleTextBox.Focus();
     }
@@ -1949,11 +1947,10 @@ public partial class MainWindow : Window
 
 
 
-private async void SaveEntry_Click(object sender, RoutedEventArgs e)
+    private async void SaveEntry_Click(object sender, RoutedEventArgs e)
      {
          var activeTab = GetActiveEditorTab();
 
-         // Если это вкладка файла без привязанной записи - создаем новую запись
          if (activeTab != null && activeTab.Entry == null && activeTab.IsFromFile)
          {
              var entry = new CodeEntry
@@ -1982,13 +1979,12 @@ private async void SaveEntry_Click(object sender, RoutedEventArgs e)
              return;
          }
 
-         var entryFromTab = activeTab?.Entry;
+         var tabTitle = activeTab?.Title;
 
-         if (entryFromTab == null)
+         if (string.IsNullOrWhiteSpace(tabTitle))
          {
-             ShowAlert("Выберите или создайте запись", isError: true);
+             ShowAlert("Нет активной закладки", isError: true);
              return;
-
          }
 
          if (string.IsNullOrWhiteSpace(TitleTextBox.Text))
@@ -1997,32 +1993,37 @@ private async void SaveEntry_Click(object sender, RoutedEventArgs e)
              return;
          }
 
-       
+         var entryToUpdate = _data.Entries.FirstOrDefault(e => e.Title == tabTitle);
+         if (entryToUpdate == null)
+         {
+             ShowAlert("Запись не найдена", isError: true);
+             return;
+         }
 
-
-         entryFromTab.Title = TitleTextBox.Text;
-         entryFromTab.Description = DescriptionTextBox.Text;
-         entryFromTab.Code = CodeTextBox.Text;
-         entryFromTab.Category = NormalizeCategoryPath(CategoryComboBox.Text);
-         entryFromTab.Tags = TagsTextBox.Text
+         entryToUpdate.Title = TitleTextBox.Text;
+         entryToUpdate.Description = DescriptionTextBox.Text;
+         entryToUpdate.Code = CodeTextBox.Text;
+         entryToUpdate.Category = NormalizeCategoryPath(CategoryComboBox.Text);
+         entryToUpdate.Tags = TagsTextBox.Text
              .Split(',')
              .Select(t => t.Trim())
              .Where(t => !string.IsNullOrWhiteSpace(t))
              .ToList();
-         entryFromTab.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
-         entryFromTab.ModifiedAt = DateTime.Now;
-         
+         entryToUpdate.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
+         entryToUpdate.ModifiedAt = DateTime.Now;
+
          if (activeTab != null)
          {
-             activeTab.Title = entryFromTab.Title;
-             activeTab.SyntaxName = entryFromTab.Syntax;
+             activeTab.Entry = entryToUpdate;
+             activeTab.Title = entryToUpdate.Title;
+             activeTab.SyntaxName = entryToUpdate.Syntax;
              activeTab.IsDirty = false;
          }
 
-         _currentEntry = entryFromTab;
+         _currentEntry = entryToUpdate;
          SaveSegmentsToEntry();
 
-         EnsureCategoryPathExists(entryFromTab.Category);
+         EnsureCategoryPathExists(entryToUpdate.Category);
 
          await _dataService.SaveDataAsync(_data);
          RefreshEntriesList();
@@ -2030,17 +2031,25 @@ private async void SaveEntry_Click(object sender, RoutedEventArgs e)
          _snackbar.Show(CodeTextBox, "Запись сохранена", NotificationType.Success, 1.5);
 
       
-    }
+     }
 
 
 
 
     private async void DeleteEntry_Click(object sender, RoutedEventArgs e)
     {
-        var activeTab = GetActiveEditorTab();
-        var entry = activeTab?.Entry;
+        CodeEntry? entryToDelete = null;
 
-        if (entry == null)
+        if (EntriesTreeView.SelectedItem is CodeEntryViewModel viewEntry)
+        {
+            entryToDelete = viewEntry.Entry;
+        }
+        else if (_currentEntry != null)
+        {
+            entryToDelete = _currentEntry;
+        }
+
+        if (entryToDelete == null)
         {
             ShowAlert("Выберите запись для удаления", isError: true);
             return;
@@ -2049,7 +2058,8 @@ private async void SaveEntry_Click(object sender, RoutedEventArgs e)
 
             if (CustomMessageBox.ShowQuestion("Удалить запись?", "Подтверждение") )
             {
-                _data.Entries.Remove(_currentEntry);
+                var deletedEntryId = entryToDelete.Id;
+                _data.Entries.Remove(entryToDelete);
                 await _dataService.SaveDataAsync(_data);
                 _currentEntry = null;
                 TitleTextBox.Text = "";
@@ -2057,6 +2067,11 @@ private async void SaveEntry_Click(object sender, RoutedEventArgs e)
                 CodeTextBox.Text = "";
                 CategoryComboBox.Text = "";
                 TagsTextBox.Text = "";
+                var deletedTab = FindEntryTab(deletedEntryId);
+                if (deletedTab != null)
+                {
+                    CloseEditorTab(deletedTab);
+                }
                 RefreshEntriesList();
                 _snackbar.Show(CodeTextBox, "Запись удалена", NotificationType.Success, 1.5);
             }
@@ -3051,6 +3066,25 @@ private async void SaveEntry_Click(object sender, RoutedEventArgs e)
 
             _data.Categories.RemoveAll(existing => categoriesToDeleteSet.Contains(NormalizeCategoryPath(existing)));
             _data.Entries.RemoveAll(entry => deletedEntryIds.Contains(entry.Id));
+
+            foreach (var entryId in deletedEntryIds)
+            {
+                var tab = FindEntryTab(entryId);
+                if (tab != null)
+                {
+                    _editorTabs.Remove(tab);
+                }
+            }
+
+            if (_editorTabs.Count == 0)
+            {
+                InitializeEditorTabs();
+                ClearEditingForm();
+            }
+            else if (_activeEditorTab != null && deletedEntryIds.Contains(_activeEditorTab.Entry?.Id ?? Guid.Empty))
+            {
+                ActivateEditorTab(_editorTabs[0]);
+            }
 
             if (string.Equals(_selectedCategoryPath, categoryPath, StringComparison.OrdinalIgnoreCase) ||
                 _selectedCategoryPath.StartsWith($"{categoryPath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase))
