@@ -289,7 +289,7 @@ public partial class MainWindow : Window
                 }
 
                 // Обновляем заголовок окна или статус
-                this.Title = $"{Path.GetFileName(_currentFilePath)} - Мой редактор";
+                //this.Title = $"{Path.GetFileName(_currentFilePath)} - Мой редактор";
 
                 // Показываем уведомление об успехе
                 _snackbar.Show(CodeTextBox, $"Файл '{Path.GetFileName(_currentFilePath)}' успешно открыт", NotificationType.Success, 1.5);
