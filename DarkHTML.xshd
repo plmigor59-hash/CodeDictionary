@@ -1,29 +1,62 @@
 <?xml version="1.0"?>
-<SyntaxDefinition name="HTML Dark" 
-    xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
-    
-    <Color name="Tag" foreground="#569CD6" />
-    <Color name="AttributeName" foreground="#9CDCFE" />
-    <Color name="AttributeValue" foreground="#CE9178" />
-    <Color name="Comment" foreground="#6A9955" />
-    
-    <RuleSet>
-        
-        <!-- Комментарии -->
-        <Span color="Comment" begin="&lt;!--" end="--&gt;" />
-        
-        <!-- Открывающий тег -->
-        <Span color="Tag" begin="&lt;[A-Za-z_][A-Za-z0-9]*" end="&gt;">
-            <RuleSet>
-                <Span color="AttributeName" begin="[A-Za-z_][A-Za-z0-9-]*" end="=" />
-                <Span color="AttributeValue" begin="&quot;" end="&quot;" />
-                <Span color="AttributeValue" begin="'" end="'" />
-            </RuleSet>
+<SyntaxDefinition name="HTML Dark Fixed"
+                  extensions=".html;.htm"
+                  xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+
+  <Color name="Tag"
+         foreground="#E86868" />
+  <Color name="AttributeName"
+         foreground="#FFC66D" />
+  <Color name="AttributeValue"
+         foreground="#A5C25C" />
+  <Color name="Comment"
+         foreground="#808080" />
+  <Color name="Entity"
+         foreground="#99CC99" />
+
+  <RuleSet ignoreCase="true">
+    <!-- HTML-комментарии -->
+    <Span color="Comment"
+          begin="&lt;!--"
+          end="--&gt;" />
+
+    <!-- HTML-сущности -->
+    <Span color="Entity"
+          begin="&amp;"
+          end=";" />
+
+    <!-- Открывающие теги -->
+    <Span color="Tag"
+          begin="&lt;"
+          end="&gt;">
+      <RuleSet>
+        <!-- Имя тега (сразу после <) -->
+        <Rule color="Tag">[A-Za-z_][A-Za-z0-9_]*</Rule>
+
+        <!-- Атрибуты (имя=...) -->
+        <Span color="AttributeName"
+              begin="[A-Za-z_][A-Za-z0-9_-]*"
+              end="=">
+          <RuleSet>
+            <!-- Значения атрибутов в кавычках -->
+            <Span color="AttributeValue"
+                  begin="&quot;"
+                  end="&quot;" />
+            <Span color="AttributeValue"
+                  begin="'"
+                  end="'" />
+          </RuleSet>
         </Span>
-        
-        <!-- Закрывающий тег -->
-        <Span color="Tag" begin="&lt;/[A-Za-z_][A-Za-z0-9]*" end="&gt;" />
-        
-    </RuleSet>
-    
+      </RuleSet>
+    </Span>
+
+    <!-- Закрывающие теги -->
+    <Span color="Tag"
+          begin="&lt;/"
+          end="&gt;">
+      <RuleSet>
+        <Rule color="Tag">[A-Za-z_][A-Za-z0-9_]*</Rule>
+      </RuleSet>
+    </Span>
+  </RuleSet>
 </SyntaxDefinition>
