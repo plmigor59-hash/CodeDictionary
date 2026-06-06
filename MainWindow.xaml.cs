@@ -1972,7 +1972,7 @@ private async void SaveEntry_Click(object sender, RoutedEventArgs e)
              activeTab.Title = entry.Title;
              activeTab.IsDirty = false;
              activeTab.NotifyHeaderChanged();
-            TitleTextBox.Text = entry.Title;
+            
 
             _currentEntry = entry;
              SaveSegmentsToEntry();
