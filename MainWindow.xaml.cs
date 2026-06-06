@@ -45,7 +45,7 @@ public partial class MainWindow : Window
     private IHighlightingDefinition? _dark1CHigh;
     private IHighlightingDefinition? _darkXMLHigh;
     private IHighlightingDefinition? _darkHTMLHigh;     
-    private string _currentFilePath = null;  // Хранит путь к текущему открытому файлу0
+    private string? _currentFilePath = null;  // Хранит путь к текущему открытому файлу0
     private SnackbarNotification _snackbar = new SnackbarNotification();
     private List<TextSegmentStyle> _textSegments = new();
 
@@ -140,9 +140,9 @@ public partial class MainWindow : Window
     
     }
 
-    private void ApplyStyleToSelection(string backgroundColor = null, string foregroundColor = null,
+    private void ApplyStyleToSelection(string? backgroundColor = null, string? foregroundColor = null,
                                           bool? bold = null, bool? italic = null, bool? underline = null,
-                                          string fontFamily = null, double? fontSize = null)
+                                          string? fontFamily = null, double? fontSize = null)
     {
         var selection = CodeTextBox.TextArea.Selection;
         if (selection.IsEmpty)
@@ -407,9 +407,13 @@ public partial class MainWindow : Window
 
         // Настройки диалога
         saveFileDialog.Title = "Сохранить файл как";
-        saveFileDialog.Filter = "Текстовые файлы (*.txt)|*.txt|1c (*.bsl)|*.bsl|c# (*.cs)|*.cs|Все файлы (*.*)|*.*";
+        saveFileDialog.Filter = "Все файлы (*.*)|*.*|" +
+                                "Текстовые файлы (*.txt)|*.txt|" +
+                                "1c (*.bsl)|*.bsl|" +
+                                "c# (*.cs)|*.cs|" +
+                                "XSHD (*.xshd)|*.xshd";
         saveFileDialog.FilterIndex = 1;
-        saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        //saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
         // Если файл уже был открыт, предлагаем его имя по умолчанию
         if (!string.IsNullOrEmpty(_currentFilePath))
@@ -1631,7 +1635,7 @@ public partial class MainWindow : Window
         _searchResults.Clear();
         _currentSearchIndex = -1;
 
-        string searchText = SearchInTextBox?.Text;
+        string? searchText = SearchInTextBox?.Text;
         if (string.IsNullOrEmpty(searchText) || CodeTextBox == null)
         {
             if (SearchResultsTextBlock != null)
@@ -1758,7 +1762,7 @@ public partial class MainWindow : Window
             Title = "Экспорт базы",
             Filter = "JSON (*.json)|*.json|XML (*.xml)|*.xml",
             FilterIndex = 1,
-            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+            //InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
         };
 
         if (saveFileDialog.ShowDialog() != true)
@@ -1785,7 +1789,7 @@ public partial class MainWindow : Window
             Title = "Импорт базы",
             Filter = "JSON (*.json)|*.json|XML (*.xml)|*.xml",
             FilterIndex = 1,
-            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+            //InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
         };
 
         if (openFileDialog.ShowDialog() != true)
@@ -1870,7 +1874,7 @@ public partial class MainWindow : Window
             Title = $"Экспорт категории '{normalizedCategoryPath}'",
             Filter = "JSON (*.json)|*.json|XML (*.xml)|*.xml",
             FilterIndex = 1,
-            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            //InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             FileName = SanitizeFileName(GetCategorySegmentName(normalizedCategoryPath))
         };
 
