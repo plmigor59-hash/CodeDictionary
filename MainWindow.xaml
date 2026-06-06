@@ -1,83 +1,115 @@
-<Window x:Class="CodeDictionary.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:CodeDictionary"
-        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
-        xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
-        mc:Ignorable="d"
-        Title="Справочник кода C#" Height="700" Width="1200"
-        WindowStartupLocation="CenterScreen"
-        WindowStyle="None"
-        AllowsTransparency="False"
-        ResizeMode="CanResize"
-        Background="#1E1E1E">
+<Window
+    x:Class="CodeDictionary.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CodeDictionary"
+    xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Справочник кода C#"
+    Width="1200"
+    Height="700"
+    AllowsTransparency="False"
+    Background="#1E1E1E"
+    ResizeMode="CanResize"
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None"
+    mc:Ignorable="d">
     <Window.Resources>
 
 
         <LinearGradientBrush x:Key="DictWindowGradient" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#111720" Offset="0"/>
-            <GradientStop Color="#1A2332" Offset="0.5"/>
-            <GradientStop Color="#1C2A3A" Offset="1"/>
+            <GradientStop Offset="0" Color="#111720" />
+            <GradientStop Offset="0.5" Color="#1A2332" />
+            <GradientStop Offset="1" Color="#1C2A3A" />
         </LinearGradientBrush>
-        <SolidColorBrush x:Key="DictSurface" Color="#202A38"/>
-        <SolidColorBrush x:Key="DictSurfaceStrong" Color="#273447"/>
-        <SolidColorBrush x:Key="DictBorder" Color="#36465E"/>
-        <SolidColorBrush x:Key="DictCardBackground" Color="#202A38"/>
-        <SolidColorBrush x:Key="DictTitleBackground" Color="#A51A2534"/>
-        <SolidColorBrush x:Key="DictStatusBackground" Color="#132f4b"/>
-        <SolidColorBrush x:Key="DictAccent" Color="#5BA5FF"/>
-        <SolidColorBrush x:Key="DictTextPrimary" Color="#EDF2F7"/>
-        <SolidColorBrush x:Key="DictTextSecondary" Color="#A7B3C5"/>
-        <SolidColorBrush x:Key="DictSuccess" Color="#4ADE80"/>
-        <SolidColorBrush x:Key="DictChat" Color="#FFD700"/>
-        <SolidColorBrush x:Key="DarkBackground" Color="#1E1E1E"/>
+        <SolidColorBrush x:Key="DictSurface" Color="#202A38" />
+        <SolidColorBrush x:Key="DictSurfaceStrong" Color="#273447" />
+        <SolidColorBrush x:Key="DictBorder" Color="#36465E" />
+        <SolidColorBrush x:Key="DictCardBackground" Color="#202A38" />
+        <SolidColorBrush x:Key="DictTitleBackground" Color="#A51A2534" />
+        <SolidColorBrush x:Key="DictStatusBackground" Color="#132f4b" />
+        <SolidColorBrush x:Key="DictAccent" Color="#5BA5FF" />
+        <SolidColorBrush x:Key="DictTextPrimary" Color="#EDF2F7" />
+        <SolidColorBrush x:Key="DictTextSecondary" Color="#A7B3C5" />
+        <SolidColorBrush x:Key="DictSuccess" Color="#4ADE80" />
+        <SolidColorBrush x:Key="DictChat" Color="#FFD700" />
+        <SolidColorBrush x:Key="DarkBackground" Color="#1E1E1E" />
 
         <Style x:Key="ToggleSwitchStyle" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{DynamicResource  DictTextPrimary}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border x:Name="Track" Width="42" Height="22" CornerRadius="11"
-                                    Background="{DynamicResource DictBorder}" VerticalAlignment="Center"
-                                    RenderTransformOrigin="0.5,0.5">
+                            <Border
+                                x:Name="Track"
+                                Width="42"
+                                Height="22"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource DictBorder}"
+                                CornerRadius="11"
+                                RenderTransformOrigin="0.5,0.5">
                                 <Border.RenderTransform>
-                                    <ScaleTransform x:Name="ToggleScale" ScaleX="1" ScaleY="1"/>
+                                    <ScaleTransform x:Name="ToggleScale" ScaleX="1" ScaleY="1" />
                                 </Border.RenderTransform>
-                                <Ellipse x:Name="Thumb" Width="16" Height="16" Fill="#F4F7FB"
-                                         HorizontalAlignment="Left" Margin="3,0,0,0"/>
+                                <Ellipse
+                                    x:Name="Thumb"
+                                    Width="16"
+                                    Height="16"
+                                    Margin="3,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    Fill="#F4F7FB" />
                             </Border>
-                            <ContentPresenter Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            <ContentPresenter
+                                Grid.Column="1"
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Center" />
                         </Grid>
                         <ControlTemplate.Triggers>
                             <EventTrigger RoutedEvent="MouseEnter">
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="ToggleScale" Storyboard.TargetProperty="ScaleX" To="1.05" Duration="0:0:0.1"/>
-                                        <DoubleAnimation Storyboard.TargetName="ToggleScale" Storyboard.TargetProperty="ScaleY" To="1.05" Duration="0:0:0.1"/>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ToggleScale"
+                                            Storyboard.TargetProperty="ScaleX"
+                                            To="1.05"
+                                            Duration="0:0:0.1" />
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ToggleScale"
+                                            Storyboard.TargetProperty="ScaleY"
+                                            To="1.05"
+                                            Duration="0:0:0.1" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </EventTrigger>
                             <EventTrigger RoutedEvent="MouseLeave">
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="ToggleScale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.1"/>
-                                        <DoubleAnimation Storyboard.TargetName="ToggleScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.1"/>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ToggleScale"
+                                            Storyboard.TargetProperty="ScaleX"
+                                            To="1"
+                                            Duration="0:0:0.1" />
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ToggleScale"
+                                            Storyboard.TargetProperty="ScaleY"
+                                            To="1"
+                                            Duration="0:0:0.1" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </EventTrigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource DictAccent}"/>
-                                <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
-                                <Setter TargetName="Thumb" Property="Margin" Value="0,0,3,0"/>
+                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource DictAccent}" />
+                                <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" />
+                                <Setter TargetName="Thumb" Property="Margin" Value="0,0,3,0" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -88,60 +120,81 @@
 
 
         <Style x:Key="ActionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource DictAccent}"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#8BC3FF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="{DynamicResource DictAccent}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#8BC3FF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="ButtonBorder"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="9"
-                                RenderTransformOrigin="0.5,0.5">
+                        <Border
+                            x:Name="ButtonBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="9"
+                            RenderTransformOrigin="0.5,0.5">
                             <Border.RenderTransform>
-                                <ScaleTransform x:Name="ActionButtonScale" ScaleX="1" ScaleY="1"/>
+                                <ScaleTransform x:Name="ActionButtonScale" ScaleX="1" ScaleY="1" />
                             </Border.RenderTransform>
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <EventTrigger RoutedEvent="MouseEnter">
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="ActionButtonScale" Storyboard.TargetProperty="ScaleX" To="1.02" Duration="0:0:0.12"/>
-                                        <DoubleAnimation Storyboard.TargetName="ActionButtonScale" Storyboard.TargetProperty="ScaleY" To="1.02" Duration="0:0:0.12"/>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ActionButtonScale"
+                                            Storyboard.TargetProperty="ScaleX"
+                                            To="1.02"
+                                            Duration="0:0:0.12" />
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ActionButtonScale"
+                                            Storyboard.TargetProperty="ScaleY"
+                                            To="1.02"
+                                            Duration="0:0:0.12" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </EventTrigger>
                             <EventTrigger RoutedEvent="MouseLeave">
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="ActionButtonScale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.12"/>
-                                        <DoubleAnimation Storyboard.TargetName="ActionButtonScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.12"/>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ActionButtonScale"
+                                            Storyboard.TargetProperty="ScaleX"
+                                            To="1"
+                                            Duration="0:0:0.12" />
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ActionButtonScale"
+                                            Storyboard.TargetProperty="ScaleY"
+                                            To="1"
+                                            Duration="0:0:0.12" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </EventTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="#3F90EB"/>
-                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#B9DBFF"/>
-                                <Setter Property="Foreground" Value="#0B223C"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#3F90EB" />
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#B9DBFF" />
+                                <Setter Property="Foreground" Value="#0B223C" />
                                 <Setter TargetName="ButtonBorder" Property="Effect">
                                     <Setter.Value>
-                                        <DropShadowEffect BlurRadius="12" ShadowDepth="0" Opacity="0.32" Color="#5BA5FF"/>
+                                        <DropShadowEffect
+                                            BlurRadius="12"
+                                            Opacity="0.32"
+                                            ShadowDepth="0"
+                                            Color="#5BA5FF" />
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="#2E79CF"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#2E79CF" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.45"/>
+                                <Setter Property="Opacity" Value="0.45" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -149,60 +202,81 @@
             </Setter>
         </Style>
         <Style x:Key="ActionButtonStyleGreen" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource DictAccent}"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#8BC3FF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="{DynamicResource DictAccent}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#8BC3FF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="ButtonBorder"
-                        Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="9"
-                        RenderTransformOrigin="0.5,0.5">
+                        <Border
+                            x:Name="ButtonBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="9"
+                            RenderTransformOrigin="0.5,0.5">
                             <Border.RenderTransform>
-                                <ScaleTransform x:Name="ActionButtonScale" ScaleX="1" ScaleY="1"/>
+                                <ScaleTransform x:Name="ActionButtonScale" ScaleX="1" ScaleY="1" />
                             </Border.RenderTransform>
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <EventTrigger RoutedEvent="MouseEnter">
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="ActionButtonScale" Storyboard.TargetProperty="ScaleX" To="1.02" Duration="0:0:0.12"/>
-                                        <DoubleAnimation Storyboard.TargetName="ActionButtonScale" Storyboard.TargetProperty="ScaleY" To="1.02" Duration="0:0:0.12"/>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ActionButtonScale"
+                                            Storyboard.TargetProperty="ScaleX"
+                                            To="1.02"
+                                            Duration="0:0:0.12" />
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ActionButtonScale"
+                                            Storyboard.TargetProperty="ScaleY"
+                                            To="1.02"
+                                            Duration="0:0:0.12" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </EventTrigger>
                             <EventTrigger RoutedEvent="MouseLeave">
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="ActionButtonScale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.12"/>
-                                        <DoubleAnimation Storyboard.TargetName="ActionButtonScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.12"/>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ActionButtonScale"
+                                            Storyboard.TargetProperty="ScaleX"
+                                            To="1"
+                                            Duration="0:0:0.12" />
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ActionButtonScale"
+                                            Storyboard.TargetProperty="ScaleY"
+                                            To="1"
+                                            Duration="0:0:0.12" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </EventTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="Green"/>
-                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#E0F63C"/>
-                                <Setter Property="Foreground" Value="#0B223C"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="Green" />
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#E0F63C" />
+                                <Setter Property="Foreground" Value="#0B223C" />
                                 <Setter TargetName="ButtonBorder" Property="Effect">
                                     <Setter.Value>
-                                        <DropShadowEffect BlurRadius="12" ShadowDepth="0" Opacity="0.32" Color="#5BA5FF"/>
+                                        <DropShadowEffect
+                                            BlurRadius="12"
+                                            Opacity="0.32"
+                                            ShadowDepth="0"
+                                            Color="#5BA5FF" />
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="#1E4903"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#1E4903" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.45"/>
+                                <Setter Property="Opacity" Value="0.45" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -210,64 +284,68 @@
             </Setter>
         </Style>
 
-<Style x:Key="EditorTabItemStyle" TargetType="TabItem">
-            <Setter Property="Foreground" Value="{DynamicResource DictTextSecondary}"/>
-            <Setter Property="Background" Value="{DynamicResource DictSurface}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource DictBorder}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12,5"/>
-            <Setter Property="Margin" Value="0,0,4,0"/>
+        <Style x:Key="EditorTabItemStyle" TargetType="TabItem">
+            <Setter Property="Foreground" Value="{DynamicResource DictTextSecondary}" />
+            <Setter Property="Background" Value="{DynamicResource DictSurface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DictBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,5" />
+            <Setter Property="Margin" Value="0,0,4,0" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
-                        <Border x:Name="TabBorder"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8,8,0,0"
-                                Padding="{TemplateBinding Padding}">
+                        <Border
+                            x:Name="TabBorder"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8,8,0,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <materialIcons:MaterialIcon x:Name="FileIndicator"
-                                                            Kind="FileOutline"
-                                                            Width="16"
-                                                            Height="16"
-                                                            Margin="0,0,4,0"
-                                                            VerticalAlignment="Center"
-                                                            Visibility="Collapsed"
-                                                            Foreground="{DynamicResource DictSuccess}"/>
-                                <ContentPresenter Grid.Column="1"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"
-                                                  ContentSource="Header"
-                                                  RecognizesAccessKey="True"/>
-                                <Button Grid.Column="2"
-                                        x:Name="CloseButton"
-                                        Content="×"
-                                        Width="18"
-                                        Height="18"
-                                        Margin="8,0,0,0"
-                                        Padding="0"
-                                        FontSize="12"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Foreground="{DynamicResource DictTextSecondary}"
-                                        Cursor="Hand"
-                                        Click="CloseTabButton_Click">
+                                <materialIcons:MaterialIcon
+                                    x:Name="FileIndicator"
+                                    Width="16"
+                                    Height="16"
+                                    Margin="0,0,4,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource DictSuccess}"
+                                    Kind="FileOutline"
+                                    Visibility="Collapsed" />
+                                <ContentPresenter
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    ContentSource="Header"
+                                    RecognizesAccessKey="True" />
+                                <Button
+                                    x:Name="CloseButton"
+                                    Grid.Column="2"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="8,0,0,0"
+                                    Padding="0"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Click="CloseTabButton_Click"
+                                    Content="×"
+                                    Cursor="Hand"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource DictTextSecondary}">
                                     <Button.Style>
                                         <Style TargetType="Button">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="BorderThickness" Value="0"/>
-                                            <Setter Property="Padding" Value="0"/>
-                                            <Setter Property="Foreground" Value="{DynamicResource DictTextSecondary}"/>
-                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Setter Property="BorderThickness" Value="0" />
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="Foreground" Value="{DynamicResource DictTextSecondary}" />
+                                            <Setter Property="Visibility" Value="Visible" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsClosable}" Value="False">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Setter Property="Visibility" Value="Collapsed" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -277,19 +355,19 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource DictSurfaceStrong}"/>
-                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource DictAccent}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
+                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource DictSurfaceStrong}" />
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource DictAccent}" />
+                                <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}" />
                             </Trigger>
                             <DataTrigger Binding="{Binding IsFromFile}" Value="True">
-                                <Setter TargetName="FileIndicator" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="FileIndicator" Property="Visibility" Value="Visible" />
                             </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="TabBorder" Property="Background" Value="#334055"/>
-                                <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
+                                <Setter TargetName="TabBorder" Property="Background" Value="#334055" />
+                                <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.5"/>
+                                <Setter Property="Opacity" Value="0.5" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -299,119 +377,127 @@
 
 
         <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
-            <Setter Property="Background" Value="{DynamicResource DictSurface}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource DictBorder}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="6,4"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}" />
+            <Setter Property="Background" Value="{DynamicResource DictSurface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DictBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
 
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Grid>
-                            <ToggleButton x:Name="ToggleButton"
-                           Focusable="False"
-                           ClickMode="Press"
-                           IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                           Background="{TemplateBinding Background}"
-                           BorderBrush="{TemplateBinding BorderBrush}"
-                           BorderThickness="{TemplateBinding BorderThickness}"
-                           Foreground="{TemplateBinding Foreground}">
+                            <ToggleButton
+                                x:Name="ToggleButton"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                ClickMode="Press"
+                                Focusable="False"
+                                Foreground="{TemplateBinding Foreground}"
+                                IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
-                                        <Border x:Name="Border"
-                                 Background="{TemplateBinding Background}"
-                                 BorderBrush="{TemplateBinding BorderBrush}"
-                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                 CornerRadius="4">
+                                        <Border
+                                            x:Name="Border"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="4">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition/>
-                                                    <ColumnDefinition Width="20"/>
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition Width="20" />
                                                 </Grid.ColumnDefinitions>
 
-                                                <ContentPresenter x:Name="ContentSite"
-                                                   Grid.Column="0"
-                                                   Margin="6,0,0,0"
-                                                   HorizontalAlignment="Left"
-                                                   VerticalAlignment="Center"
-                                                   Content="{TemplateBinding Content}"
-                                                   ContentTemplate="{TemplateBinding ContentTemplate}"
-                                                   IsHitTestVisible="False"/>
+                                                <ContentPresenter
+                                                    x:Name="ContentSite"
+                                                    Grid.Column="0"
+                                                    Margin="6,0,0,0"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    Content="{TemplateBinding Content}"
+                                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                    IsHitTestVisible="False" />
 
-                                                <Path x:Name="Arrow"
-                                       Grid.Column="1"
-                                       Fill="{TemplateBinding Foreground}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                                <Path
+                                                    x:Name="Arrow"
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Data="M 0 0 L 4 4 L 8 0 Z"
+                                                    Fill="{TemplateBinding Foreground}" />
                                             </Grid>
                                         </Border>
 
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource DictSurfaceStrong}"/>
-                                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource DictAccent}"/>
+                                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource DictSurfaceStrong}" />
+                                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource DictAccent}" />
                                             </Trigger>
                                             <Trigger Property="IsPressed" Value="True">
-                                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource DictSurface}"/>
+                                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource DictSurface}" />
                                             </Trigger>
                                             <Trigger Property="IsChecked" Value="True">
-                                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource DictSurface}"/>
-                                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource DictAccent}"/>
+                                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource DictSurface}" />
+                                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource DictAccent}" />
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
 
-                            <ContentPresenter x:Name="ContentSite"
-                                              IsHitTestVisible="False"
-                                              Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                              Margin="6,3,23,3"
-                                              VerticalAlignment="Center"
-                                              HorizontalAlignment="Left"/>
+                            <ContentPresenter
+                                x:Name="ContentSite"
+                                Margin="6,3,23,3"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Content="{TemplateBinding SelectionBoxItem}"
+                                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                IsHitTestVisible="False" />
 
-                            <TextBox x:Name="PART_EditableTextBox"
-                                     Style="{x:Null}"
-                                     HorizontalAlignment="Left"
-                                     VerticalAlignment="Center"
-                                     Margin="3,3,23,3"
-                                     Focusable="True"
-                                     Background="Transparent"
-                                     Foreground="{TemplateBinding Foreground}"
-                                     Visibility="Hidden"
-                                     IsReadOnly="{TemplateBinding IsReadOnly}"/>
+                            <TextBox
+                                x:Name="PART_EditableTextBox"
+                                Margin="3,3,23,3"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Background="Transparent"
+                                Focusable="True"
+                                Foreground="{TemplateBinding Foreground}"
+                                IsReadOnly="{TemplateBinding IsReadOnly}"
+                                Style="{x:Null}"
+                                Visibility="Hidden" />
 
-                            <Popup x:Name="Popup"
-                    AllowsTransparency="True"
-                    IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
-                    Placement="Bottom"
-                    Focusable="False"
-                    PopupAnimation="Slide">
-                                <Border Background="{DynamicResource DictCardBackground}"
-                         BorderBrush="{DynamicResource DictBorder}"
-                         BorderThickness="1"
-                         CornerRadius="4"
-                         Margin="0,2,0,0"
-                         MinWidth="{TemplateBinding ActualWidth}"
-                         MaxHeight="200">
+                            <Popup
+                                x:Name="Popup"
+                                AllowsTransparency="True"
+                                Focusable="False"
+                                IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                Placement="Bottom"
+                                PopupAnimation="Slide">
+                                <Border
+                                    MinWidth="{TemplateBinding ActualWidth}"
+                                    MaxHeight="200"
+                                    Margin="0,2,0,0"
+                                    Background="{DynamicResource DictCardBackground}"
+                                    BorderBrush="{DynamicResource DictBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="4">
                                     <ScrollViewer CanContentScroll="True" VerticalScrollBarVisibility="Auto">
-                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
                                     </ScrollViewer>
                                 </Border>
                             </Popup>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsEditable" Value="True">
-                                <Setter Property="IsTabStop" Value="False"/>
-                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
-                                <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden"/>
+                                <Setter Property="IsTabStop" Value="False" />
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -419,27 +505,28 @@
             </Setter>
         </Style>
 
-        <!-- Стиль для элементов ComboBox -->
+        <!--  Стиль для элементов ComboBox  -->
         <Style TargetType="ComboBoxItem">
-            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="8,6" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="ItemBorder"
-                                Background="{TemplateBinding Background}"
-                                BorderThickness="0"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter/>
+                        <Border
+                            x:Name="ItemBorder"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="0">
+                            <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource DictSurfaceStrong}"/>
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource DictSurfaceStrong}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource DictAccent}"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource DictAccent}" />
+                                <Setter Property="Foreground" Value="White" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -447,26 +534,25 @@
             </Setter>
         </Style>
 
-        <!-- Стиль для кнопок заголовка окна -->
+        <!--  Стиль для кнопок заголовка окна  -->
         <Style x:Key="TitleBarButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="ButtonBorder"
-                                Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource DictSurfaceStrong}"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource DictSurfaceStrong}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource DictBorder}"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource DictBorder}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -474,23 +560,22 @@
             </Setter>
         </Style>
 
-        <!-- Стиль для кнопки закрытия -->
+        <!--  Стиль для кнопки закрытия  -->
         <Style x:Key="TitleBarCloseButtonStyle" TargetType="Button">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="ButtonBorder"
-                                Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="#E81123"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#E81123" />
+                                <Setter Property="Foreground" Value="White" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="#C50F1F"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#C50F1F" />
+                                <Setter Property="Foreground" Value="White" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -498,20 +583,24 @@
             </Setter>
         </Style>
 
-       
+
 
         <Style TargetType="Separator">
-            <Setter Property="Background" Value="{DynamicResource DictCardBackground}"/>
+            <Setter Property="Background" Value="{DynamicResource DictCardBackground}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Separator">
                         <Grid Background="{TemplateBinding Background}">
-                            <Line X1="0" Y1="0" X2="0" Y2="0" 
-                          Stretch="Fill" 
-                          Stroke="{DynamicResource DictCardBackground}"
-                          StrokeThickness="1"
-                          Margin="30,0,0,0"/>
-                            <!-- Сдвигаем линию вправо -->
+                            <Line
+                                Margin="30,0,0,0"
+                                Stretch="Fill"
+                                Stroke="{DynamicResource DictCardBackground}"
+                                StrokeThickness="1"
+                                X1="0"
+                                X2="0"
+                                Y1="0"
+                                Y2="0" />
+                            <!--  Сдвигаем линию вправо  -->
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -527,243 +616,319 @@
 
     <Grid Background="#1E1E1E">
         <Grid.RowDefinitions>
-            <RowDefinition Height="40"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Кастомный заголовок окна -->
-        <Border Grid.Row="0" x:Name="TitleBar"
-                Background="{DynamicResource DictSurface}"
-                BorderBrush="{DynamicResource DictBorder}"
-                BorderThickness="0,0,0,1"
-                MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+        <!--  Кастомный заголовок окна  -->
+        <Border
+            x:Name="TitleBar"
+            Grid.Row="0"
+            Background="{DynamicResource DictSurface}"
+            BorderBrush="{DynamicResource DictBorder}"
+            BorderThickness="0,0,0,1"
+            MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Заголовок -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0">
-                    <TextBlock Text="📚" FontSize="18"  Foreground="{DynamicResource DictTextPrimary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="WindowTitle" Text="Справочник кода "
-                               FontSize="14" FontWeight="SemiBold"
-                               Foreground="{DynamicResource DictTextPrimary}"
-                               VerticalAlignment="Center"/>
+                <!--  Заголовок  -->
+                <StackPanel
+                    Grid.Column="0"
+                    Margin="10,0"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        Foreground="{DynamicResource DictTextPrimary}"
+                        Text="📚" />
+                    <TextBlock
+                        x:Name="WindowTitle"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource DictTextPrimary}"
+                        Text="Справочник кода " />
                 </StackPanel>
 
-                <!-- Кнопки управления окном -->
+                <!--  Кнопки управления окном  -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button x:Name="MinimizeButton" Content="─"
-                            Click="MinimizeButton_Click"
-                            Width="46" Height="40"
-                            Style="{StaticResource TitleBarButtonStyle}"/>
-                    <Button x:Name="MaximizeButton" Content="□"
-                            Click="MaximizeButton_Click"
-                            Width="46" Height="40"
-                            Style="{StaticResource TitleBarButtonStyle}"/>
-                    <Button x:Name="CloseButton" Content="✕"
-                            Click="CloseButton_Click"
-                            Width="46" Height="40"
-                            Style="{StaticResource TitleBarCloseButtonStyle}"/>
+                    <Button
+                        x:Name="MinimizeButton"
+                        Width="46"
+                        Height="40"
+                        Click="MinimizeButton_Click"
+                        Content="─"
+                        Style="{StaticResource TitleBarButtonStyle}" />
+                    <Button
+                        x:Name="MaximizeButton"
+                        Width="46"
+                        Height="40"
+                        Click="MaximizeButton_Click"
+                        Content="□"
+                        Style="{StaticResource TitleBarButtonStyle}" />
+                    <Button
+                        x:Name="CloseButton"
+                        Width="46"
+                        Height="40"
+                        Click="CloseButton_Click"
+                        Content="✕"
+                        Style="{StaticResource TitleBarCloseButtonStyle}" />
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Основной контент -->
+        <!--  Основной контент  -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="450" MinWidth="250"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*" MinWidth="300"/>
+                <ColumnDefinition Width="450" MinWidth="250" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" MinWidth="300" />
             </Grid.ColumnDefinitions>
 
-            <!-- Левая панель: список записей и детали -->
-            <Grid Grid.Column="0" x:Name="SidePanel" Background="#252526">
+            <!--  Левая панель: список записей и детали  -->
+            <Grid
+                x:Name="SidePanel"
+                Grid.Column="0"
+                Background="#252526">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
 
-                <!-- Переключатель темы -->
-                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,5,10,10">
-                    <CheckBox x:Name="ThemeCheckBox"
-                          Content="Светлая тема"
-                          Checked="ThemeCheckBox_Changed"
-                          Unchecked="ThemeCheckBox_Changed"
-                          VerticalAlignment="Center"
-                          Foreground="#CCCCCC"
-                          Style="{StaticResource ToggleSwitchStyle}"
-                          FontSize="12"/>
+                <!--  Переключатель темы  -->
+                <StackPanel
+                    Grid.Row="1"
+                    Margin="10,5,10,10"
+                    HorizontalAlignment="Left"
+                    Orientation="Horizontal">
+                    <CheckBox
+                        x:Name="ThemeCheckBox"
+                        VerticalAlignment="Center"
+                        Checked="ThemeCheckBox_Changed"
+                        Content="Светлая тема"
+                        FontSize="12"
+                        Foreground="#CCCCCC"
+                        Style="{StaticResource ToggleSwitchStyle}"
+                        Unchecked="ThemeCheckBox_Changed" />
                 </StackPanel>
 
-                <StackPanel Grid.Row="2" Margin="10,0,10,10"  Orientation="Horizontal">
-                    <materialIcons:MaterialIcon Kind="Search" Foreground="Gold" Width="26" Height="26" Margin="0,0,5,0"/>
-                    <TextBox x:Name="SearchBox"
-                          TextChanged="SearchBox_TextChanged"
-                          Margin="0,0,5,0"   
-                          Padding="5"
-                          FontSize="14"
-                          Background="#3C3C3C"
-                          Foreground="#000000"
-                          BorderBrush="#555555"
-                          Text="" Width="402"/>
-                    
+                <StackPanel
+                    Grid.Row="2"
+                    Margin="10,0,10,10"
+                    Orientation="Horizontal">
+                    <materialIcons:MaterialIcon
+                        Width="26"
+                        Height="26"
+                        Margin="0,0,5,0"
+                        Foreground="Gold"
+                        Kind="Search" />
+                    <TextBox
+                        x:Name="SearchBox"
+                        Width="364"
+                        Margin="0,0,5,0"
+                        Padding="5"
+                        Background="#3C3C3C"
+                        BorderBrush="#555555"
+                        FontSize="14"
+                        Foreground="#000000"
+                        Text=""
+                        TextChanged="SearchBox_TextChanged" />
+                    <Button
+                        Width="30"
+                        Height="26"
+                        Margin="5,0,2,0"
+                        Click="SearchBox_TextChanged_Click"
+                        Content="✘"
+                        Foreground="#FFED360C"
+                        Style="{StaticResource TitleBarButtonStyle}"
+                        ToolTip="Очистить поиск " />
+
                 </StackPanel>
 
-                <TreeView x:Name="EntriesTreeView"
-                      Grid.Row="3"
-                      SelectedItemChanged="EntriesTreeView_SelectedItemChanged"
-                      PreviewMouseLeftButtonDown="EntriesTreeView_PreviewMouseLeftButtonDown"
-                      MouseDoubleClick="EntriesTreeView_MouseDoubleClick"
-                      PreviewMouseMove="EntriesTreeView_PreviewMouseMove"
-                      AllowDrop="True"
-                      DragOver="EntriesTreeView_DragOver"
-                      Drop="EntriesTreeView_Drop"
-                      Margin="10,0,10,10"
-                      Background="{DynamicResource DarkBackground}"
-                      Foreground="#CCCCCC"
-                      FontSize="14"
-                      BorderBrush="{DynamicResource DictBorder}">
-                                        <TreeView.ContextMenu>
+                <TreeView
+                    x:Name="EntriesTreeView"
+                    Grid.Row="3"
+                    Margin="10,0,10,10"
+                    AllowDrop="True"
+                    Background="{DynamicResource DarkBackground}"
+                    BorderBrush="{DynamicResource DictBorder}"
+                    DragOver="EntriesTreeView_DragOver"
+                    Drop="EntriesTreeView_Drop"
+                    FontSize="14"
+                    Foreground="#CCCCCC"
+                    MouseDoubleClick="EntriesTreeView_MouseDoubleClick"
+                    PreviewMouseLeftButtonDown="EntriesTreeView_PreviewMouseLeftButtonDown"
+                    PreviewMouseMove="EntriesTreeView_PreviewMouseMove"
+                    SelectedItemChanged="EntriesTreeView_SelectedItemChanged">
+                    <TreeView.ContextMenu>
                         <ContextMenu BorderThickness="1">
-                            <MenuItem Header="Добавить корневую категорию" Click="AddCategoryRoot_Click">
-                            </MenuItem>
+                            <MenuItem Click="AddCategoryRoot_Click" Header="Добавить корневую категорию" />
+                            <MenuItem Click="DeleteEntry_Click" Header="Удалить запись" />
                         </ContextMenu>
                     </TreeView.ContextMenu>
 
 
 
                     <TreeView.Resources>
-                        <!-- Шаблон для записи (конечный элемент) -->
-                                                <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
-                            <StackPanel Orientation="Horizontal" Margin="2">
-                                <TextBlock Text="📄" Margin="0,0,5,0" Foreground="{DynamicResource DictAccent}"/>
-                                <TextBlock Text="{Binding Title}" Foreground="{DynamicResource DictTextPrimary}"/>
+                        <!--  Шаблон для записи (конечный элемент)  -->
+                        <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
+                            <StackPanel Margin="2" Orientation="Horizontal">
+                                <TextBlock
+                                    Margin="0,0,5,0"
+                                    Foreground="{DynamicResource DictAccent}"
+                                    Text="📄" />
+                                <TextBlock Foreground="{DynamicResource DictTextPrimary}" Text="{Binding Title}" />
                             </StackPanel>
                         </DataTemplate>
-                        <!-- Шаблон для категории (узел) -->
-                                                <HierarchicalDataTemplate DataType="{x:Type local:CategoryNode}" ItemsSource="{Binding Items}">
-                            <StackPanel Orientation="Horizontal" Margin="2">
+                        <!--  Шаблон для категории (узел)  -->
+                        <HierarchicalDataTemplate DataType="{x:Type local:CategoryNode}" ItemsSource="{Binding Items}">
+                            <StackPanel Margin="2" Orientation="Horizontal">
                                 <StackPanel.ContextMenu>
                                     <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                                        <MenuItem Header="Добавить подкатегорию"
-                                                  Click="AddCategoryChild_Click"
-                                                  Tag="{Binding}"
-                                                  IsEnabled="{Binding CanDelete}">
-                                        </MenuItem>
-                                        <MenuItem Header="Экспортировать категорию"
-                                                  Click="ExportCategory_Click"
-                                                  Tag="{Binding}"
-                                                  IsEnabled="{Binding CanDelete}">
-                                        </MenuItem>
-                                        <MenuItem Header="Переименовать"
-                                                  Click="RenameCategory_Click"
-                                                  Tag="{Binding}"
-                                                  IsEnabled="{Binding CanDelete}">
-                                        </MenuItem>
-                                        <MenuItem Header="Удалить категорию"
-                                                  Click="DeleteCategory_Click"
-                                                  Tag="{Binding}"
-                                                  IsEnabled="{Binding CanDelete}">
+                                        <MenuItem
+                                            Click="AddCategoryChild_Click"
+                                            Header="Добавить подкатегорию"
+                                            IsEnabled="{Binding CanDelete}"
+                                            Tag="{Binding}" />
+                                        <MenuItem
+                                            Click="ExportCategory_Click"
+                                            Header="Экспортировать категорию"
+                                            IsEnabled="{Binding CanDelete}"
+                                            Tag="{Binding}" />
+                                        <MenuItem
+                                            Click="RenameCategory_Click"
+                                            Header="Переименовать"
+                                            IsEnabled="{Binding CanDelete}"
+                                            Tag="{Binding}" />
+                                        <MenuItem
+                                            Click="DeleteCategory_Click"
+                                            Header="Удалить категорию"
+                                            IsEnabled="{Binding CanDelete}"
+                                            Tag="{Binding}">
                                             <MenuItem.Icon>
-                                                <materialIcons:MaterialIcon Kind="TrashCanOutline"
-                                                                             Width="16"
-                                                                             Height="16" />
+                                                <materialIcons:MaterialIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="TrashCanOutline" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                     </ContextMenu>
                                 </StackPanel.ContextMenu>
-                                <TextBlock Text="📁" Margin="0,0,5,0" Foreground="{DynamicResource DictChat}"/>
-                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="{DynamicResource DictTextPrimary}" ToolTip="{Binding FullPath}"/>
-                                <TextBlock Text="{Binding CountString}" Margin="5,0,0,0" Foreground="{DynamicResource DictTextSecondary}" FontSize="11" VerticalAlignment="Center"/>
+                                <TextBlock
+                                    Margin="0,0,5,0"
+                                    Foreground="{DynamicResource DictChat}"
+                                    Text="📁" />
+                                <TextBlock
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource DictTextPrimary}"
+                                    Text="{Binding Name}"
+                                    ToolTip="{Binding FullPath}" />
+                                <TextBlock
+                                    Margin="5,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource DictTextSecondary}"
+                                    Text="{Binding CountString}" />
                             </StackPanel>
                         </HierarchicalDataTemplate>
-                        
-                        <!-- Стиль для элементов дерева -->
+
+                        <!--  Стиль для элементов дерева  -->
                         <Style TargetType="TreeViewItem">
-                            <Setter Property="IsExpanded" Value="True"/>
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="Padding" Value="4,2"/>
+                            <Setter Property="IsExpanded" Value="True" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Padding" Value="4,2" />
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="TreeViewItem">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
                                             </Grid.RowDefinitions>
-                                            
-                                            <!-- Кнопка раскрытия (стрелочка) -->
-                                            <ToggleButton x:Name="Expander" 
-                                                          ClickMode="Press" 
-                                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
-                                                          Foreground="{TemplateBinding Foreground}"
-                                                          VerticalAlignment="Center">
+
+                                            <!--  Кнопка раскрытия (стрелочка)  -->
+                                            <ToggleButton
+                                                x:Name="Expander"
+                                                VerticalAlignment="Center"
+                                                ClickMode="Press"
+                                                Foreground="{TemplateBinding Foreground}"
+                                                IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}">
                                                 <ToggleButton.Template>
                                                     <ControlTemplate TargetType="ToggleButton">
-                                                        <Border Background="Transparent" Width="16" Height="16">
-                                                            <Path x:Name="Arrow" 
-                                                                  Data="M 4 2 L 8 6 L 4 10 Z" 
-                                                                  Fill="#858585" 
-                                                                  HorizontalAlignment="Center" 
-                                                                  VerticalAlignment="Center"/>
+                                                        <Border
+                                                            Width="16"
+                                                            Height="16"
+                                                            Background="Transparent">
+                                                            <Path
+                                                                x:Name="Arrow"
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                Data="M 4 2 L 8 6 L 4 10 Z"
+                                                                Fill="#858585" />
                                                         </Border>
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsChecked" Value="True">
-                                                                <Setter TargetName="Arrow" Property="Data" Value="M 2 4 L 10 4 L 6 8 Z"/>
+                                                                <Setter TargetName="Arrow" Property="Data" Value="M 2 4 L 10 4 L 6 8 Z" />
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
                                                 </ToggleButton.Template>
                                             </ToggleButton>
-                                            
-                                            <!-- Содержимое элемента -->
-                                            <Border x:Name="Bd" 
-                                                    Grid.Column="1" 
-                                                    Background="{TemplateBinding Background}" 
-                                                    BorderBrush="{TemplateBinding BorderBrush}" 
-                                                    BorderThickness="{TemplateBinding BorderThickness}" 
-                                                    Padding="{TemplateBinding Padding}" 
-                                                    CornerRadius="3">
-                                                <ContentPresenter x:Name="PART_Header" 
-                                                                  ContentSource="Header" 
-                                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+
+                                            <!--  Содержимое элемента  -->
+                                            <Border
+                                                x:Name="Bd"
+                                                Grid.Column="1"
+                                                Padding="{TemplateBinding Padding}"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="3">
+                                                <ContentPresenter
+                                                    x:Name="PART_Header"
+                                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                    ContentSource="Header" />
                                             </Border>
-                                            
-                                            <!-- Дочерние элементы -->
-                                            <ItemsPresenter x:Name="ItemsHost" 
-                                                            Grid.Column="1" 
-                                                            Grid.Row="1"/>
+
+                                            <!--  Дочерние элементы  -->
+                                            <ItemsPresenter
+                                                x:Name="ItemsHost"
+                                                Grid.Row="1"
+                                                Grid.Column="1" />
                                         </Grid>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsExpanded" Value="False">
-                                                <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/>
+                                                <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed" />
                                             </Trigger>
                                             <Trigger Property="HasItems" Value="False">
-                                                <Setter TargetName="Expander" Property="Visibility" Value="Hidden"/>
+                                                <Setter TargetName="Expander" Property="Visibility" Value="Hidden" />
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DictBorder}"/>
-                                                <Setter Property="Foreground" Value="White"/>
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DictBorder}" />
+                                                <Setter Property="Foreground" Value="White" />
                                             </Trigger>
                                             <MultiTrigger>
                                                 <MultiTrigger.Conditions>
-                                                    <Condition Property="IsSelected" Value="False"/>
-                                                    <Condition Property="IsMouseOver" Value="True" SourceName="Bd"/>
+                                                    <Condition Property="IsSelected" Value="False" />
+                                                    <Condition SourceName="Bd" Property="IsMouseOver" Value="True" />
                                                 </MultiTrigger.Conditions>
-                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DictSurfaceStrong}"/>
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DictSurfaceStrong}" />
                                             </MultiTrigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -773,365 +938,585 @@
                     </TreeView.Resources>
                 </TreeView>
 
-                <Button Grid.Row="4" Content="+ Добавить запись"
-                    Click="AddEntry_Click"
+                <Button
+                    Grid.Row="4"
                     Height="30"
                     Margin="5"
                     Padding="5"
                     Background="Green"
-                    Foreground="White"
                     BorderThickness="0"
-                    Style="{StaticResource ActionButtonStyleGreen}"
-                    Cursor="Hand"/>
+                    Click="AddEntry_Click"
+                    Content="+ Добавить запись"
+                    Cursor="Hand"
+                    Foreground="White"
+                    Style="{StaticResource ActionButtonStyleGreen}" />
 
-                <!-- Название -->
+                <!--  Название  -->
                 <StackPanel Grid.Row="5" Margin="10,10,10,5">
-                    <TextBlock Text="Название:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC"/>
-                    <TextBox x:Name="TitleTextBox" Padding="5"
-                         FontSize="14"
-                         Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#555555"/>
+                    <TextBlock
+                        Margin="0,0,0,5"
+                        FontWeight="Bold"
+                        Foreground="#CCCCCC"
+                        Text="Название:" />
+                    <TextBox
+                        x:Name="TitleTextBox"
+                        Padding="5"
+                        Background="#3C3C3C"
+                        BorderBrush="#555555"
+                        FontSize="14"
+                        Foreground="#CCCCCC" />
                 </StackPanel>
 
-                <!-- Категория -->
+                <!--  Категория  -->
                 <StackPanel Grid.Row="6" Margin="10,5,10,5">
-                    <TextBlock Text="Категория:" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC"/>
-                    <ComboBox x:Name="CategoryComboBox"
-                          IsEditable="True"
-                          Style="{StaticResource ComboBoxStyle}"/>
+                    <TextBlock
+                        Margin="0,0,0,5"
+                        FontWeight="Bold"
+                        Foreground="#CCCCCC"
+                        Text="Категория:" />
+                    <ComboBox
+                        x:Name="CategoryComboBox"
+                        IsEditable="True"
+                        Style="{StaticResource ComboBoxStyle}" />
                 </StackPanel>
 
-                <!-- Кнопки управления -->
-                <StackPanel Grid.Row="7" Orientation="Horizontal" Margin="10,10,10,10" HorizontalAlignment="Center">
-                    <Button Content=" 📑  Сохранить" Click="SaveEntry_Click"
-                        Height="30"
+                <!--  Кнопки управления  -->
+                <StackPanel
+                    Grid.Row="7"
+                    Margin="10,10,10,10"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+                    <Button
                         Width="185"
-                        Padding="10,5" Margin="0,0,5,0"
-                        Style="{StaticResource ActionButtonStyle}"
-                        Background="#0E639C" Foreground="White" BorderThickness="0" Cursor="Hand"/>
-                    <Button Content="❌  Удалить" Click="DeleteEntry_Click"
-                        
-                           Padding="10,5" Margin="5,0,0,0"
                         Height="30"
+                        Margin="0,0,5,0"
+                        Padding="10,5"
+                        Background="#0E639C"
+                        BorderThickness="0"
+                        Click="SaveEntry_Click"
+                        Content=" 📑  Сохранить"
+                        Cursor="Hand"
+                        Foreground="White"
+                        Style="{StaticResource ActionButtonStyle}" />
+                    <Button
                         Width="185"
-                        Style="{StaticResource ActionButtonStyle}"
-                         
-                        Background="#C72E2E" Foreground="White" BorderThickness="0" Cursor="Hand"/>
-                    
+                        Height="30"
+                        Margin="5,0,0,0"
+                        Padding="10,5"
+                        Background="#C72E2E"
+                        BorderThickness="0"
+                        Click="DeleteEntry_Click"
+                        Content="❌  Удалить"
+                        Cursor="Hand"
+                        Foreground="White"
+                        Style="{StaticResource ActionButtonStyle}" />
+
                 </StackPanel>
             </Grid>
 
-            <!-- Разделитель между панелями -->
-            <GridSplitter Grid.Column="1"
-                          Width="6"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Stretch"
-                          Background="#2D2D2D"
-                          BorderBrush="#3E3E3E"
-                          BorderThickness="1,0"
-                          Cursor="SizeWE"
-                          ResizeBehavior="PreviousAndNext"/>
+            <!--  Разделитель между панелями  -->
+            <GridSplitter
+                Grid.Column="1"
+                Width="6"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Stretch"
+                Background="#2D2D2D"
+                BorderBrush="#3E3E3E"
+                BorderThickness="1,0"
+                Cursor="SizeWE"
+                ResizeBehavior="PreviousAndNext" />
 
-            <!-- Правая панель: описание, код и теги -->
+            <!--  Правая панель: описание, код и теги  -->
             <Grid Grid.Column="2" Margin="10">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <!-- Description Header -->
-                    <RowDefinition x:Name="DescriptionRow" Height="Auto"/>
-                    <!-- Description TextBox -->
-                    <RowDefinition Height="Auto"/>
-                    <!-- Horizontal Splitter row -->
-                    <RowDefinition Height="Auto"/>
-                    <!-- Code Header -->
-                    <RowDefinition x:Name="CodeRow" Height="1*"/>
-                    <!-- Code TextBox -->
-                    <RowDefinition Height="Auto"/>
-                    <!-- Tags -->
-                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto" />
+                    <!--  Description Header  -->
+                    <RowDefinition x:Name="DescriptionRow" Height="Auto" />
+                    <!--  Description TextBox  -->
+                    <RowDefinition Height="Auto" />
+                    <!--  Horizontal Splitter row  -->
+                    <RowDefinition Height="Auto" />
+                    <!--  Code Header  -->
+                    <RowDefinition x:Name="CodeRow" Height="1*" />
+                    <!--  Code TextBox  -->
+                    <RowDefinition Height="Auto" />
+                    <!--  Tags  -->
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <!-- Шапка описания -->
+                <!--  Шапка описания  -->
                 <Grid Grid.Row="0" Margin="0,0,0,5">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Описание:" FontWeight="Bold" Foreground="#CCCCCC" VerticalAlignment="Center" FontSize="14" HorizontalAlignment="Left" Width="444"/>
-                    <Button Grid.Column="1" x:Name="ToggleDescriptionButton"
-                        Content= " ▲ Свернуть "
-                        Click="ToggleDescriptionButton_Click"
-                        Padding="8,2"
-                        FontSize="12"
+                    <TextBlock
+                        Grid.Column="0"
+                        Width="444"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="Bold"
+                        Foreground="#CCCCCC"
+                        Text="Описание:" />
+                    <Button
+                        x:Name="ToggleDescriptionButton"
+                        Grid.Column="1"
                         Height="26"
+                        Padding="8,2"
+                        Click="ToggleDescriptionButton_Click"
+                        Content=" ▲ Свернуть "
                         Cursor="Hand"
-                        Style="{StaticResource ActionButtonStyle}"/>
+                        FontSize="12"
+                        Style="{StaticResource ActionButtonStyle}" />
                 </Grid>
 
-                <!-- Поле описания (1/3 от высоты кода) -->
-                <TextBox Grid.Row="1" x:Name="DescriptionTextBox"
-                     TextWrapping="Wrap"
-                     AcceptsReturn="True"
-                     VerticalScrollBarVisibility="Auto"
-                     FontSize="12"
-                     Padding="5"
-                     Margin="0,0,0,10"
-                     VerticalAlignment="Stretch"
-                         
-                     Background="{DynamicResource DarkBackground}" Foreground="{DynamicResource DictTextPrimary}" 
-                     MinHeight="80"/>
+                <!--  Поле описания (1/3 от высоты кода)  -->
+                <TextBox
+                    x:Name="DescriptionTextBox"
+                    Grid.Row="1"
+                    MinHeight="80"
+                    Margin="0,0,0,10"
+                    Padding="5"
+                    VerticalAlignment="Stretch"
+                    AcceptsReturn="True"
+                    Background="{DynamicResource DarkBackground}"
+                    FontSize="12"
+                    Foreground="{DynamicResource DictTextPrimary}"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto" />
 
-                <!-- Горизонтальный разделитель -->
-                <GridSplitter x:Name="DescriptionSplitter"
-                              Grid.Row="2"
-                              Height="6"
-                              HorizontalAlignment="Stretch"
-                              VerticalAlignment="Center"
-                              Background="#2D2D2D"
-                              BorderBrush="#3E3E3E"
-                              BorderThickness="0,1"
-                              Cursor="SizeNS"
-                              ResizeBehavior="PreviousAndNext"
-                              Margin="0,0,0,10"
-                              Visibility="Collapsed"/>
+                <!--  Горизонтальный разделитель  -->
+                <GridSplitter
+                    x:Name="DescriptionSplitter"
+                    Grid.Row="2"
+                    Height="6"
+                    Margin="0,0,0,10"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center"
+                    Background="#2D2D2D"
+                    BorderBrush="#3E3E3E"
+                    BorderThickness="0,1"
+                    Cursor="SizeNS"
+                    ResizeBehavior="PreviousAndNext"
+                    Visibility="Collapsed" />
 
-                <!-- Контейнер кода (Row 4) -->
-                <Grid Grid.Row="4" x:Name="CodeContainer">
+                <!--  Контейнер кода (Row 4)  -->
+                <Grid x:Name="CodeContainer" Grid.Row="4">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <!-- Шапка кода и панель управления шрифтом -->
+                    <!--  Шапка кода и панель управления шрифтом  -->
                     <Grid Grid.Row="0" Margin="0,0,0,10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                  
-
-                    <!-- Панель управления шрифтом -->
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,5">
-                        <TextBlock Text="Шрифт:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#CCCCCC"/>
-                        <ComboBox x:Name="FontFamilyComboBox"
-                              SelectionChanged="FontFamilyComboBox_SelectionChanged"
-                              Width="120"
-                              Margin="0,0,10,0"
-                              FontSize="12"
-                              Style="{StaticResource ComboBoxStyle}" Height="22"
-                             />
-
-                        <TextBlock Text="Размер:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#CCCCCC"/>
-                        <ComboBox x:Name="FontSizeComboBox"
-                              SelectionChanged="FontSizeComboBox_SelectionChanged"
-                              Width="42"
-                              Margin="0,0,10,0"
-                              FontSize="12"
-                              Style="{StaticResource ComboBoxStyle}" Height="22"
-                             />
-
-                        <CheckBox x:Name="WordWrapCheckBox"
-                              Content="Перенос строк"
-                              Checked="WordWrapCheckBox_Changed"
-                              Unchecked="WordWrapCheckBox_Changed"
-                              VerticalAlignment="Center"
-                               Style="{StaticResource ToggleSwitchStyle}"
-                              Foreground="#CCCCCC"
-                              Margin="10,0,0,0"/>
-
-                        <TextBlock Text="Синтаксис:" VerticalAlignment="Center" Margin="15,0,5,0" Foreground="#CCCCCC"/>
-                        <ComboBox x:Name="SyntaxHighlightingComboBox"
-                               SelectionChanged="SyntaxHighlightingComboBox_SelectionChanged"
-                               Width="160"
-                               FontSize="12"
-                               Style="{StaticResource ComboBoxStyle}" Height="22"/>
-                    </StackPanel>
-
-                    <!-- Панель кнопок -->
-                    <Grid Grid.Row="2" Margin="0,0,0,5">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
-                            <Button Click="UndoMenuItem_Click" Content="↩️" Width="30" Margin="2" ToolTip="Отменить" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="RedoMenuItem_Click" Content="↪️" Width="30" Margin="2" ToolTip="Повторить" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="CutMenuItem_Click" Content="✂️" Width="30" Margin="2" ToolTip="Вырезать" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="CopyMenuItem_Click" Content="📋" Width="30" Margin="2" ToolTip="Копировать" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="PasteMenuItem_Click" Content="📄" Width="30" Margin="2" ToolTip="Вставить" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="SelectAllMenuItem_Click" Content="🔲" Width="30" Margin="2" ToolTip="Выделить все" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="OpenFile_Click" Content="📂" Width="30" Margin="2"   ToolTip="Открыть..." Style="{StaticResource TitleBarButtonStyle}" Foreground="#FF12902B"/>
-                            <Button Click="SaveFile_Click" Content="📑" Width="30" Margin="2" ToolTip="Сохранить ..." Style="{StaticResource TitleBarButtonStyle}" Foreground="#FF19E2CB"/>
-                            <Button Click="ExportData_Click" Content="⇧" Width="30" Margin="2" ToolTip="Экспорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="ImportData_Click" Content="⇩" Width="30" Margin="2" ToolTip="Импорт базы (JSON/XML)" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="ExportSelectedCategory_Click" Content="🗂" Width="30" Margin="2" ToolTip="Экспорт выбранной категории" Style="{StaticResource TitleBarButtonStyle}"/>
 
-                            <Button Content="🖌️" ToolTip="Изменить фон"  Width="30" Margin="2" Click="ChangeBackground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="🎨" ToolTip="Изменить цвет текста"  Width="30" Margin="2" Click="ChangeForeground_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="𝐁" FontWeight="Bold" ToolTip="Жирный" Width="30" Margin="2" Click="MakeBold_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="𝐼" FontStyle="Italic" ToolTip="Курсив" Width="30" Margin="2" Click="MakeItalic_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Content="U" ToolTip="Подчёркнутый" Width="30" Margin="2" Click="MakeUnderline_Click" Style="{StaticResource TitleBarButtonStyle}"/>
-                             <Button Content="✘" ToolTip="Очистить стиль" Width="30" Margin="2" Click="ClearStyle_Click" Style="{StaticResource TitleBarButtonStyle}" Foreground="#FFEC3E0B"/>
-                              
+                        <!--  Панель управления шрифтом  -->
+                        <StackPanel
+                            Grid.Row="1"
+                            Margin="0,0,0,5"
+                            Orientation="Horizontal">
+                            <TextBlock
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                Foreground="#CCCCCC"
+                                Text="Шрифт:" />
+                            <ComboBox
+                                x:Name="FontFamilyComboBox"
+                                Width="120"
+                                Height="22"
+                                Margin="0,0,10,0"
+                                FontSize="12"
+                                SelectionChanged="FontFamilyComboBox_SelectionChanged"
+                                Style="{StaticResource ComboBoxStyle}" />
+
+                            <TextBlock
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                Foreground="#CCCCCC"
+                                Text="Размер:" />
+                            <ComboBox
+                                x:Name="FontSizeComboBox"
+                                Width="42"
+                                Height="22"
+                                Margin="0,0,10,0"
+                                FontSize="12"
+                                SelectionChanged="FontSizeComboBox_SelectionChanged"
+                                Style="{StaticResource ComboBoxStyle}" />
+
+                            <CheckBox
+                                x:Name="WordWrapCheckBox"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Checked="WordWrapCheckBox_Changed"
+                                Content="Перенос строк"
+                                Foreground="#CCCCCC"
+                                Style="{StaticResource ToggleSwitchStyle}"
+                                Unchecked="WordWrapCheckBox_Changed" />
+
+                            <TextBlock
+                                Margin="15,0,5,0"
+                                VerticalAlignment="Center"
+                                Foreground="#CCCCCC"
+                                Text="Синтаксис:" />
+                            <ComboBox
+                                x:Name="SyntaxHighlightingComboBox"
+                                Width="160"
+                                Height="22"
+                                FontSize="12"
+                                SelectionChanged="SyntaxHighlightingComboBox_SelectionChanged"
+                                Style="{StaticResource ComboBoxStyle}" />
+                        </StackPanel>
+
+                        <!--  Панель кнопок  -->
+                        <Grid Grid.Row="2" Margin="0,0,0,5">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel
+                                Grid.Row="0"
+                                Margin="0,0,0,5"
+                                Orientation="Horizontal">
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="UndoMenuItem_Click"
+                                    Content="↩️"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Отменить" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="RedoMenuItem_Click"
+                                    Content="↪️"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Повторить" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="CutMenuItem_Click"
+                                    Content="✂️"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Вырезать" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="CopyMenuItem_Click"
+                                    Content="📋"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Копировать" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="PasteMenuItem_Click"
+                                    Content="📄"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Вставить" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="SelectAllMenuItem_Click"
+                                    Content="🔲"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Выделить все" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="OpenFile_Click"
+                                    Content="📂"
+                                    Foreground="#FF12902B"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Открыть..." />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="SaveFile_Click"
+                                    Content="📑"
+                                    Foreground="#FF19E2CB"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Сохранить ..." />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="ExportData_Click"
+                                    Content="⇧"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Экспорт базы (JSON/XML)" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="ImportData_Click"
+                                    Content="⇩"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Импорт базы (JSON/XML)" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="ExportSelectedCategory_Click"
+                                    Content="🗂"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Экспорт выбранной категории" />
+
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="ChangeBackground_Click"
+                                    Content="🖌️"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Изменить фон" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="ChangeForeground_Click"
+                                    Content="🎨"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Изменить цвет текста" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="MakeBold_Click"
+                                    Content="𝐁"
+                                    FontWeight="Bold"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Жирный" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="MakeItalic_Click"
+                                    Content="𝐼"
+                                    FontStyle="Italic"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Курсив" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="MakeUnderline_Click"
+                                    Content="U"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Подчёркнутый" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="ClearStyle_Click"
+                                    Content="✘"
+                                    Foreground="#FFEC3E0B"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Очистить стиль" />
+
                             </StackPanel>
 
-                        <!-- Панель поиска -->
-                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0" >
+                            <!--  Панель поиска  -->
+                            <StackPanel
+                                Grid.Row="1"
+                                Margin="0,0,0,0"
+                                Orientation="Horizontal">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialIcons:MaterialIcon Kind="Search" Foreground="Gold" Width="26" Height="26" Margin="0,0,5,0"/>
-                                    <TextBlock Text=""/>         
+                                    <materialIcons:MaterialIcon
+                                        Width="26"
+                                        Height="26"
+                                        Margin="0,0,5,0"
+                                        Foreground="Gold"
+                                        Kind="Search" />
+                                    <TextBlock Text="" />
                                 </StackPanel>
-                                <TextBox x:Name="SearchInTextBox"
-                                     Width="200"
-                                     Height="26"
-                                     Padding="5,3"
-                                     FontSize="12"
-                                     BorderBrush="#555555"
-                                     Background="FloralWhite"
-                                     VerticalContentAlignment="Center"
-                                     KeyDown="SearchInTextBox_KeyDown"
-                                     TextChanged="SearchInTextBox_TextChanged"/>
-                                <Button Click="ClearSearch_Click" Content="✘" Width="30" Height="26" Margin="5,0,2,0" ToolTip="Очистить поиск " Style="{StaticResource TitleBarButtonStyle}" Foreground="#FFED360C"/>
-                                <Button Click="FindPrevious_Click" Content="▲" Width="30" Height="26" Margin="5,0,2,0" ToolTip="Предыдущее (Shift+F3)" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <Button Click="FindNext_Click" Content="▼" Width="30" Height="26" Margin="2,0,5,0" ToolTip="Следующее (F3)" Style="{StaticResource TitleBarButtonStyle}"/>
-                            <CheckBox x:Name="MatchCaseCheckBox"
-                                      Content="Аа"
-                                      ToolTip="Учитывать регистр"
-                                      VerticalAlignment="Center"
-                                      Foreground="#CCCCCC"
-                                      Style="{StaticResource ToggleSwitchStyle}"
-                                      Margin="5,0,10,0"
-                                      Checked="SearchOptions_Changed"
-                                      Unchecked="SearchOptions_Changed"/>
-                            <TextBlock x:Name="SearchResultsTextBlock"
-                                       Text=""
-                                       VerticalAlignment="Center"
-                                       Foreground="{DynamicResource DictTextSecondary}"
-                                       FontSize="11"
-                                       Margin="5,0,0,0"/>
-                        </StackPanel>
+                                <TextBox
+                                    x:Name="SearchInTextBox"
+                                    Width="200"
+                                    Height="26"
+                                    Padding="5,3"
+                                    VerticalContentAlignment="Center"
+                                    Background="FloralWhite"
+                                    BorderBrush="#555555"
+                                    FontSize="12"
+                                    KeyDown="SearchInTextBox_KeyDown"
+                                    TextChanged="SearchInTextBox_TextChanged" />
+                                <Button
+                                    Width="30"
+                                    Height="26"
+                                    Margin="5,0,2,0"
+                                    Click="ClearSearch_Click"
+                                    Content="✘"
+                                    Foreground="#FFED360C"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Очистить поиск " />
+                                <Button
+                                    Width="30"
+                                    Height="26"
+                                    Margin="5,0,2,0"
+                                    Click="FindPrevious_Click"
+                                    Content="▲"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Предыдущее (Shift+F3)" />
+                                <Button
+                                    Width="30"
+                                    Height="26"
+                                    Margin="2,0,5,0"
+                                    Click="FindNext_Click"
+                                    Content="▼"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Следующее (F3)" />
+                                <CheckBox
+                                    x:Name="MatchCaseCheckBox"
+                                    Margin="5,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Checked="SearchOptions_Changed"
+                                    Content="Аа"
+                                    Foreground="#CCCCCC"
+                                    Style="{StaticResource ToggleSwitchStyle}"
+                                    ToolTip="Учитывать регистр"
+                                    Unchecked="SearchOptions_Changed" />
+                                <TextBlock
+                                    x:Name="SearchResultsTextBlock"
+                                    Margin="5,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource DictTextSecondary}"
+                                    Text="" />
+                            </StackPanel>
+                        </Grid>
                     </Grid>
+
+                    <!--  Текстовый редактор кода (3/3 от высоты кода)  -->
+                    <TabControl
+                        x:Name="EditorTabs"
+                        Grid.Row="1"
+                        Margin="0,0,0,8"
+                        Padding="0"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Center"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ItemContainerStyle="{StaticResource EditorTabItemStyle}"
+                        SelectionChanged="EditorTabs_SelectionChanged"
+                        TabStripPlacement="Top">
+                        <TabControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock
+                                    Text="{Binding Header}"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTip="{Binding FilePath}" />
+                            </DataTemplate>
+                        </TabControl.ItemTemplate>
+                        <TabControl.ContentTemplate>
+                            <DataTemplate>
+                                <Border Width="0" Height="0" />
+                            </DataTemplate>
+                        </TabControl.ContentTemplate>
+                    </TabControl>
+
+                    <avalonEdit:TextEditor
+                        x:Name="CodeTextBox"
+                        Grid.Row="2"
+                        Margin="0,0,0,10"
+                        Padding="5"
+                        Background="#252526"
+                        BorderBrush="#555555"
+                        BorderThickness="1"
+                        FontFamily="Consolas"
+                        FontSize="12"
+                        Foreground="#D4D4D4"
+                        HorizontalScrollBarVisibility="Auto"
+                        LineNumbersForeground="#858585"
+                        ShowLineNumbers="True"
+                        VerticalScrollBarVisibility="Auto">
+                        <avalonEdit:TextEditor.ContextMenu>
+                            <ContextMenu BorderThickness="1">
+                                <MenuItem Click="UndoMenuItem_Click" Header="Отменить">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="Undo" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+
+                                <MenuItem Click="RedoMenuItem_Click" Header="Повторить">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="Redo" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator />
+
+
+                                <MenuItem Click="CopyMenuItem_Click" Header="Копировать">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="ContentCopy" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Click="CutMenuItem_Click" Header="Вырезать">
+
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="ContentCut" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Click="PasteMenuItem_Click" Header="Вставить">
+
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="ContentPaste" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+
+                                <Separator />
+
+                                <MenuItem Click="DeleteMenuItem_Click" Header="Удалить выделенное">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="TrashCanOutline" />
+
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator />
+                                <MenuItem Click="SelectAllMenuItem_Click" Header="Выделить всё">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="Select" />
+
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </avalonEdit:TextEditor.ContextMenu>
+                    </avalonEdit:TextEditor>
+
                 </Grid>
-
-                <!-- Текстовый редактор кода (3/3 от высоты кода) -->
-                <TabControl Grid.Row="1"
-                            x:Name="EditorTabs"
-                            Margin="0,0,0,8"
-                            SelectionChanged="EditorTabs_SelectionChanged"
-                            ItemContainerStyle="{StaticResource EditorTabItemStyle}"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Padding="0"
-                            HorizontalContentAlignment="Stretch"
-                            VerticalContentAlignment="Center"
-                            TabStripPlacement="Top">
-                    <TabControl.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Header}" ToolTip="{Binding FilePath}" TextTrimming="CharacterEllipsis"/>
-                        </DataTemplate>
-                    </TabControl.ItemTemplate>
-                    <TabControl.ContentTemplate>
-                        <DataTemplate>
-                            <Border Height="0" Width="0"/>
-                        </DataTemplate>
-                    </TabControl.ContentTemplate>
-                </TabControl>
-
-                <avalonEdit:TextEditor Grid.Row="2" x:Name="CodeTextBox"
-                                   FontFamily="Consolas"
-                                   FontSize="12"
-                                   ShowLineNumbers="True"
-                                   Background="#252526"
-                                   Foreground="#D4D4D4"
-                                   LineNumbersForeground="#858585"
-                                   BorderBrush="#555555"
-                                   BorderThickness="1"
-                                   Padding="5"
-                                   Margin="0,0,0,10"
-                                   VerticalScrollBarVisibility="Auto"
-                                   HorizontalScrollBarVisibility="Auto">
-                    <avalonEdit:TextEditor.ContextMenu>
-                        <ContextMenu 
-                                 BorderThickness="1">
-                            <MenuItem Header="Отменить" Click="UndoMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="Undo" 
-                                    Width="16" 
-                                    Height="16" 
-                                   />
-                                </MenuItem.Icon>
-                            </MenuItem>
-
-                            <MenuItem Header="Повторить" Click="RedoMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="Redo" 
-                                    Width="16" 
-                                    Height="16" 
-                                   />
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <Separator/>
-
-
-                            <MenuItem Header="Копировать" Click="CopyMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="ContentCopy" 
-                                     Width="16" 
-                                      Height="16" 
-                                      />
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Header="Вырезать" Click="CutMenuItem_Click" >
-
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="ContentCut" 
-                                    Width="16" 
-                                    Height="16" 
-                                   />
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Header="Вставить" Click="PasteMenuItem_Click">
-
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="ContentPaste" 
-                                     Width="16" 
-                                      Height="16" 
-                                    />
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            
-                            <Separator/>
-                            
-                            <MenuItem Header="Удалить выделенное" Click="DeleteMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="TrashCanOutline" 
-                                     Width="16" 
-                                     Height="16" 
-                                   />
-                                    
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <Separator/>
-                            <MenuItem Header="Выделить всё" Click="SelectAllMenuItem_Click" >
-                                <MenuItem.Icon>
-                                    <materialIcons:MaterialIcon Kind="Select" 
-                                     Width="16" 
-                                     Height="16" 
-                                     />
-
-                                </MenuItem.Icon>
-                            </MenuItem>
-                        </ContextMenu>
-                    </avalonEdit:TextEditor.ContextMenu>
-                </avalonEdit:TextEditor>
-                  
-                </Grid>
-                <!-- Теги -->
+                <!--  Теги  -->
                 <StackPanel Grid.Row="5">
-                    <TextBlock Text="Теги (через запятую):" FontWeight="Bold" Margin="0,0,0,5" Foreground="#CCCCCC"/>
-                    <TextBox x:Name="TagsTextBox" Padding="5"
-                     Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#555555" FontSize="14"/>
+                    <TextBlock
+                        Margin="0,0,0,5"
+                        FontWeight="Bold"
+                        Foreground="#CCCCCC"
+                        Text="Теги (через запятую):" />
+                    <TextBox
+                        x:Name="TagsTextBox"
+                        Padding="5"
+                        Background="#3C3C3C"
+                        BorderBrush="#555555"
+                        FontSize="14"
+                        Foreground="#CCCCCC" />
                 </StackPanel>
 
             </Grid>

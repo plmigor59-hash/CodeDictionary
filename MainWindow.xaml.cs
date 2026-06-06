@@ -272,26 +272,24 @@ public partial class MainWindow : Window
         _isSwitchingEditorTab = true;
         try
         {
-            if (tab.Entry != null)
-            {
-                //MoveEditorTabToFront(tab);
-            }
+           
 
             _activeEditorTab = tab;
             _textSegments = tab.Segments;
 
-            if (CodeTextBox.Document != tab.Document)
-            {
+            if (CodeTextBox.Document != tab.Document)            {
                 CodeTextBox.Document = tab.Document;
             }
-
+        
             CodeTextBox.TextArea.TextView.Redraw();
             _currentFilePath = tab.FilePath;
             this.Title = !string.IsNullOrWhiteSpace(tab.FilePath)
-                ? $"{Path.GetFileName(tab.FilePath)} - Мой редактор"
-                : $"{tab.Title} - Мой редактор";
+                ? $"{Path.GetFileName(tab.FilePath)} "
+                : $"{tab.Title} ";
 
             _suppressSyntaxSelectionChange = true;
+
+            //TitleTextBox.Text = tab.Title;
             try
             {
                 if (!string.IsNullOrWhiteSpace(tab.SyntaxName))
@@ -339,14 +337,17 @@ public partial class MainWindow : Window
         var existingTab = FindEditorTab(filePath);
         if (existingTab != null)
         {
+            TitleTextBox.Text = Path.GetFileName(filePath);
             ActivateEditorTab(existingTab);
             return existingTab;
         }
 
         var content = File.ReadAllText(filePath);
+
         var tab = new EditorTabModel(Path.GetFileName(filePath), filePath, GetSyntaxSelectionForFile(filePath), content, isClosable: true);
         tab.MarkSaved();
         _editorTabs.Add(tab);
+        TitleTextBox.Text = Path.GetFileName(filePath);
         ActivateEditorTab(tab);
         return tab;
     }
@@ -783,7 +784,7 @@ public partial class MainWindow : Window
 
             activeTab.MarkSaved();
             _currentFilePath = activeTab.FilePath;
-            this.Title = $"{Path.GetFileName(activeTab.FilePath)} - Мой редактор";
+            this.Title = $"{Path.GetFileName(activeTab.FilePath)}";
         }
         catch (Exception ex)
         {
@@ -829,7 +830,7 @@ public partial class MainWindow : Window
                   }
 
                 // Обновляем заголовок
-                this.Title = $"{Path.GetFileName(_currentFilePath)} - Мой редактор";
+                this.Title = $"{Path.GetFileName(_currentFilePath)} ";
             }
             catch (Exception ex)
             {
@@ -880,7 +881,7 @@ public partial class MainWindow : Window
                 }
 
                 activeTab.MarkSaved();
-                this.Title = $"{Path.GetFileName(activeTab.FilePath)} - Мой редактор";
+                this.Title = $"{Path.GetFileName(activeTab.FilePath)}";
 
                 _snackbar.Show(CodeTextBox, "Файл успешно сохранён", NotificationType.Success, 1.5);
             }
@@ -1971,8 +1972,9 @@ private async void SaveEntry_Click(object sender, RoutedEventArgs e)
              activeTab.Title = entry.Title;
              activeTab.IsDirty = false;
              activeTab.NotifyHeaderChanged();
+            TitleTextBox.Text = entry.Title;
 
-             _currentEntry = entry;
+            _currentEntry = entry;
              SaveSegmentsToEntry();
              await _dataService.SaveDataAsync(_data);
              RefreshEntriesList();
@@ -2247,6 +2249,11 @@ private async void SaveEntry_Click(object sender, RoutedEventArgs e)
         ClearSearch();
     }
 
+    private void SearchBox_TextChanged_Click(object sender, RoutedEventArgs e)
+    {
+        ClearSearchTextChanged();
+    }
+
     private void FindNext()
     {
         if (_searchResults.Count == 0) return;
@@ -2305,6 +2312,12 @@ private async void SaveEntry_Click(object sender, RoutedEventArgs e)
 
         if (SearchResultsTextBlock != null)
             SearchResultsTextBlock.Text = "";
+    }
+
+    private void ClearSearchTextChanged()
+    {
+        if (SearchBox != null)
+            SearchBox.Text = "";
     }
 
     private void SelectEntryInTree(Guid entryId)
