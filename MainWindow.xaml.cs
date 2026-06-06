@@ -75,7 +75,10 @@ public partial class MainWindow : Window
         _appState = new AppState();
 
         LoadCustomHighlighting();
+
+       
         InitializeEditorTabs();
+       
 
 
         // Инициализируем список шрифтов и настроек подсветки
@@ -92,7 +95,7 @@ public partial class MainWindow : Window
         TitleTextBox.TextChanged += EntryField_TextChanged;
         DescriptionTextBox.TextChanged += EntryField_TextChanged;
         TagsTextBox.TextChanged += EntryField_TextChanged;
-        //CategoryComboBox.TextChanged += EntryField_TextChanged;
+      
 
     }
 
@@ -100,8 +103,8 @@ public partial class MainWindow : Window
     {
         _editorTabs.Clear();
 
-        _entryEditorTab = new EditorTabModel("Запись", isClosable: false);
-        _editorTabs.Add(_entryEditorTab);
+        //_entryEditorTab = new EditorTabModel("Запись", isClosable: false);
+        //_editorTabs.Add(_entryEditorTab);
 
         if (EditorTabs != null)
         {
