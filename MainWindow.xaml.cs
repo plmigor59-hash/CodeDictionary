@@ -6,6 +6,7 @@ using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -48,6 +49,12 @@ public partial class MainWindow : Window
     private string? _currentFilePath = null;  // Хранит путь к текущему открытому файлу0
     private SnackbarNotification _snackbar = new SnackbarNotification();
     private List<TextSegmentStyle> _textSegments = new();
+    private readonly ObservableCollection<EditorTabModel> _editorTabs = new();
+    private EditorTabModel? _activeEditorTab;
+    private EditorTabModel? _entryEditorTab;
+    private bool _isSwitchingEditorTab;
+    private bool _isUpdatingEditorContent;
+    private bool _suppressSyntaxSelectionChange;
 
 
     public MainWindow()
@@ -67,6 +74,7 @@ public partial class MainWindow : Window
         _appState = new AppState();
 
         LoadCustomHighlighting();
+        InitializeEditorTabs();
 
 
         // Инициализируем список шрифтов и настроек подсветки
@@ -76,14 +84,247 @@ public partial class MainWindow : Window
         Closing += MainWindow_Closing;
         StateChanged += MainWindow_StateChanged;
 
-        CodeTextBox.TextArea.TextView.LineTransformers.Add(new CustomColorTransformer(_textSegments));
+        CodeTextBox.TextArea.TextView.LineTransformers.Add(new CustomColorTransformer(() => _textSegments));
 
         // Подписываемся на изменения текста
-        CodeTextBox.TextChanged += (s, e) => UpdateSegmentsAfterTextChange();
+        CodeTextBox.TextChanged += CodeTextBox_TextChanged;
 
     }
 
+    private void InitializeEditorTabs()
+    {
+        _editorTabs.Clear();
 
+        _entryEditorTab = new EditorTabModel("Запись");
+        _editorTabs.Add(_entryEditorTab);
+
+        if (EditorTabs != null)
+        {
+            EditorTabs.ItemsSource = _editorTabs;
+            EditorTabs.SelectedItem = _entryEditorTab;
+        }
+
+        ActivateEditorTab(_entryEditorTab, selectInTabControl: false);
+    }
+
+    private void CodeTextBox_TextChanged(object? sender, EventArgs e)
+    {
+        if (_isSwitchingEditorTab || _isUpdatingEditorContent || _activeEditorTab == null)
+        {
+            return;
+        }
+
+        _activeEditorTab.IsDirty = true;
+        UpdateSegmentsAfterTextChange();
+    }
+
+    private void EditorTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isSwitchingEditorTab || EditorTabs?.SelectedItem is not EditorTabModel tab)
+        {
+            return;
+        }
+
+        ActivateEditorTab(tab, selectInTabControl: false);
+    }
+
+    private EditorTabModel? GetActiveEditorTab()
+    {
+        return _activeEditorTab ?? _entryEditorTab;
+    }
+
+    private void ActivateEditorTab(EditorTabModel? tab, bool selectInTabControl = true)
+    {
+        if (tab == null)
+        {
+            return;
+        }
+
+        _isSwitchingEditorTab = true;
+        try
+        {
+            _activeEditorTab = tab;
+            _textSegments = tab.Segments;
+
+            if (CodeTextBox.Document != tab.Document)
+            {
+                CodeTextBox.Document = tab.Document;
+            }
+
+            CodeTextBox.TextArea.TextView.Redraw();
+            _currentFilePath = tab.FilePath;
+            this.Title = !string.IsNullOrWhiteSpace(tab.FilePath)
+                ? $"{Path.GetFileName(tab.FilePath)} - Мой редактор"
+                : $"{tab.Title} - Мой редактор";
+
+            _suppressSyntaxSelectionChange = true;
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(tab.SyntaxName))
+                {
+                    SyntaxHighlightingComboBox.SelectedItem = tab.SyntaxName;
+                }
+            }
+            finally
+            {
+                _suppressSyntaxSelectionChange = false;
+            }
+
+            ApplySyntaxHighlighting(tab.SyntaxName);
+
+            if (selectInTabControl && EditorTabs != null && !ReferenceEquals(EditorTabs.SelectedItem, tab))
+            {
+                EditorTabs.SelectedItem = tab;
+            }
+        }
+        finally
+        {
+            _isSwitchingEditorTab = false;
+        }
+    }
+
+    private EditorTabModel? FindEditorTab(string filePath)
+    {
+        var normalizedPath = Path.GetFullPath(filePath);
+        return _editorTabs.FirstOrDefault(tab =>
+            !string.IsNullOrWhiteSpace(tab.FilePath) &&
+            string.Equals(Path.GetFullPath(tab.FilePath), normalizedPath, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private EditorTabModel OpenEditorTab(string filePath)
+    {
+        var existingTab = FindEditorTab(filePath);
+        if (existingTab != null)
+        {
+            ActivateEditorTab(existingTab);
+            return existingTab;
+        }
+
+        var content = File.ReadAllText(filePath);
+        var tab = new EditorTabModel(Path.GetFileName(filePath), filePath, GetSyntaxSelectionForFile(filePath), content);
+        tab.MarkSaved();
+        _editorTabs.Add(tab);
+        ActivateEditorTab(tab);
+        return tab;
+    }
+
+    private string? GetSyntaxSelectionForFile(string filePath)
+    {
+        return Path.GetExtension(filePath).ToLowerInvariant() switch
+        {
+            ".cs" => _currentTheme == AppTheme.Dark ? "Темная C#" : "Стандартная (C#)",
+            ".cpp" or ".cxx" or ".cc" or ".hpp" or ".h" => _currentTheme == AppTheme.Dark ? "Темная C++" : "Стандартная (C++)",
+            ".bsl" or ".os" => _currentTheme == AppTheme.Dark ? "Темная (1C)" : "Стандартная (1C)",
+            ".xml" or ".xsd" or ".xaml" => _currentTheme == AppTheme.Dark ? "Темная (XML)" : "Стандартная (XML)",
+            ".html" or ".htm" => _currentTheme == AppTheme.Dark ? "Темная (HTML)" : "Стандартная (HTML)",
+            ".js" => "Стандартная (JavaScript)",
+            ".java" => "Стандартная (Java)",
+            ".css" => "Стандартная (CSS)",
+            ".php" => "Стандартная (PHP)",
+            ".ps1" => "Стандартная (PowerShell)",
+            ".sql" => "Стандартная (SQL)",
+            ".vb" => "Стандартная (VB)",
+            ".patch" or ".diff" => "Стандартная (Patch)",
+            _ => null
+        };
+    }
+
+    private void ApplySyntaxHighlighting(string? selected)
+    {
+        if (CodeTextBox == null)
+        {
+            return;
+        }
+
+        var syntax = selected ?? SyntaxHighlightingComboBox?.SelectedItem?.ToString();
+
+        if (syntax == "Темная C#")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
+        }
+        else if (syntax == "Темная C++")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
+        }
+        else if (syntax == "Стандартная (C++)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C++");
+        }
+        else if (syntax == "Темная (1C)")
+        {
+            CodeTextBox.SyntaxHighlighting = _dark1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
+        }
+        else if (syntax == "Темная (XML)")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkXMLHigh ?? HighlightingManager.Instance.GetDefinition("XML");
+        }
+        else if (syntax == "Темная (HTML)")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkHTMLHigh ?? HighlightingManager.Instance.GetDefinition("HTML Dark");
+        }
+        else if (syntax == "Стандартная (1C)")
+        {
+            CodeTextBox.SyntaxHighlighting = _standart1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
+        }
+        else if (syntax == "Стандартная (Java)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Java");
+        }
+        else if (syntax == "Стандартная (JavaScript)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
+        }
+        else if (syntax == "Стандартная (HTML)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("HTML");
+        }
+        else if (syntax == "Стандартная (XML)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("XML");
+        }
+        else if (syntax == "Стандартная (CSS)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("CSS");
+        }
+        else if (syntax == "Стандартная (PHP)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("PHP");
+        }
+        else if (syntax == "Стандартная (PowerShell)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("PowerShell");
+        }
+        else if (syntax == "Стандартная (SQL)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("SQL");
+        }
+        else if (syntax == "Стандартная (VB)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("VB");
+        }
+        else if (syntax == "Стандартная (ASP/XHTML)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("ASP/XHTML");
+        }
+        else if (syntax == "Стандартная (Patch)")
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Patch");
+        }
+        else
+        {
+            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
+        }
+
+        UpdateCodeEditorColors(syntax);
+    }
+
+    private void MarkTabTextDirty()
+    {
+        if (_activeEditorTab != null)
+        {
+            _activeEditorTab.IsDirty = true;
+        }
+    }
 
     private void LoadWindowState()
     {
@@ -274,12 +515,25 @@ public partial class MainWindow : Window
         openFileDialog.Title = "Выберите текстовый файл";
         openFileDialog.Filter = "Текстовые файлы (*.txt;*.xshd;*.bsl;*.cs;*.xaml;*.json;*.xml)|*.txt;*.xshd;*.bsl;*cs;*.xaml;*.json;*.xml|Все файлы (*.*)|*.*";
         openFileDialog.FilterIndex = 1;
+        openFileDialog.Multiselect = true;
         //openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
         if (openFileDialog.ShowDialog() == true)
         {
             try
             {
+                foreach (var fileName in openFileDialog.FileNames)
+                {
+                    OpenEditorTab(fileName);
+                }
+
+                if (openFileDialog.FileNames.Length > 0)
+                {
+                    _snackbar.Show(CodeTextBox, $"Открыто файлов: {openFileDialog.FileNames.Length}", NotificationType.Success, 1.5);
+                }
+
+                return;
+
                 _currentFilePath = openFileDialog.FileName;
 
                 // Загружаем файл с определением кодировки (автоматическая)
@@ -352,6 +606,51 @@ public partial class MainWindow : Window
     // 💾 СОХРАНИТЬ (если путь уже есть, иначе Сохранить как...)
     private void SaveFile_Click(object sender, RoutedEventArgs e)
     {
+        var activeTab = GetActiveEditorTab();
+        if (activeTab == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(activeTab.FilePath))
+        {
+            SaveAsFile_Click(sender, e);
+            return;
+        }
+
+        try
+        {
+            if (!CodeTextBox.TextArea.Selection.IsEmpty)
+            {
+                using (var stream = new FileStream(activeTab.FilePath, FileMode.Create, FileAccess.Write))
+                using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                {
+                    writer.Write(CodeTextBox.SelectedText);
+                }
+
+                _snackbar.Show(CodeTextBox, "Выделенный текст успешно сохранён", NotificationType.Success, 1.5);
+            }
+            else
+            {
+                using (var stream = new FileStream(activeTab.FilePath, FileMode.Create, FileAccess.Write))
+                {
+                    CodeTextBox.Save(stream);
+                }
+
+                _snackbar.Show(CodeTextBox, "Файл успешно сохранён", NotificationType.Success, 1.5);
+            }
+
+            activeTab.MarkSaved();
+            _currentFilePath = activeTab.FilePath;
+            this.Title = $"{Path.GetFileName(activeTab.FilePath)} - Мой редактор";
+        }
+        catch (Exception ex)
+        {
+            ShowAlert($"Ошибка при сохранении: {ex.Message}", isError: true);
+        }
+
+        return;
+
         SaveAsFile_Click(sender, e);
 
         if (string.IsNullOrEmpty(_currentFilePath))
@@ -403,6 +702,12 @@ public partial class MainWindow : Window
     // 📝 СОХРАНИТЬ КАК (всегда спрашиваем путь)
     private void SaveAsFile_Click(object sender, RoutedEventArgs e)
     {
+        var activeTab = GetActiveEditorTab();
+        if (activeTab == null)
+        {
+            return;
+        }
+
         var saveFileDialog = new SaveFileDialog();
 
         // Настройки диалога
@@ -425,14 +730,16 @@ public partial class MainWindow : Window
         {
             try
             {
-                _currentFilePath = saveFileDialog.FileName;
+                activeTab.FilePath = saveFileDialog.FileName;
+                _currentFilePath = activeTab.FilePath;
 
-                using (var stream = new FileStream(_currentFilePath, FileMode.Create, FileAccess.Write))
+                using (var stream = new FileStream(activeTab.FilePath, FileMode.Create, FileAccess.Write))
                 {
                     CodeTextBox.Save(stream);
                 }
 
-                this.Title = $"{Path.GetFileName(_currentFilePath)} ";
+                activeTab.MarkSaved();
+                this.Title = $"{Path.GetFileName(activeTab.FilePath)} - Мой редактор";
 
                 _snackbar.Show(CodeTextBox, "Файл успешно сохранён", NotificationType.Success, 1.5);
             }
@@ -709,7 +1016,19 @@ public partial class MainWindow : Window
 
     private void SyntaxHighlightingComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (CodeTextBox == null || SyntaxHighlightingComboBox?.SelectedItem == null) return;
+        if (_suppressSyntaxSelectionChange || SyntaxHighlightingComboBox?.SelectedItem == null)
+        {
+            return;
+        }
+
+        var selectedSyntax = SyntaxHighlightingComboBox.SelectedItem.ToString();
+        if (_activeEditorTab != null)
+        {
+            _activeEditorTab.SyntaxName = selectedSyntax;
+        }
+
+        ApplySyntaxHighlighting(selectedSyntax);
+        return;
 
         var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
 
@@ -1265,49 +1584,79 @@ public partial class MainWindow : Window
 
     private void LoadEntryToForm(CodeEntry entry)
     {
-        TitleTextBox.Text = entry.Title;
-        DescriptionTextBox.Text = entry.Description;
-        CodeTextBox.Text = entry.Code;
-        CategoryComboBox.Text = NormalizeCategoryPath(entry.Category);
-        TagsTextBox.Text = string.Join(", ", entry.Tags);
-
-        _selectedCategoryPath = NormalizeCategoryPath(entry.Category);
-        RefreshCategoryFilter();
-
-
-        if (!string.IsNullOrEmpty(entry.Syntax) && SyntaxHighlightingComboBox != null)
+        ActivateEditorTab(_entryEditorTab);
+        _isUpdatingEditorContent = true;
+        try
         {
-            SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
+            TitleTextBox.Text = entry.Title;
+            DescriptionTextBox.Text = entry.Description;
+            CodeTextBox.Text = entry.Code;
+            CategoryComboBox.Text = NormalizeCategoryPath(entry.Category);
+            TagsTextBox.Text = string.Join(", ", entry.Tags);
+
+            _selectedCategoryPath = NormalizeCategoryPath(entry.Category);
+            RefreshCategoryFilter();
+
+            if (!string.IsNullOrEmpty(entry.Syntax) && SyntaxHighlightingComboBox != null)
+            {
+                SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
+            }
+
+            LoadSegmentsFromEntry();
+            ClearSearch();
+        }
+        finally
+        {
+            _isUpdatingEditorContent = false;
         }
 
-        LoadSegmentsFromEntry();
-        ClearSearch();
+        _activeEditorTab?.MarkSaved();
     }
 
     private void AddEntry_Click(object sender, RoutedEventArgs e)
     {
+        ActivateEditorTab(_entryEditorTab);
+
         _currentEntry = new CodeEntry();
         _data.Entries.Add(_currentEntry);
+        _isUpdatingEditorContent = true;
+        try
+        {
+            TitleTextBox.Text = "";
+            DescriptionTextBox.Text = "";
+            CodeTextBox.Text = "";
+            CategoryComboBox.Text = _selectedCategoryPath;
+            TagsTextBox.Text = "";
+            RefreshCategoryFilter();
 
-        TitleTextBox.Text = "";
-        DescriptionTextBox.Text = "";
-        CodeTextBox.Text = "";
-        CategoryComboBox.Text = _selectedCategoryPath;
-        TagsTextBox.Text = "";
-        RefreshCategoryFilter();
+            ClearSearch();
+            TitleTextBox.Focus();
+        }
+        finally
+        {
+            _isUpdatingEditorContent = false;
+        }
 
-        ClearSearch();
-        TitleTextBox.Focus();
+        _activeEditorTab?.MarkSaved();
     }
 
     private void ClearEditingForm()
     {
-        TitleTextBox.Text = string.Empty;
-        DescriptionTextBox.Text = string.Empty;
-        CodeTextBox.Text = string.Empty;
-        CategoryComboBox.Text = string.Empty;
-        TagsTextBox.Text = string.Empty;
-        _selectedCategoryPath = string.Empty;
+        ActivateEditorTab(_entryEditorTab);
+        _isUpdatingEditorContent = true;
+        try
+        {
+            TitleTextBox.Text = string.Empty;
+            DescriptionTextBox.Text = string.Empty;
+            CodeTextBox.Text = string.Empty;
+            CategoryComboBox.Text = string.Empty;
+            TagsTextBox.Text = string.Empty;
+            _selectedCategoryPath = string.Empty;
+        }
+        finally
+        {
+            _isUpdatingEditorContent = false;
+        }
     }
 
     private void NormalizeImportedData()
@@ -1428,6 +1777,8 @@ public partial class MainWindow : Window
 
     private async void SaveEntry_Click(object sender, RoutedEventArgs e)
     {
+        ActivateEditorTab(_entryEditorTab);
+
         if (_currentEntry == null)
         {
             ShowAlert("Выберите или создайте запись", isError: true);
@@ -1473,6 +1824,8 @@ public partial class MainWindow : Window
 
     private async void DeleteEntry_Click(object sender, RoutedEventArgs e)
     {
+        ActivateEditorTab(_entryEditorTab);
+
         if (_currentEntry == null)
         {
             ShowAlert("Выберите запись для удаления", isError: true);

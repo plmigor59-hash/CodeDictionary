@@ -210,6 +210,46 @@
             </Setter>
         </Style>
 
+        <Style x:Key="EditorTabItemStyle" TargetType="TabItem">
+            <Setter Property="Foreground" Value="{DynamicResource DictTextSecondary}"/>
+            <Setter Property="Background" Value="{DynamicResource DictSurface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DictBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="Margin" Value="0,0,4,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8,8,0,0"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              ContentSource="Header"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource DictSurfaceStrong}"/>
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource DictAccent}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#334055"/>
+                                <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
 
         <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
             <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}"/>
@@ -809,6 +849,7 @@
                 <Grid Grid.Row="4" x:Name="CodeContainer">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
@@ -926,7 +967,31 @@
                 </Grid>
 
                 <!-- Текстовый редактор кода (3/3 от высоты кода) -->
-                <avalonEdit:TextEditor Grid.Row="4" x:Name="CodeTextBox"
+                <TabControl Grid.Row="1"
+                            x:Name="EditorTabs"
+                            Margin="0,0,0,8"
+                            SelectedIndex="0"
+                            SelectionChanged="EditorTabs_SelectionChanged"
+                            ItemContainerStyle="{StaticResource EditorTabItemStyle}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="0"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Center"
+                            TabStripPlacement="Top">
+                    <TabControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Header}" ToolTip="{Binding FilePath}" TextTrimming="CharacterEllipsis"/>
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
+                    <TabControl.ContentTemplate>
+                        <DataTemplate>
+                            <Border Height="0" Width="0"/>
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
+
+                <avalonEdit:TextEditor Grid.Row="2" x:Name="CodeTextBox"
                                    FontFamily="Consolas"
                                    FontSize="12"
                                    ShowLineNumbers="True"
