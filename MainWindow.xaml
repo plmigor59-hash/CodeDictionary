@@ -250,7 +250,7 @@
                                         Cursor="Hand"
                                         Click="CloseTabButton_Click">
                                     <Button.Style>
-                                        <Style TargetType="Button" BasedOn="{StaticResource TitleBarButtonStyle}">
+                                        <Style TargetType="Button">
                                             <Setter Property="Background" Value="Transparent"/>
                                             <Setter Property="BorderThickness" Value="0"/>
                                             <Setter Property="Padding" Value="0"/>
@@ -463,7 +463,7 @@
         </Style>
 
         <!-- Стиль для кнопки закрытия -->
-        <Style x:Key="TitleBarCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource TitleBarButtonStyle}">
+        <Style x:Key="TitleBarCloseButtonStyle" TargetType="Button">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -1125,3 +1125,4 @@
         </Grid>
     </Grid>
 </Window>
+
