@@ -3,12 +3,12 @@
                   extensions=".cs"
                   xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
   <Color name="Comment"
-         foreground="#E5C4ED"
+         foreground="#8BCE78"
          fontStyle="italic" />
   <Color name="String"
-         foreground="#CE9178" />
+         foreground="#788BCE" />
   <Color name="Char"
-         foreground="#CE9178" />
+         foreground="#B6CE78" />
   <Color name="Preprocessor"
          foreground="#00FFFF" />
   <Color name="Punctuation"
@@ -17,7 +17,7 @@
          foreground="#C4EDE5"
          fontWeight="normal" />
   <Color name="ReferenceTypes"
-         foreground="#4EC9B0" />
+         foreground="#C9B14F" />
   <Color name="MethodCall"
          foreground="#DCDCAA"
          fontWeight="normal" />
@@ -61,6 +61,8 @@
          foreground="#D69057" />
   <Color name="SemanticKeywords"
          foreground="#D69057" />
+  <Color name="DefaultText" 
+         foreground="#C8EEE7" />       
 
   <RuleSet ignoreCase="false">
     <Span color="Comment"
@@ -274,5 +276,9 @@
     <Rule color="Punctuation">
       [?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;]+
     </Rule>
+    
+    <Rule color="DefaultText">
+			\b[a-zA-Z_а-яА-Я_][a-zA-Z_а-яА-Я0-9_]*\b
+	</Rule>
   </RuleSet>
 </SyntaxDefinition>
