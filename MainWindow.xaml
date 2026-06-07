@@ -1249,7 +1249,7 @@
                                     Margin="2"
                                     Click="SaveFile_Click"
                                     Content="📑"
-                                    Foreground="#FF19E2CB"
+                                    Foreground="Gold"
                                     Style="{StaticResource TitleBarButtonStyle}"
                                     ToolTip="Сохранить ..." />
                                 <Button
