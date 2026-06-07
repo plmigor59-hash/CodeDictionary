@@ -153,7 +153,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        _activeEditorTab.IsDirty = true;
+        //_activeEditorTab.IsDirty = true;
+        MarkTabTextDirty();
         SyncActiveEntryTabFromForm();
         UpdateSegmentsAfterTextChange();
     }
@@ -294,6 +295,7 @@ public partial class MainWindow : Window
 
             _activeEditorTab = tab;
             _textSegments = tab.Segments;
+          
 
             if (CodeTextBox.Document != tab.Document)            {
                 CodeTextBox.Document = tab.Document;
@@ -310,7 +312,11 @@ public partial class MainWindow : Window
             var currentIndex = _editorTabs.IndexOf(tab);
                 if (currentIndex >= 0)
                 {
-                TitleTextBox.Text = this.Title;
+             
+                TitleTextBox.Text = tab.Entry?.Title ?? string.Empty;
+             
+                //tab.MarkSaved();
+
             }
 
             
@@ -332,6 +338,7 @@ public partial class MainWindow : Window
             if (selectInTabControl && EditorTabs != null && !ReferenceEquals(EditorTabs.SelectedItem, tab))
             {
                 EditorTabs.SelectedItem = tab;
+                //EditorTabs.
             }
         }
         finally
@@ -372,7 +379,7 @@ public partial class MainWindow : Window
         var tab = new EditorTabModel(Path.GetFileName(filePath), filePath, GetSyntaxSelectionForFile(filePath), content, isClosable: true);
         tab.MarkSaved();
         _editorTabs.Add(tab);
-        TitleTextBox.Text = Path.GetFileName(filePath);
+        //TitleTextBox.Text = Path.GetFileName(filePath);
         ActivateEditorTab(tab);
         return tab;
     }
@@ -686,7 +693,7 @@ public partial class MainWindow : Window
         openFileDialog.Filter = "Текстовые файлы (*.txt;*.xshd;*.bsl;*.cs;*.xaml;*.json;*.xml)|*.txt;*.xshd;*.bsl;*cs;*.xaml;*.json;*.xml|Все файлы (*.*)|*.*";
         openFileDialog.FilterIndex = 1;
         openFileDialog.Multiselect = true;
-        //openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+      
 
         if (openFileDialog.ShowDialog() == true)
         {
@@ -1166,7 +1173,7 @@ public partial class MainWindow : Window
             if (_activeEditorTab.Entry != null)
             {
                 _activeEditorTab.Entry.Syntax = selectedSyntax ?? string.Empty;
-                _activeEditorTab.IsDirty = true;
+                _activeEditorTab.IsDirty = false;
             }
         }
 
