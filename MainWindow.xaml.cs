@@ -153,7 +153,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        //_activeEditorTab.IsDirty = true;
+      
         MarkTabTextDirty();
         SyncActiveEntryTabFromForm();
         UpdateSegmentsAfterTextChange();
@@ -192,19 +192,14 @@ public partial class MainWindow : Window
         activeTab.SyntaxName = entry.Syntax;
         activeTab.IsDirty = true;
         _currentEntry = entry;
-        //FindAndFocusItem(string.IsNullOrWhiteSpace(entry.Title) ? "Без названия" : entry.Title);
+      
 
 
     }
 
     private void EditorTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        //string _currentSelection = $"{string.Join(", ", e.AddedItems.Cast<EditorTabModel>().Select(t => t.Title))} ";
-        ////string _currentSelection= "HTML";
-        //////MessageBox.Show(_currentSelection);
-
-
-        //FindTreeViewItemRecursive(EntriesTreeView, item => item.Header?.ToString() == _currentSelection);
+       
 
 
 
@@ -315,7 +310,7 @@ public partial class MainWindow : Window
              
                 TitleTextBox.Text = tab.Entry?.Title ?? string.Empty;
              
-                //tab.MarkSaved();
+             
 
             }
 
@@ -338,7 +333,7 @@ public partial class MainWindow : Window
             if (selectInTabControl && EditorTabs != null && !ReferenceEquals(EditorTabs.SelectedItem, tab))
             {
                 EditorTabs.SelectedItem = tab;
-                //EditorTabs.
+               
             }
         }
         finally
@@ -1156,7 +1151,7 @@ public partial class MainWindow : Window
 
         WordWrapCheckBox.IsChecked = false;
      
-        SyntaxHighlightingComboBox.SelectedIndex = 0; // По умолчанию DarkCSharp
+        SyntaxHighlightingComboBox.SelectedIndex = 0; // По умолчанию 1C или C#, будет определяться при открытии файла
     }
 
     private void SyntaxHighlightingComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1404,7 +1399,7 @@ public partial class MainWindow : Window
                 var selected = SyntaxHighlightingComboBox.SelectedItem?.ToString();
                 if ( selected == "Стандартная (C#)")
                 {
-                    SyntaxHighlightingComboBox.SelectedIndex = 0; // DarkCSharp
+                    SyntaxHighlightingComboBox.SelectedIndex = 1; // Dark1C
                 }
                 else if ( selected == "Стандартная (C++)")
                 {

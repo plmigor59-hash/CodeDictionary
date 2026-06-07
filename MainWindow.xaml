@@ -285,10 +285,11 @@
         </Style>
 
         <Style x:Key="EditorTabItemStyle" TargetType="TabItem">
-            <Setter Property="Foreground" Value="{DynamicResource DictTextSecondary}" />
+            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}" />
             <Setter Property="Background" Value="{DynamicResource DictSurface}" />
             <Setter Property="BorderBrush" Value="{DynamicResource DictBorder}" />
             <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="13" />
             <Setter Property="Padding" Value="12,5" />
             <Setter Property="Margin" Value="0,0,4,0" />
             <Setter Property="Template">
@@ -355,15 +356,16 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource DictSurfaceStrong}" />
+                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource DictCardBackground}" />
                                 <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource DictAccent}" />
-                                <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}" />
+                                <Setter Property="Foreground" Value="{DynamicResource DictSuccess}" />
                             </Trigger>
                             <DataTrigger Binding="{Binding IsFromFile}" Value="True">
                                 <Setter TargetName="FileIndicator" Property="Visibility" Value="Visible" />
                             </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="TabBorder" Property="Background" Value="#334055" />
+                                
+                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource DictCardBackground}" />
                                 <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">

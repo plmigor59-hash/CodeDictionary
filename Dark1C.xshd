@@ -11,7 +11,7 @@
 	<Color name="OperatorKeywordsEn" foreground="#E58E0B" />
 	<Color name="TrueFalse" foreground="#E58E0B" />
 	<Color name="Punctuation" foreground="#079217" />
-	<Color name="DefaultText" foreground="#F6AF3C" />
+	<Color name="DefaultText" foreground="#FFC65C" />
 
 	<RuleSet ignoreCase="true">
 		<Span color="Comment">
