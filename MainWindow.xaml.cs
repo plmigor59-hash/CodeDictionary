@@ -341,7 +341,15 @@ public partial class MainWindow : Window
             else
             {
                 TitleTextBox.Text = tab.Title;
-                SetDescriptionHtml(string.Empty);
+                if (tab.IsFromFile && tab.FilePath != null && Path.GetExtension(tab.FilePath).ToLower() == ".html")
+                {
+                    SetDescriptionHtml(tab.Document.Text);
+                    ToggleDescription_Open();
+                }
+                else
+                {
+                    SetDescriptionHtml(string.Empty);
+                }
                 CategoryComboBox.Text = string.Empty;
                 TagsTextBox.Text = string.Empty;
                 _currentEntry = null;
@@ -1969,12 +1977,14 @@ public partial class MainWindow : Window
 
          if (activeTab != null && activeTab.Entry == null && activeTab.IsFromFile)
          {
+             bool isHtml = Path.GetExtension(activeTab.FilePath).ToLower() == ".html";
+
              var entry = new CodeEntry
              {
                  Title = Path.GetFileNameWithoutExtension(activeTab.FilePath),
                  Extension = Path.GetExtension(activeTab.FilePath),
-                 Description = "",
-                 Code = CodeTextBox.Text,
+                 Description = isHtml ? CodeTextBox.Text : "",
+                 Code = isHtml ? "" : CodeTextBox.Text,
                  Category = NormalizeCategoryPath(CategoryComboBox.Text),
                  Tags = Array.Empty<string>().ToList(),
                  Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty
