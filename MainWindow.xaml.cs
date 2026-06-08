@@ -1722,8 +1722,6 @@ public partial class MainWindow : Window
 
     private void LoadEntryToForm(CodeEntry entry)
     {
-        var entryTab = OpenEntryTab(entry);
-        ActivateEditorTab(entryTab);
         _isUpdatingEditorContent = true;
         try
         {
@@ -1735,9 +1733,26 @@ public partial class MainWindow : Window
             _selectedCategoryPath = NormalizeCategoryPath(entry.Category);
             RefreshCategoryFilter();
 
-            if (!string.IsNullOrEmpty(entry.Syntax) && SyntaxHighlightingComboBox != null)
+            if (!string.IsNullOrEmpty(entry.Code))
             {
-                SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
+                var entryTab = OpenEntryTab(entry);
+                ActivateEditorTab(entryTab);
+                _currentEntry = entryTab.Entry;
+            }
+            else
+            {
+                // Если кода нет (только документация/HTML), не создаем закладку
+                _activeEditorTab = null;
+                if (EditorTabs != null) EditorTabs.SelectedItem = null;
+                CodeTextBox.Document.Text = string.Empty;
+                _textSegments.Clear();
+                CodeTextBox.TextArea.TextView.Redraw();
+                _currentEntry = entry;
+                
+                if (!string.IsNullOrEmpty(entry.Syntax) && SyntaxHighlightingComboBox != null)
+                {
+                    SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
+                }
             }
 
             ClearSearch();
@@ -1746,9 +1761,6 @@ public partial class MainWindow : Window
         {
             _isUpdatingEditorContent = false;
         }
-
-        _currentEntry = entryTab.Entry;
-        entryTab.MarkSaved();
     }
 
     private void AddEntry_Click(object sender, RoutedEventArgs e)
@@ -2395,11 +2407,22 @@ public partial class MainWindow : Window
     {
         var allFiles = Directory.GetFiles(rootPath, "*.*", SearchOption.AllDirectories);
         var bslFiles = allFiles.Where(f => f.EndsWith(".bsl", StringComparison.OrdinalIgnoreCase)).ToList();
+        
+        // Базовая категория для импорта - текущая выбранная
+        string baseCategory = NormalizeCategoryPath(_selectedCategoryPath);
 
         foreach (var bslFile in bslFiles)
         {
             string relativePath = Path.GetDirectoryName(Path.GetRelativePath(rootPath, bslFile)) ?? "";
-            string category = relativePath.Replace(Path.DirectorySeparatorChar, '/');
+            string folderCategory = relativePath.Replace(Path.DirectorySeparatorChar, '/');
+            
+            string category = string.IsNullOrWhiteSpace(baseCategory) 
+                ? folderCategory 
+                : string.IsNullOrWhiteSpace(folderCategory) 
+                    ? baseCategory 
+                    : $"{baseCategory}/{folderCategory}";
+            
+            category = NormalizeCategoryPath(category);
             if (string.IsNullOrEmpty(category)) category = UncategorizedCategoryName;
 
             string title = Path.GetFileNameWithoutExtension(bslFile);
@@ -2441,7 +2464,15 @@ public partial class MainWindow : Window
             if (Path.GetFileName(htmlFile).Equals("index.html", StringComparison.OrdinalIgnoreCase)) continue;
 
             string relativePath = Path.GetDirectoryName(Path.GetRelativePath(rootPath, htmlFile)) ?? "";
-            string category = relativePath.Replace(Path.DirectorySeparatorChar, '/');
+            string folderCategory = relativePath.Replace(Path.DirectorySeparatorChar, '/');
+            
+            string category = string.IsNullOrWhiteSpace(baseCategory) 
+                ? folderCategory 
+                : string.IsNullOrWhiteSpace(folderCategory) 
+                    ? baseCategory 
+                    : $"{baseCategory}/{folderCategory}";
+            
+            category = NormalizeCategoryPath(category);
             if (string.IsNullOrEmpty(category)) category = UncategorizedCategoryName;
 
             string title = Path.GetFileNameWithoutExtension(htmlFile);
@@ -2460,6 +2491,7 @@ public partial class MainWindow : Window
             _data.Entries.Add(entry);
         }
 
+        NormalizeImportedData();
         await _dataService.SaveDataAsync(_data);
     }
 
@@ -2877,16 +2909,66 @@ public partial class MainWindow : Window
             ? enteredName
             : $"{NormalizeCategoryPath(parentPath)}{CategorySeparator}{enteredName}";
 
-        if (_data.Categories.Any(existing => string.Equals(NormalizeCategoryPath(existing), newCategoryPath, StringComparison.OrdinalIgnoreCase)))
+        if (_data.Categories.Any(existing => string.Equals(NormalizeCategoryPath(existing), newCategoryPath, StringComparison.CurrentCultureIgnoreCase)))
         {
             ShowAlert($"Категория '{newCategoryPath}' уже существует", isError: true);
             return;
         }
 
         EnsureCategoryPathExists(newCategoryPath);
+        
+        // Сортируем категории для сохранения порядка
+        _data.Categories = _data.Categories
+            .OrderBy(c => c, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
         await _dataService.SaveDataAsync(_data);
         RefreshEntriesList();
+        
+        _selectedCategoryPath = newCategoryPath;
+        CategoryComboBox.Text = newCategoryPath;
+        
+        // Автоматически раскрываем и выделяем новую категорию
+        SelectCategoryInTree(newCategoryPath);
+
         _snackbar.Show(CodeTextBox, $"Категория '{newCategoryPath}' добавлена", NotificationType.Success, 1.5);
+    }
+
+    private void SelectCategoryInTree(string categoryPath)
+    {
+        if (EntriesTreeView.ItemsSource is IEnumerable<CategoryNode> categories)
+        {
+            var targetNode = FindCategoryNode(categories, categoryPath);
+            if (targetNode != null)
+            {
+                ExpandAncestors(categories, categoryPath);
+                targetNode.IsSelected = true;
+                targetNode.IsExpanded = true;
+            }
+        }
+    }
+
+    private CategoryNode? FindCategoryNode(IEnumerable<CategoryNode> nodes, string path)
+    {
+        foreach (var node in nodes)
+        {
+            if (string.Equals(node.FullPath, path, StringComparison.CurrentCultureIgnoreCase))
+                return node;
+            
+            var found = FindCategoryNode(node.Children, path);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
+    private void ExpandAncestors(IEnumerable<CategoryNode> nodes, string path)
+    {
+        var ancestors = EnumerateCategoryAncestors(path).ToList();
+        foreach (var ancestor in ancestors)
+        {
+            var node = FindCategoryNode(nodes, ancestor);
+            if (node != null) node.IsExpanded = true;
+        }
     }
 
     private async void RenameCategory_Click(object sender, RoutedEventArgs e)
@@ -3203,8 +3285,10 @@ public partial class MainWindow : Window
     }
 }
 
-public class CategoryNode
+public class CategoryNode : System.ComponentModel.INotifyPropertyChanged
 {
+    private bool _isExpanded;
+    private bool _isSelected;
     public string Name { get; set; } = string.Empty;
     public string FullPath { get; set; } = string.Empty;
     public List<CategoryNode> Children { get; set; } = new();
@@ -3213,6 +3297,21 @@ public class CategoryNode
     public int TotalEntryCount => Entries.Count + Children.Sum(child => child.TotalEntryCount);
     public string CountString => $"({TotalEntryCount})";
     public bool CanDelete => !string.IsNullOrWhiteSpace(FullPath);
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set { _isExpanded = value; OnPropertyChanged(nameof(IsExpanded)); }
+    }
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set { _isSelected = value; OnPropertyChanged(nameof(IsSelected)); }
+    }
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+    protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
 }
 
 public class CodeEntryViewModel

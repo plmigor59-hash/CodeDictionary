@@ -854,7 +854,8 @@
 
                         <!--  Стиль для элементов дерева  -->
                         <Style TargetType="TreeViewItem">
-                            <Setter Property="IsExpanded" Value="True" />
+                            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                             <Setter Property="Background" Value="Transparent" />
                             <Setter Property="Padding" Value="4,2" />
                             <Setter Property="Template">
