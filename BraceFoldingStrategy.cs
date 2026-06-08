@@ -25,9 +25,10 @@ namespace CodeDictionary
 		/// </summary>
 		public BraceFoldingStrategy()
 		{
-			this.OpeningBrace = '{';
-			this.ClosingBrace = '}';
-		}
+            this.OpeningBrace = '{';
+            this.ClosingBrace = '}';
+           
+        }
 
 		public void UpdateFoldings(FoldingManager manager, TextDocument document)
 		{

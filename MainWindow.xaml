@@ -775,7 +775,7 @@
                     DragOver="EntriesTreeView_DragOver"
                     Drop="EntriesTreeView_Drop"
                     FontSize="14"
-                    Foreground="#CCCCCC"
+                    Foreground="#F2EAE9"
                     MouseDoubleClick="EntriesTreeView_MouseDoubleClick"
                     PreviewMouseLeftButtonDown="EntriesTreeView_PreviewMouseLeftButtonDown"
                     PreviewMouseMove="EntriesTreeView_PreviewMouseMove"
@@ -1105,7 +1105,8 @@
                     Grid.Row="1"
                     MinHeight="80"
                     Margin="0,0,0,10"
-                    VerticalAlignment="Stretch" />
+                    VerticalAlignment="Stretch"
+                    />
 
                 <!--  Горизонтальный разделитель  -->
                 <GridSplitter
