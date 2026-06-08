@@ -12,6 +12,7 @@ public class CodeEntry
     public DateTime CreatedAt { get; set; }
     public DateTime ModifiedAt { get; set; }
     public string FormattingData { get; set; } = string.Empty; // JSON строка с форматированием
+    public string Extension { get; set; } = string.Empty;
 
     public CodeEntry()
     {

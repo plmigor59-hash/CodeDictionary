@@ -18,6 +18,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using System.Xml;
 
 
@@ -61,10 +62,7 @@ public partial class MainWindow : Window
     private bool _suppressSyntaxSelectionChange;
     private FoldingManager _foldingManager;
     private BraceFoldingStrategy _foldingStrategy;
-
-
-    
-
+    private bool _updateDescription;
 
 
 
@@ -108,6 +106,16 @@ public partial class MainWindow : Window
       
 
     }
+
+
+
+    private void DescriptionBrowser_Navigating(object sender, NavigatingCancelEventArgs e)
+    {
+        // Отменяем переход по любой ссылке
+        e.Cancel = true;
+    }
+
+
 
     private void UpdateFoldings()
     {
@@ -1425,9 +1433,8 @@ public partial class MainWindow : Window
              UpdateCodeEditorColors();
 
             SyntaxHighlightingComboBox?.Items.Clear();
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная C#");
             SyntaxHighlightingComboBox?.Items.Add("Стандартная 1C");
-           
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная C#");
             SyntaxHighlightingComboBox?.Items.Add("Стандартная C++)");
             SyntaxHighlightingComboBox?.Items.Add("Стандартная Python");
             SyntaxHighlightingComboBox?.Items.Add("Стандартная Java");
@@ -1481,7 +1488,7 @@ public partial class MainWindow : Window
 
         var syntax = selectedSyntax ?? SyntaxHighlightingComboBox?.SelectedItem?.ToString();
 
-        if (syntax == "Стандартная (1C)")
+        if (syntax == "Стандартная 1C")
         {
             // Для 1С фон всегда остается светлым
             CodeTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeBackground));
@@ -1569,6 +1576,7 @@ public partial class MainWindow : Window
     private void EntriesTreeView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         var treeViewItem = FindParent<TreeViewItem>(e.OriginalSource as DependencyObject);
+        _updateDescription = false; // Разрешаем обновление описания при двойном клике, так как пользователь явно взаимодействует с элементом
         if (treeViewItem?.DataContext is not CodeEntryViewModel viewEntry)
         {
             return;
@@ -1722,6 +1730,7 @@ public partial class MainWindow : Window
     private void LoadEntryToForm(CodeEntry entry)
     {
         _isUpdatingEditorContent = true;
+        _updateDescription = entry.Extension.Contains(".html");
         try
         {
             TitleTextBox.Text = entry.Title;
@@ -1733,29 +1742,43 @@ public partial class MainWindow : Window
             RefreshCategoryFilter();
 
             if (!string.IsNullOrEmpty(entry.Code))
+
             {
+                ToggleDescription_Close();
                 var entryTab = OpenEntryTab(entry);
                 ActivateEditorTab(entryTab);
                 _currentEntry = entryTab.Entry;
+                
+                if (!string.IsNullOrEmpty(entry.Syntax) && SyntaxHighlightingComboBox != null)
+                {
+                  
+                    SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
+                }
+
+
             }
             else
             {
                 // Если кода нет (только документация/HTML), не создаем закладку
                 _activeEditorTab = null;
-                if (EditorTabs != null) EditorTabs.SelectedItem = null;
-                CodeTextBox.Document.Text = string.Empty;
-                _textSegments.Clear();
-                CodeTextBox.TextArea.TextView.Redraw();
-                _currentEntry = entry;
-                
-                if (!string.IsNullOrEmpty(entry.Syntax) && SyntaxHighlightingComboBox != null)
+                if (_updateDescription)
+
                 {
-                    SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
+                    if (_currentTheme == AppTheme.Dark)
+                        SyntaxHighlightingComboBox.SelectedIndex = 6;
+                    else SyntaxHighlightingComboBox.SelectedIndex = 0;
+
+                   
                 }
+
+                ToggleDescription_Open();
+
+
             }
 
             ClearSearch();
         }
+    
         finally
         {
             _isUpdatingEditorContent = false;
@@ -1946,6 +1969,7 @@ public partial class MainWindow : Window
              var entry = new CodeEntry
              {
                  Title = Path.GetFileNameWithoutExtension(activeTab.FilePath),
+                 Extension = Path.GetExtension(activeTab.FilePath),
                  Description = "",
                  Code = CodeTextBox.Text,
                  Category = NormalizeCategoryPath(CategoryComboBox.Text),
@@ -2243,6 +2267,28 @@ public partial class MainWindow : Window
         }
     }
 
+
+
+    private void ToggleDescription_Close()
+    {
+            DescriptionBrowser.Visibility = Visibility.Collapsed;
+            DescriptionSplitter.Visibility = Visibility.Collapsed;
+            DescriptionRow.Height = new GridLength(0);
+            ToggleDescriptionButton.Content = " ▼ Развернуть ";
+           _updateDescription = false;
+    }
+
+
+    private void ToggleDescription_Open()
+    {
+        DescriptionBrowser.Visibility = Visibility.Visible;
+        DescriptionSplitter.Visibility = Visibility.Visible;
+        DescriptionRow.Height = new GridLength(350);
+        ToggleDescriptionButton.Content = " ▲ Свернуть ";
+        _updateDescription = false;
+    }
+
+
     // Поиск в тексте
     private List<int> _searchResults = new List<int>();
     private int _currentSearchIndex = -1;
@@ -2494,34 +2540,42 @@ public partial class MainWindow : Window
 
     private async Task ImportFromFolderAsync(string rootPath)
     {
+        // Список папок, которые не должны становиться категориями
+        var foldersToIgnore = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Ext", "Forms", "Help" };
+
         var allFiles = Directory.EnumerateFiles(rootPath, "*.*", SearchOption.AllDirectories)
             .Where(f => !Path.GetDirectoryName(f)!.Split(Path.DirectorySeparatorChar).Any(p => p.StartsWith("_")))
             .Where(f => !Path.GetFileName(f).StartsWith("_"))
-            .Where(f => !Path.GetFileName(f).StartsWith("E") 
-            )
             .ToList();
+
         var bslFiles = allFiles.Where(f => f.EndsWith(".bsl", StringComparison.OrdinalIgnoreCase)).ToList();
-        
+
         // Базовая категория для импорта - текущая выбранная
         string baseCategory = NormalizeCategoryPath(_selectedCategoryPath);
 
         foreach (var bslFile in bslFiles)
         {
             string relativePath = Path.GetDirectoryName(Path.GetRelativePath(rootPath, bslFile)) ?? "";
-            string folderCategory = relativePath.Replace(Path.DirectorySeparatorChar, '/');
-            
+
+            // Фильтруем части пути: если часть пути в списке исключений, пропускаем ее
+            var pathParts = relativePath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
+                                        .Where(p => !foldersToIgnore.Contains(p));
+
+            string folderCategory = string.Join("/", pathParts);
+
             string category = string.IsNullOrWhiteSpace(baseCategory) 
                 ? folderCategory 
                 : string.IsNullOrWhiteSpace(folderCategory) 
                     ? baseCategory 
                     : $"{baseCategory}/{folderCategory}";
-            
+
             category = NormalizeCategoryPath(category);
             if (string.IsNullOrEmpty(category)) category = UncategorizedCategoryName;
 
             string title = Path.GetFileNameWithoutExtension(bslFile);
             string code = await File.ReadAllTextAsync(bslFile);
 
+            // Ищем соответствующий html файл для описания
             string htmlFile = Path.ChangeExtension(bslFile, ".html");
             string description = "";
             if (File.Exists(htmlFile))
@@ -2530,6 +2584,7 @@ public partial class MainWindow : Window
             }
             else
             {
+                // Если нет файла с таким же именем, ищем index.html в той же папке
                 string indexHtml = Path.Combine(Path.GetDirectoryName(bslFile) ?? "", "index.html");
                 if (File.Exists(indexHtml))
                 {
@@ -2541,6 +2596,7 @@ public partial class MainWindow : Window
             {
                 Id = Guid.NewGuid(),
                 Title = title,
+                Extension = Path.GetExtension(bslFile),
                 Code = code,
                 Category = category,
                 Description = description,
@@ -2550,22 +2606,28 @@ public partial class MainWindow : Window
             _data.Entries.Add(entry);
         }
 
+        // Также импортируем HTML файлы, для которых нет BSL (как отдельные записи)
         var htmlFiles = allFiles.Where(f => f.EndsWith(".html", StringComparison.OrdinalIgnoreCase)).ToList();
         foreach (var htmlFile in htmlFiles)
         {
             string bslEquiv = Path.ChangeExtension(htmlFile, ".bsl");
-            if (File.Exists(bslEquiv)) continue;
+            if (File.Exists(bslEquiv)) continue; // Уже импортировано с BSL
             if (Path.GetFileName(htmlFile).Equals("index.html", StringComparison.OrdinalIgnoreCase)) continue;
 
             string relativePath = Path.GetDirectoryName(Path.GetRelativePath(rootPath, htmlFile)) ?? "";
-            string folderCategory = relativePath.Replace(Path.DirectorySeparatorChar, '/');
-            
+
+            // Фильтруем части пути
+            var pathParts = relativePath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
+                                        .Where(p => !foldersToIgnore.Contains(p));
+
+            string folderCategory = string.Join("/", pathParts);
+
             string category = string.IsNullOrWhiteSpace(baseCategory) 
                 ? folderCategory 
                 : string.IsNullOrWhiteSpace(folderCategory) 
                     ? baseCategory 
                     : $"{baseCategory}/{folderCategory}";
-            
+
             category = NormalizeCategoryPath(category);
             if (string.IsNullOrEmpty(category)) category = UncategorizedCategoryName;
 
@@ -2576,6 +2638,7 @@ public partial class MainWindow : Window
             {
                 Id = Guid.NewGuid(),
                 Title = title,
+                Extension = Path.GetExtension(htmlFile),
                 Code = "",
                 Category = category,
                 Description = description,
