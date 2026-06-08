@@ -2,6 +2,7 @@ using CodeDictionary.Models;
 using CodeDictionary.Properties;
 using CodeDictionary.Services;
 using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
@@ -46,6 +47,8 @@ public partial class MainWindow : Window
     private IHighlightingDefinition? _dark1CHigh;
     private IHighlightingDefinition? _darkXMLHigh;
     private IHighlightingDefinition? _darkHTMLHigh;     
+    private IHighlightingDefinition? _darkPythonHigh;
+    private IHighlightingDefinition? _lightPythonHigh;
     private string? _currentFilePath = null;  // Хранит путь к текущему открытому файлу0
     private SnackbarNotification _snackbar = new SnackbarNotification();
     private List<TextSegmentStyle> _textSegments = new();
@@ -56,6 +59,8 @@ public partial class MainWindow : Window
     private bool _isSwitchingEditorTab;
     private bool _isUpdatingEditorContent;
     private bool _suppressSyntaxSelectionChange;
+    private FoldingManager _foldingManager;
+    private BraceFoldingStrategy _foldingStrategy;
 
 
     
@@ -81,7 +86,10 @@ public partial class MainWindow : Window
 
         LoadCustomHighlighting();
 
-       
+        CodeTextBox.TextArea.TextView.LineTransformers.Add(new CustomColorTransformer(() => _textSegments));
+        _foldingManager = FoldingManager.Install(CodeTextBox.TextArea);
+        _foldingStrategy = new BraceFoldingStrategy();
+
         InitializeEditorTabs();
        
 
@@ -93,15 +101,20 @@ public partial class MainWindow : Window
         Closing += MainWindow_Closing;
         StateChanged += MainWindow_StateChanged;
 
-        CodeTextBox.TextArea.TextView.LineTransformers.Add(new CustomColorTransformer(() => _textSegments));
-
         // Подписываемся на изменения текста
         CodeTextBox.TextChanged += CodeTextBox_TextChanged;
         TitleTextBox.TextChanged += EntryField_TextChanged;
-        DescriptionTextBox.TextChanged += EntryField_TextChanged;
         TagsTextBox.TextChanged += EntryField_TextChanged;
       
 
+    }
+
+    private void UpdateFoldings()
+    {
+        if (_foldingStrategy != null && _foldingManager != null && CodeTextBox.Document != null)
+        {
+            _foldingStrategy.UpdateFoldings(_foldingManager, CodeTextBox.Document);
+        }
     }
 
     private void InitializeEditorTabs()
@@ -159,6 +172,7 @@ public partial class MainWindow : Window
         MarkTabTextDirty();
         SyncActiveEntryTabFromForm();
         UpdateSegmentsAfterTextChange();
+        UpdateFoldings();
     }
 
     private void EntryField_TextChanged(object? sender, TextChangedEventArgs e)
@@ -181,7 +195,7 @@ public partial class MainWindow : Window
 
         var entry = activeTab.Entry;
         entry.Title = TitleTextBox.Text;
-        entry.Description = DescriptionTextBox.Text;
+        // Описание теперь только отображается через WebBrowser и не редактируется напрямую в UI
         entry.Code = CodeTextBox.Text;
         entry.Category = NormalizeCategoryPath(CategoryComboBox.Text);
         entry.Tags = TagsTextBox.Text
@@ -194,9 +208,6 @@ public partial class MainWindow : Window
         activeTab.SyntaxName = entry.Syntax;
         activeTab.IsDirty = true;
         _currentEntry = entry;
-      
-
-
     }
 
     private void EditorTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -294,7 +305,12 @@ public partial class MainWindow : Window
 
             if (CodeTextBox.Document != tab.Document)
             {
+                if (_foldingManager != null)
+                {
+                    FoldingManager.Uninstall(_foldingManager);
+                }
                 CodeTextBox.Document = tab.Document;
+                _foldingManager = FoldingManager.Install(CodeTextBox.TextArea);
             }
         
             CodeTextBox.TextArea.TextView.Redraw();
@@ -308,7 +324,7 @@ public partial class MainWindow : Window
             if (tab.Entry != null)
             {
                 TitleTextBox.Text = tab.Entry.Title;
-                DescriptionTextBox.Text = tab.Entry.Description;
+                SetDescriptionHtml(tab.Entry.Description);
                 CategoryComboBox.Text = NormalizeCategoryPath(tab.Entry.Category);
                 TagsTextBox.Text = string.Join(", ", tab.Entry.Tags);
                 _currentEntry = tab.Entry;
@@ -317,7 +333,7 @@ public partial class MainWindow : Window
             else
             {
                 TitleTextBox.Text = tab.Title;
-                DescriptionTextBox.Text = string.Empty;
+                SetDescriptionHtml(string.Empty);
                 CategoryComboBox.Text = string.Empty;
                 TagsTextBox.Text = string.Empty;
                 _currentEntry = null;
@@ -340,6 +356,8 @@ public partial class MainWindow : Window
             {
                 EditorTabs.SelectedItem = tab;
             }
+
+            UpdateFoldings();
         }
         finally
         {
@@ -348,14 +366,7 @@ public partial class MainWindow : Window
         }
     }
 
-    //private void MoveEditorTabToFront(EditorTabModel tab)
-    //{
-    //    var currentIndex = _editorTabs.IndexOf(tab);
-    //    if (currentIndex > 0)
-    //    {
-    //        _editorTabs.Move(currentIndex, 0);
-    //    }
-    //}
+  
 
     private EditorTabModel? FindEditorTab(string filePath)
     {
@@ -399,6 +410,7 @@ public partial class MainWindow : Window
             ".css" => "Стандартная CSS",
             ".php" => "Стандартная PHP",
             ".ps1" => "Стандартная PowerShell",
+            ".py" => _currentTheme == AppTheme.Dark ? "Темная Python" : "Стандартная Python",
             ".sql" => "Стандартная SQL",
             ".vb" => "Стандартная VB",
             ".patch" or ".diff" => "Стандартная Patch",
@@ -932,6 +944,34 @@ public partial class MainWindow : Window
         }
 
         
+        try
+        {
+            var darkPythonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkPython.xshd");
+            if (System.IO.File.Exists(darkPythonPath))
+            {
+                using (var reader = new XmlTextReader(darkPythonPath))
+                {
+                    _darkPythonHigh = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                    HighlightingManager.Instance.RegisterHighlighting("Python Dark", new[] { ".py" }, _darkPythonHigh);
+                }
+            }
+        }
+        catch { _darkPythonHigh = null; }
+
+        try
+        {
+            var lightPythonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LightPython.xshd");
+            if (System.IO.File.Exists(lightPythonPath))
+            {
+                using (var reader = new XmlTextReader(lightPythonPath))
+                {
+                    _lightPythonHigh = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                    HighlightingManager.Instance.RegisterHighlighting("Python Light", new[] { ".py" }, _lightPythonHigh);
+                }
+            }
+        }
+        catch { _lightPythonHigh = null; }
+
         // Если не удалось загрузить кастомную светлую тему, используем стандартную
         if (_lightCSharpHighlighting == null)
         {
@@ -1018,7 +1058,7 @@ public partial class MainWindow : Window
         _appState = await _dataService.LoadStateAsync();
 
 
-        DescriptionTextBox.Visibility = Visibility.Collapsed;
+        DescriptionBrowser.Visibility = Visibility.Collapsed;
         DescriptionSplitter.Visibility = Visibility.Collapsed;
         DescriptionRow.Height = new GridLength(0);
         ToggleDescriptionButton.Content = " ▼ Развернуть ";
@@ -1121,11 +1161,18 @@ public partial class MainWindow : Window
         {
             CodeTextBox.SyntaxHighlighting = _darkHTMLHigh ?? HighlightingManager.Instance.GetDefinition("HTML Dark");
         }
+        else if (selected == "Темная Python")
+        {
+            CodeTextBox.SyntaxHighlighting = _darkPythonHigh ?? HighlightingManager.Instance.GetDefinition("Python Dark");
+        }
         else if (selected == "Стандартная 1C")
         {
             CodeTextBox.SyntaxHighlighting = _standart1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
         }
-
+        else if (selected == "Стандартная Python")
+        {
+            CodeTextBox.SyntaxHighlighting = _lightPythonHigh ?? HighlightingManager.Instance.GetDefinition("Python Light");
+        }
         else if (selected == "Стандартная Java")
         {
             CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Java");
@@ -1291,10 +1338,6 @@ public partial class MainWindow : Window
             TitleTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
             TitleTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
 
-            DescriptionTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Input));
-            DescriptionTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
-            DescriptionTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
-
             TagsTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Input));
             TagsTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
             TagsTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
@@ -1308,6 +1351,7 @@ public partial class MainWindow : Window
             SyntaxHighlightingComboBox?.Items.Add("Темная C++");
             SyntaxHighlightingComboBox?.Items.Add("Темная XML");    
             SyntaxHighlightingComboBox?.Items.Add("Темная HTML");    
+            SyntaxHighlightingComboBox?.Items.Add("Темная Python");
 
             // По умолчанию при темном режиме выбираем DarkCSharp или DarkCpp
             if (SyntaxHighlightingComboBox != null)
@@ -1317,7 +1361,11 @@ public partial class MainWindow : Window
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 1; // DarkCSharp
                 }
-                if (selected == "Темная 1C")
+                else if (selected == "Темная Python")
+                {
+                    SyntaxHighlightingComboBox.SelectedIndex = 5; // DarkPython
+                }
+                else if (selected == "Темная 1C")
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 0; // Dark1C
                 }
@@ -1368,10 +1416,6 @@ public partial class MainWindow : Window
             TitleTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
             TitleTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
 
-            DescriptionTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Input));
-            DescriptionTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
-            DescriptionTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
-
             TagsTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Input));
             TagsTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
             TagsTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
@@ -1385,6 +1429,7 @@ public partial class MainWindow : Window
             SyntaxHighlightingComboBox?.Items.Add("Стандартная 1C");
            
             SyntaxHighlightingComboBox?.Items.Add("Стандартная C++)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная Python");
             SyntaxHighlightingComboBox?.Items.Add("Стандартная Java");
             SyntaxHighlightingComboBox?.Items.Add("Стандартная JavaScript");
             SyntaxHighlightingComboBox?.Items.Add("Стандартная HTML");
@@ -1413,6 +1458,10 @@ public partial class MainWindow : Window
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 0; // Light1C
                 }
+                else if (selected == "Стандартная Python")
+                {
+                    SyntaxHighlightingComboBox.SelectedIndex = 3; // LightPython
+                }
                 else if (selected == "LightCpp")
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 2; // LightCpp
@@ -1424,6 +1473,7 @@ public partial class MainWindow : Window
             }
         }
     }
+    
 
     private void UpdateCodeEditorColors(string? selectedSyntax = null)
     {
@@ -1678,7 +1728,7 @@ public partial class MainWindow : Window
         try
         {
             TitleTextBox.Text = entry.Title;
-            DescriptionTextBox.Text = entry.Description;
+            SetDescriptionHtml(entry.Description);
             CategoryComboBox.Text = NormalizeCategoryPath(entry.Category);
             TagsTextBox.Text = string.Join(", ", entry.Tags);
 
@@ -1719,7 +1769,7 @@ public partial class MainWindow : Window
         try
         {
             TitleTextBox.Text = string.Empty;
-            DescriptionTextBox.Text = string.Empty;
+            SetDescriptionHtml(string.Empty);
             CodeTextBox.Text = string.Empty;
             CategoryComboBox.Text = string.Empty;
             TagsTextBox.Text = string.Empty;
@@ -1930,7 +1980,7 @@ public partial class MainWindow : Window
          }
 
          entryToUpdate.Title = TitleTextBox.Text;
-         entryToUpdate.Description = DescriptionTextBox.Text;
+         // Описание теперь отображается через WebBrowser и не редактируется напрямую
          entryToUpdate.Code = CodeTextBox.Text;
          entryToUpdate.Category = NormalizeCategoryPath(CategoryComboBox.Text);
          entryToUpdate.Tags = TagsTextBox.Text
@@ -2082,14 +2132,14 @@ public partial class MainWindow : Window
     {
         if (DescriptionRow.Height.Value > 0)
         {
-            DescriptionTextBox.Visibility = Visibility.Collapsed;
+            DescriptionBrowser.Visibility = Visibility.Collapsed;
             DescriptionSplitter.Visibility = Visibility.Collapsed;
             DescriptionRow.Height = new GridLength(0);
             ToggleDescriptionButton.Content = " ▼ Развернуть ";
         }
         else
         {
-            DescriptionTextBox.Visibility = Visibility.Visible;
+            DescriptionBrowser.Visibility = Visibility.Visible;
             DescriptionSplitter.Visibility = Visibility.Visible;
             DescriptionRow.Height = new GridLength(150);
             ToggleDescriptionButton.Content = " ▲ Свернуть ";
@@ -2305,6 +2355,114 @@ public partial class MainWindow : Window
         }
     }
 
+    private void SetDescriptionHtml(string? html)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(html))
+            {
+                DescriptionBrowser.NavigateToString("<html><body style='background-color:#1E1E1E;'></body></html>");
+            }
+            else
+            {
+                string bgColor = _currentTheme == AppTheme.Dark ? "#1E1E1E" : "#FFFFFF";
+                string textColor = _currentTheme == AppTheme.Dark ? "#EDF2F7" : "#1F1F1F";
+                string style = $"<style>body {{ background-color: {bgColor}; color: {textColor}; font-family: 'Segoe UI', sans-serif; font-size: 12px; margin: 5px; }}</style>";
+                DescriptionBrowser.NavigateToString($"<html><head>{style}</head><body>{html}</body></html>");
+            }
+        }
+        catch { /* Ignore browser errors */ }
+    }
+
+    private async void ImportFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Выберите папку для импорта (*.bsl, *.html)",
+            InitialDirectory = @"G:\Dictionary\Dictionary\Test"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            string selectedPath = dialog.FolderName;
+            await ImportFromFolderAsync(selectedPath);
+            RefreshEntriesList();
+            _snackbar.Show(CodeTextBox, "Импорт из папки завершен", NotificationType.Success, 2.0);
+        }
+    }
+
+    private async Task ImportFromFolderAsync(string rootPath)
+    {
+        var allFiles = Directory.GetFiles(rootPath, "*.*", SearchOption.AllDirectories);
+        var bslFiles = allFiles.Where(f => f.EndsWith(".bsl", StringComparison.OrdinalIgnoreCase)).ToList();
+
+        foreach (var bslFile in bslFiles)
+        {
+            string relativePath = Path.GetDirectoryName(Path.GetRelativePath(rootPath, bslFile)) ?? "";
+            string category = relativePath.Replace(Path.DirectorySeparatorChar, '/');
+            if (string.IsNullOrEmpty(category)) category = UncategorizedCategoryName;
+
+            string title = Path.GetFileNameWithoutExtension(bslFile);
+            string code = await File.ReadAllTextAsync(bslFile);
+
+            string htmlFile = Path.ChangeExtension(bslFile, ".html");
+            string description = "";
+            if (File.Exists(htmlFile))
+            {
+                description = await File.ReadAllTextAsync(htmlFile);
+            }
+            else
+            {
+                string indexHtml = Path.Combine(Path.GetDirectoryName(bslFile) ?? "", "index.html");
+                if (File.Exists(indexHtml))
+                {
+                    description = await File.ReadAllTextAsync(indexHtml);
+                }
+            }
+
+            var entry = new CodeEntry
+            {
+                Id = Guid.NewGuid(),
+                Title = title,
+                Code = code,
+                Category = category,
+                Description = description,
+                Syntax = "Стандартная 1C",
+                Tags = new List<string> { "Imported" }
+            };
+            _data.Entries.Add(entry);
+        }
+
+        var htmlFiles = allFiles.Where(f => f.EndsWith(".html", StringComparison.OrdinalIgnoreCase)).ToList();
+        foreach (var htmlFile in htmlFiles)
+        {
+            string bslEquiv = Path.ChangeExtension(htmlFile, ".bsl");
+            if (File.Exists(bslEquiv)) continue;
+            if (Path.GetFileName(htmlFile).Equals("index.html", StringComparison.OrdinalIgnoreCase)) continue;
+
+            string relativePath = Path.GetDirectoryName(Path.GetRelativePath(rootPath, htmlFile)) ?? "";
+            string category = relativePath.Replace(Path.DirectorySeparatorChar, '/');
+            if (string.IsNullOrEmpty(category)) category = UncategorizedCategoryName;
+
+            string title = Path.GetFileNameWithoutExtension(htmlFile);
+            string description = await File.ReadAllTextAsync(htmlFile);
+
+            var entry = new CodeEntry
+            {
+                Id = Guid.NewGuid(),
+                Title = title,
+                Code = "",
+                Category = category,
+                Description = description,
+                Syntax = "Темная HTML",
+                Tags = new List<string> { "Imported", "Doc" }
+            };
+            _data.Entries.Add(entry);
+        }
+
+        await _dataService.SaveDataAsync(_data);
+    }
+
     private async void ImportData_Click(object sender, RoutedEventArgs e)
     {
         var openFileDialog = new OpenFileDialog
@@ -2345,7 +2503,6 @@ public partial class MainWindow : Window
         {
             return;
         }
-
     }
 
     private async void ExportCategory_Click(object sender, RoutedEventArgs e)
