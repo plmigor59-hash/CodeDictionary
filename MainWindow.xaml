@@ -783,7 +783,7 @@
                     <TreeView.ContextMenu>
                         <ContextMenu BorderThickness="1">
                             <MenuItem Click="AddCategoryRoot_Click" Header="Добавить корневую категорию" />
-                            <MenuItem Click="DeleteEntry_Click" Header="Удалить запись" />
+                            <MenuItem Click="DeleteSingleEntry_Click" Header="Удалить запись" />
                         </ContextMenu>
                     </TreeView.ContextMenu>
 
@@ -1016,12 +1016,21 @@
                         Padding="10,5"
                         Background="#C72E2E"
                         BorderThickness="0"
-                        Click="DeleteEntry_Click"
+                        Click="DeleteSingleEntry_Click"
                         Content="❌  Удалить"
                         Cursor="Hand"
                         Foreground="White"
                         Style="{StaticResource ActionButtonStyle}" />
-
+                    <Button
+                        x:Name="DeleteCheckedButton"
+                        Width="30"
+                        Height="30"
+                        Margin="5,0,0,0"
+                        Click="DeleteEntry_Click"
+                        Content="🗑"
+                        Foreground="#FF5555"
+                        Style="{StaticResource TitleBarButtonStyle}"
+                        ToolTip="Удалить отмеченные" />
                 </StackPanel>
             </Grid>
 
@@ -1273,7 +1282,7 @@
                                     Content="📁"
                                     Foreground="LightBlue"
                                     Style="{StaticResource TitleBarButtonStyle}"
-                                    ToolTip="Импорт из папки..." />
+                                    ToolTip="Импорт из папки (bsl)..." />
                                 <Button
                                     Width="30"
                                     Margin="2"

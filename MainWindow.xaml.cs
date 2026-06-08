@@ -1557,10 +1557,9 @@ public partial class MainWindow : Window
 
         if (e.NewValue is CodeEntryViewModel viewEntry)
         {
-            return;
+            LoadEntryToForm(viewEntry.Entry);
         }
-
-        if (e.NewValue is CategoryNode categoryNode)
+        else if (e.NewValue is CategoryNode categoryNode)
         {
             _selectedCategoryPath = categoryNode.FullPath;
             CategoryComboBox.Text = categoryNode.FullPath;
@@ -2029,53 +2028,6 @@ public partial class MainWindow : Window
 
     private async void DeleteEntry_Click(object sender, RoutedEventArgs e)
     {
-        CodeEntry? entryToDelete = null;
-
-        if (EntriesTreeView.SelectedItem is CodeEntryViewModel viewEntry)
-        {
-            entryToDelete = viewEntry.Entry;
-        }
-        else if (_currentEntry != null)
-        {
-            entryToDelete = _currentEntry;
-        }
-
-        if (entryToDelete == null)
-        {
-            ShowAlert("Выберите запись для удаления", isError: true);
-            return;
-        }
-
-        if (CustomMessageBox.ShowQuestion("Удалить запись?", "Подтверждение"))
-        {
-            var deletedEntryId = entryToDelete.Id;
-            _data.Entries.Remove(entryToDelete);
-            await _dataService.SaveDataAsync(_data);
-
-            var deletedTab = FindEntryTab(deletedEntryId);
-            if (deletedTab != null)
-            {
-                _editorTabs.Remove(deletedTab);
-            }
-            
-            if (_currentEntry?.Id == deletedEntryId)
-            {
-                _currentEntry = null;
-                ClearEditingForm();
-            }
-
-            if (_editorTabs.Count == 0)
-            {
-                InitializeEditorTabs();
-            }
-
-            RefreshEntriesList();
-            _snackbar.Show(CodeTextBox, "Запись удалена", NotificationType.Success, 1.5);
-        }
-    }
-
-    private async void DeleteChecked_Click(object sender, RoutedEventArgs e)
-    {
         var checkedEntries = new List<CodeEntryViewModel>();
         var checkedCategories = new List<CategoryNode>();
 
@@ -2136,6 +2088,53 @@ public partial class MainWindow : Window
             await _dataService.SaveDataAsync(_data);
             RefreshEntriesList();
             _snackbar.Show(CodeTextBox, "Отмеченные элементы удалены", NotificationType.Success, 1.5);
+        }
+    }
+
+    private async void DeleteSingleEntry_Click(object sender, RoutedEventArgs e)
+    {
+        CodeEntry? entryToDelete = null;
+
+        if (EntriesTreeView.SelectedItem is CodeEntryViewModel viewEntry)
+        {
+            entryToDelete = viewEntry.Entry;
+        }
+        else if (_currentEntry != null)
+        {
+            entryToDelete = _currentEntry;
+        }
+
+        if (entryToDelete == null)
+        {
+            ShowAlert("Выберите запись для удаления", isError: true);
+            return;
+        }
+
+        if (CustomMessageBox.ShowQuestion("Удалить запись?", "Подтверждение"))
+        {
+            var deletedEntryId = entryToDelete.Id;
+            _data.Entries.Remove(entryToDelete);
+            await _dataService.SaveDataAsync(_data);
+
+            var deletedTab = FindEntryTab(deletedEntryId);
+            if (deletedTab != null)
+            {
+                _editorTabs.Remove(deletedTab);
+            }
+            
+            if (_currentEntry?.Id == deletedEntryId)
+            {
+                _currentEntry = null;
+                ClearEditingForm();
+            }
+
+            if (_editorTabs.Count == 0)
+            {
+                InitializeEditorTabs();
+            }
+
+            RefreshEntriesList();
+            _snackbar.Show(CodeTextBox, "Запись удалена", NotificationType.Success, 1.5);
         }
     }
 
@@ -2498,6 +2497,8 @@ public partial class MainWindow : Window
         var allFiles = Directory.EnumerateFiles(rootPath, "*.*", SearchOption.AllDirectories)
             .Where(f => !Path.GetDirectoryName(f)!.Split(Path.DirectorySeparatorChar).Any(p => p.StartsWith("_")))
             .Where(f => !Path.GetFileName(f).StartsWith("_"))
+            .Where(f => !Path.GetFileName(f).StartsWith("E") 
+            )
             .ToList();
         var bslFiles = allFiles.Where(f => f.EndsWith(".bsl", StringComparison.OrdinalIgnoreCase)).ToList();
         
@@ -2543,7 +2544,7 @@ public partial class MainWindow : Window
                 Code = code,
                 Category = category,
                 Description = description,
-                Syntax = "Стандартная 1C",
+                Syntax = _currentTheme == AppTheme.Dark ? "Темная 1C" : "Стандартная 1C",
                 Tags = new List<string> { "Imported" }
             };
             _data.Entries.Add(entry);
