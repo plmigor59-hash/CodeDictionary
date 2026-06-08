@@ -1328,7 +1328,7 @@
 
                             <!--  Панель поиска  -->
                             <StackPanel
-                                Margin="0,30,0,0"
+                                Margin="0,40,0,0"
                                 Orientation="Horizontal" Grid.ColumnSpan="2" Grid.RowSpan="2">
                                 <StackPanel Orientation="Horizontal">
                                     <materialIcons:MaterialIcon

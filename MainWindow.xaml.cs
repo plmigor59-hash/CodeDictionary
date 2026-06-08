@@ -286,15 +286,14 @@ public partial class MainWindow : Window
         }
 
         _isSwitchingEditorTab = true;
+        _isUpdatingEditorContent = true;
         try
         {
-           
-
             _activeEditorTab = tab;
             _textSegments = tab.Segments;
-          
 
-            if (CodeTextBox.Document != tab.Document)            {
+            if (CodeTextBox.Document != tab.Document)
+            {
                 CodeTextBox.Document = tab.Document;
             }
         
@@ -306,17 +305,24 @@ public partial class MainWindow : Window
 
             _suppressSyntaxSelectionChange = true;
 
-            var currentIndex = _editorTabs.IndexOf(tab);
-                if (currentIndex >= 0)
-                {
-             
-                TitleTextBox.Text = tab.Entry?.Title ?? string.Empty;
-             
-             
-
+            if (tab.Entry != null)
+            {
+                TitleTextBox.Text = tab.Entry.Title;
+                DescriptionTextBox.Text = tab.Entry.Description;
+                CategoryComboBox.Text = NormalizeCategoryPath(tab.Entry.Category);
+                TagsTextBox.Text = string.Join(", ", tab.Entry.Tags);
+                _currentEntry = tab.Entry;
+                _selectedCategoryPath = NormalizeCategoryPath(tab.Entry.Category);
             }
-
-            
+            else
+            {
+                TitleTextBox.Text = tab.Title;
+                DescriptionTextBox.Text = string.Empty;
+                CategoryComboBox.Text = string.Empty;
+                TagsTextBox.Text = string.Empty;
+                _currentEntry = null;
+                _selectedCategoryPath = string.Empty;
+            }
 
             try
             {
@@ -330,16 +336,14 @@ public partial class MainWindow : Window
                 _suppressSyntaxSelectionChange = false;
             }
 
-            //ApplySyntaxHighlighting(tab.SyntaxName);
-
             if (selectInTabControl && EditorTabs != null && !ReferenceEquals(EditorTabs.SelectedItem, tab))
             {
                 EditorTabs.SelectedItem = tab;
-               
             }
         }
         finally
         {
+            _isUpdatingEditorContent = false;
             _isSwitchingEditorTab = false;
         }
     }
@@ -391,105 +395,16 @@ public partial class MainWindow : Window
             ".xml" or ".xsd" or ".xaml" => _currentTheme == AppTheme.Dark ? "Темная XML" : "Стандартная XML",
             ".html" or ".htm" => _currentTheme == AppTheme.Dark ? "Темная HTML" : "Стандартная HTML",
             ".js" => "Стандартная JavaScript",
-            ".java" => "Стандартная (Java)",
-            ".css" => "Стандартная (CSS)",
-            ".php" => "Стандартная (PHP)",
-            ".ps1" => "Стандартная (PowerShell)",
-            ".sql" => "Стандартная (SQL)",
-            ".vb" => "Стандартная (VB)",
-            ".patch" or ".diff" => "Стандартная (Patch)",
+            ".java" => "Стандартная Java",
+            ".css" => "Стандартная CSS",
+            ".php" => "Стандартная PHP",
+            ".ps1" => "Стандартная PowerShell",
+            ".sql" => "Стандартная SQL",
+            ".vb" => "Стандартная VB",
+            ".patch" or ".diff" => "Стандартная Patch",
             _ => null
         };
     }
-
-    //private void ApplySyntaxHighlighting(string? selected)
-    //{
-    //    if (CodeTextBox == null)
-    //    {
-    //        return;
-    //    }
-
-    //    var syntax = selected ?? SyntaxHighlightingComboBox?.SelectedItem?.ToString();
-
-    //    if (syntax == "Темная C#")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
-    //    }
-    //    else if (syntax == "Темная C++")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = _darkCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
-    //    }
-    //    else if (syntax == "Темная 1C")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = _dark1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
-    //    }
-    //    else if (syntax == "Темная XML")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = _darkXMLHigh ?? HighlightingManager.Instance.GetDefinition("XML");
-    //    }
-    //    else if (syntax == "Темная HTML")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = _darkHTMLHigh ?? HighlightingManager.Instance.GetDefinition("HTML Dark");
-    //    }
-    //    else if (syntax == "Стандартная C#")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
-    //    }
-    //    else if (syntax == "Стандартная 1C")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = _standart1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
-    //    }
-    //    else if (syntax == "Стандартная Java")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Java");
-    //    }
-    //    else if (syntax == "Стандартная JavaScript")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
-    //    }
-    //    else if (syntax == "Стандартная HTML")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("HTML");
-    //    }
-    //    else if (syntax == "Стандартная XML")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("XML");
-    //    }
-    //    else if (syntax == "Стандартная CSS")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("CSS");
-    //    }
-    //    else if (syntax == "Стандартная PHP")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("PHP");
-    //    }
-    //    else if (syntax == "Стандартная PowerShell)")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("PowerShell");
-    //    }
-    //    else if (syntax == "Стандартная SQL")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("SQL");
-    //    }
-    //    else if (syntax == "Стандартная VB")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("VB");
-    //    }
-    //    else if (syntax == "Стандартная ASP/XHTML")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("ASP/XHTML");
-    //    }
-    //    else if (syntax == "Стандартная Patch")
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Patch");
-    //    }
-    //    else
-    //    {
-    //        CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
-    //    }
-
-    //    UpdateCodeEditorColors(syntax);
-    //}
 
     private void MarkTabTextDirty()
     {
@@ -1020,7 +935,7 @@ public partial class MainWindow : Window
         // Если не удалось загрузить кастомную светлую тему, используем стандартную
         if (_lightCSharpHighlighting == null)
         {
-            _lightCSharpHighlighting = HighlightingManager.Instance.GetDefinition("C#");
+            _lightCSharpHighlighting = HighlightingManager.Instance.GetDefinition("1C");
         }
 
         try
@@ -1466,30 +1381,37 @@ public partial class MainWindow : Window
              UpdateCodeEditorColors();
 
             SyntaxHighlightingComboBox?.Items.Clear();
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная C#");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная 1C");
            
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (1C)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (C#)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (C++)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (Java)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (JavaScript)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (HTML)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (XML)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (CSS)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (PHP)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (PowerShell)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (SQL)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (VB)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (ASP/XHTML)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная (Patch)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная C++)");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная Java");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная JavaScript");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная HTML");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная XML");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная CSS");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная PHP");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная PowerShell");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная SQL");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная VB");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная ASP/XHTML");
+            SyntaxHighlightingComboBox?.Items.Add("Стандартная Patch");
 
 
             // По умолчанию при светлом режиме выбираем LightCSharp или LightCpp
             if (SyntaxHighlightingComboBox != null)
             {
                 var selected = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+
+                
+
                 if (selected == "LightCSharp")
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 1; // LightCSharp
+                }
+                else if (selected == "Standart1C")
+                {
+                    SyntaxHighlightingComboBox.SelectedIndex = 0; // Light1C
                 }
                 else if (selected == "LightCpp")
                 {
@@ -2068,17 +1990,18 @@ public partial class MainWindow : Window
                 var deletedEntryId = entryToDelete.Id;
                 _data.Entries.Remove(entryToDelete);
                 await _dataService.SaveDataAsync(_data);
-                _currentEntry = null;
-                TitleTextBox.Text = "";
-                DescriptionTextBox.Text = "";
-                CodeTextBox.Text = "";
-                CategoryComboBox.Text = "";
-                TagsTextBox.Text = "";
+
                 var deletedTab = FindEntryTab(deletedEntryId);
                 if (deletedTab != null)
                 {
                     CloseEditorTab(deletedTab);
                 }
+                else if (_currentEntry?.Id == deletedEntryId)
+                {
+                    _currentEntry = null;
+                    ClearEditingForm();
+                }
+
                 RefreshEntriesList();
                 _snackbar.Show(CodeTextBox, "Запись удалена", NotificationType.Success, 1.5);
             }

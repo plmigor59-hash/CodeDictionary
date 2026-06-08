@@ -3,15 +3,15 @@
 	<Color name="Comment" foreground="#99FF99" fontStyle="italic" />
 	<Color name="String" foreground="#FCFEE7" />
 	<Color name="Number" foreground="#079217" />
-	<Color name="Preprocessor" foreground="#CFE50B" />
+	<Color name="Preprocessor" foreground="#8F4714" />
     <Color name="Preprocedure" foreground="#E50BCF" />
-	<Color name="Keywords" foreground="#E58E0B" fontWeight="bold" />
-	<Color name="KeywordsEn" foreground="#E58E0B" fontWeight="bold" />
+	<Color name="Keywords" foreground="#D45959" fontWeight="bold" />
+	<Color name="KeywordsEn" foreground="#D45959" fontWeight="bold" />
 	<Color name="OperatorKeywords" foreground="#E58E0B" />
 	<Color name="OperatorKeywordsEn" foreground="#E58E0B" />
 	<Color name="TrueFalse" foreground="#E58E0B" />
 	<Color name="Punctuation" foreground="#079217" />
-	<Color name="DefaultText" foreground="#FFC65C" />
+	<Color name="DefaultText" foreground="#A2C4E7" />
 
 	<RuleSet ignoreCase="true">
 		<Span color="Comment">
