@@ -793,6 +793,7 @@
                         <!--  Шаблон для записи (конечный элемент)  -->
                         <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
                             <StackPanel Margin="2" Orientation="Horizontal">
+                                <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,5,0" VerticalAlignment="Center" />
                                 <TextBlock
                                     Margin="0,0,5,0"
                                     Foreground="{DynamicResource DictAccent}"
@@ -834,6 +835,7 @@
                                         </MenuItem>
                                     </ContextMenu>
                                 </StackPanel.ContextMenu>
+                                <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,5,0" VerticalAlignment="Center" />
                                 <TextBlock
                                     Margin="0,0,5,0"
                                     Foreground="{DynamicResource DictChat}"

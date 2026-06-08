@@ -2046,29 +2046,115 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (CustomMessageBox.ShowQuestion("Удалить запись?", "Подтверждение"))
+        {
+            var deletedEntryId = entryToDelete.Id;
+            _data.Entries.Remove(entryToDelete);
+            await _dataService.SaveDataAsync(_data);
 
-            if (CustomMessageBox.ShowQuestion("Удалить запись?", "Подтверждение") )
+            var deletedTab = FindEntryTab(deletedEntryId);
+            if (deletedTab != null)
             {
-                var deletedEntryId = entryToDelete.Id;
-                _data.Entries.Remove(entryToDelete);
-                await _dataService.SaveDataAsync(_data);
-
-                var deletedTab = FindEntryTab(deletedEntryId);
-                if (deletedTab != null)
-                {
-                    CloseEditorTab(deletedTab);
-                }
-                else if (_currentEntry?.Id == deletedEntryId)
-                {
-                    _currentEntry = null;
-                    ClearEditingForm();
-                }
-
-                RefreshEntriesList();
-                _snackbar.Show(CodeTextBox, "Запись удалена", NotificationType.Success, 1.5);
+                _editorTabs.Remove(deletedTab);
+            }
+            
+            if (_currentEntry?.Id == deletedEntryId)
+            {
+                _currentEntry = null;
+                ClearEditingForm();
             }
 
+            if (_editorTabs.Count == 0)
+            {
+                InitializeEditorTabs();
+            }
+
+            RefreshEntriesList();
+            _snackbar.Show(CodeTextBox, "Запись удалена", NotificationType.Success, 1.5);
         }
+    }
+
+    private async void DeleteChecked_Click(object sender, RoutedEventArgs e)
+    {
+        var checkedEntries = new List<CodeEntryViewModel>();
+        var checkedCategories = new List<CategoryNode>();
+
+        FindCheckedItems(EntriesTreeView.ItemsSource as IEnumerable<object>, checkedEntries, checkedCategories);
+
+        if (checkedEntries.Count == 0 && checkedCategories.Count == 0)
+        {
+            ShowAlert("Не выбрано ни одной записи или категории для удаления", isError: true);
+            return;
+        }
+
+        if (CustomMessageBox.ShowQuestion($"Удалить отмеченные элементы?\n\nЗаписей: {checkedEntries.Count}\nКатегорий: {checkedCategories.Count}", "Подтверждение удаления"))
+        {
+            foreach (var entryViewModel in checkedEntries)
+            {
+                var entryToDelete = entryViewModel.Entry;
+                _data.Entries.Remove(entryToDelete);
+
+                var tab = FindEntryTab(entryToDelete.Id);
+                if (tab != null) _editorTabs.Remove(tab);
+            }
+
+            foreach (var categoryNode in checkedCategories)
+            {
+                var categoryPath = NormalizeCategoryPath(categoryNode.FullPath);
+                var entriesToDelete = _data.Entries
+                    .Where(entry => IsPathWithin(NormalizeCategoryPath(entry.Category), categoryPath))
+                    .ToList();
+                var categoriesToDelete = _data.Categories
+                    .Where(category => IsPathWithin(NormalizeCategoryPath(category), categoryPath))
+                    .ToList();
+
+                var deletedEntryIds = entriesToDelete.Select(entry => entry.Id).ToHashSet();
+                var categoriesToDeleteSet = categoriesToDelete
+                    .Select(NormalizeCategoryPath)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                _data.Categories.RemoveAll(existing => categoriesToDeleteSet.Contains(NormalizeCategoryPath(existing)));
+                _data.Entries.RemoveAll(entry => deletedEntryIds.Contains(entry.Id));
+
+                foreach (var entryId in deletedEntryIds)
+                {
+                    var tab = FindEntryTab(entryId);
+                    if (tab != null) _editorTabs.Remove(tab);
+                }
+            }
+
+            if (_editorTabs.Count == 0)
+            {
+                InitializeEditorTabs();
+                ClearEditingForm();
+            }
+            else if (_activeEditorTab != null && !_editorTabs.Contains(_activeEditorTab))
+            {
+                ActivateEditorTab(_editorTabs[0]);
+            }
+
+            await _dataService.SaveDataAsync(_data);
+            RefreshEntriesList();
+            _snackbar.Show(CodeTextBox, "Отмеченные элементы удалены", NotificationType.Success, 1.5);
+        }
+    }
+
+    private void FindCheckedItems(IEnumerable<object>? items, List<CodeEntryViewModel> entries, List<CategoryNode> categories)
+    {
+        if (items == null) return;
+        foreach (var item in items)
+        {
+            if (item is CategoryNode cat)
+            {
+                if (cat.IsChecked) categories.Add(cat);
+                FindCheckedItems(cat.Items, entries, categories);
+            }
+            else if (item is CodeEntryViewModel entry)
+            {
+                if (entry.IsChecked) entries.Add(entry);
+            }
+        }
+    }
    
 
     private async void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -2373,14 +2459,18 @@ public partial class MainWindow : Window
         {
             if (string.IsNullOrWhiteSpace(html))
             {
-                DescriptionBrowser.NavigateToString("<html><body style='background-color:#1E1E1E;'></body></html>");
+                DescriptionBrowser.NavigateToString("<html><head><meta charset='utf-8'></head><body style='background-color:#1E1E1E;'></body></html>");
             }
             else
             {
                 string bgColor = _currentTheme == AppTheme.Dark ? "#1E1E1E" : "#FFFFFF";
                 string textColor = _currentTheme == AppTheme.Dark ? "#EDF2F7" : "#1F1F1F";
-                string style = $"<style>body {{ background-color: {bgColor}; color: {textColor}; font-family: 'Segoe UI', sans-serif; font-size: 12px; margin: 5px; }}</style>";
-                DescriptionBrowser.NavigateToString($"<html><head>{style}</head><body>{html}</body></html>");
+                string style = $"<style>body {{ background-color: {bgColor}; color: {textColor}; font-family: 'Segoe UI', sans-serif; font-size: 12px; margin: 5px; }} a {{ pointer-events: none; cursor: default; color: inherit; text-decoration: none; }}</style>";
+                
+                // JavaScript to ensure links are disabled
+                string script = "<script>window.onload = function() { var links = document.getElementsByTagName('a'); for (var i = 0; i < links.length; i++) { links[i].onclick = function(e) { e.preventDefault(); return false; }; } };</script>";
+                
+                DescriptionBrowser.NavigateToString($"<html><head><meta charset='utf-8'>{style}{script}</head><body>{html}</body></html>");
             }
         }
         catch { /* Ignore browser errors */ }
@@ -2405,7 +2495,10 @@ public partial class MainWindow : Window
 
     private async Task ImportFromFolderAsync(string rootPath)
     {
-        var allFiles = Directory.GetFiles(rootPath, "*.*", SearchOption.AllDirectories);
+        var allFiles = Directory.EnumerateFiles(rootPath, "*.*", SearchOption.AllDirectories)
+            .Where(f => !Path.GetDirectoryName(f)!.Split(Path.DirectorySeparatorChar).Any(p => p.StartsWith("_")))
+            .Where(f => !Path.GetFileName(f).StartsWith("_"))
+            .ToList();
         var bslFiles = allFiles.Where(f => f.EndsWith(".bsl", StringComparison.OrdinalIgnoreCase)).ToList();
         
         // Базовая категория для импорта - текущая выбранная
@@ -3289,6 +3382,7 @@ public class CategoryNode : System.ComponentModel.INotifyPropertyChanged
 {
     private bool _isExpanded;
     private bool _isSelected;
+    private bool _isChecked;
     public string Name { get; set; } = string.Empty;
     public string FullPath { get; set; } = string.Empty;
     public List<CategoryNode> Children { get; set; } = new();
@@ -3310,17 +3404,43 @@ public class CategoryNode : System.ComponentModel.INotifyPropertyChanged
         set { _isSelected = value; OnPropertyChanged(nameof(IsSelected)); }
     }
 
+    public bool IsChecked
+    {
+        get => _isChecked;
+        set 
+        { 
+            if (_isChecked != value)
+            {
+                _isChecked = value; 
+                OnPropertyChanged(nameof(IsChecked));
+                // Прокидываем состояние вложенным элементам
+                foreach (var child in Children) child.IsChecked = value;
+                foreach (var entry in Entries) entry.IsChecked = value;
+            }
+        }
+    }
+
     public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
     protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
 }
 
-public class CodeEntryViewModel
+public class CodeEntryViewModel : System.ComponentModel.INotifyPropertyChanged
 {
+    private bool _isChecked;
     public CodeEntry Entry { get; }
     public string Title => Entry.Title;
+
+    public bool IsChecked
+    {
+        get => _isChecked;
+        set { _isChecked = value; OnPropertyChanged(nameof(IsChecked)); }
+    }
 
     public CodeEntryViewModel(CodeEntry entry)
     {
         Entry = entry;
     }
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+    protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
 }
