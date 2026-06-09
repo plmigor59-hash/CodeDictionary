@@ -37,85 +37,213 @@
         <SolidColorBrush x:Key="DictChat" Color="#FFD700" />
         <SolidColorBrush x:Key="DarkBackground" Color="#1E1E1E" />
 
-        <Style x:Key="ToggleSwitchStyle" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{DynamicResource DictTextPrimary}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
+
+
+        
+
+        <Style x:Key="ModernCheckBox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#333333" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
-                        <Grid>
+                        <Grid Background="Transparent">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
+
+                            <!--  Квадратик чекбокса  -->
                             <Border
-                                x:Name="Track"
-                                Width="42"
+                                x:Name="CheckBorder"
+                                Width="22"
                                 Height="22"
-                                VerticalAlignment="Center"
-                                Background="{DynamicResource DictBorder}"
-                                CornerRadius="11"
+                                Background="Transparent"
+                                BorderBrush="#B0B0B0"
+                                BorderThickness="2"
+                                CornerRadius="6"
                                 RenderTransformOrigin="0.5,0.5">
                                 <Border.RenderTransform>
-                                    <ScaleTransform x:Name="ToggleScale" ScaleX="1" ScaleY="1" />
+                                    <ScaleTransform x:Name="BorderScale" ScaleX="1" ScaleY="1" />
                                 </Border.RenderTransform>
-                                <Ellipse
-                                    x:Name="Thumb"
-                                    Width="16"
-                                    Height="16"
-                                    Margin="3,0,0,0"
-                                    HorizontalAlignment="Left"
-                                    Fill="#F4F7FB" />
+
+                                <!--  Галочка  -->
+                                <Path
+                                    x:Name="CheckMark"
+                                    Margin="3"
+                                    Data="M 4,11 L 9,16 L 18,5"
+                                    Opacity="0"
+                                    RenderTransformOrigin="0.5,0.5"
+                                    Stretch="Uniform"
+                                    Stroke="White"
+                                    StrokeEndLineCap="Round"
+                                    StrokeLineJoin="Round"
+                                    StrokeStartLineCap="Round"
+                                    StrokeThickness="2.5">
+                                    <Path.RenderTransform>
+                                        <ScaleTransform x:Name="CheckScale" ScaleX="0.3" ScaleY="0.3" />
+                                    </Path.RenderTransform>
+                                </Path>
                             </Border>
+
+                            <!--  Текст  -->
                             <ContentPresenter
                                 Grid.Column="1"
-                                Margin="12,0,0,0"
-                                VerticalAlignment="Center" />
+                                Margin="10,0,0,0"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                RecognizesAccessKey="True" />
                         </Grid>
+
                         <ControlTemplate.Triggers>
-                            <EventTrigger RoutedEvent="MouseEnter">
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation
-                                            Storyboard.TargetName="ToggleScale"
-                                            Storyboard.TargetProperty="ScaleX"
-                                            To="1.05"
-                                            Duration="0:0:0.1" />
-                                        <DoubleAnimation
-                                            Storyboard.TargetName="ToggleScale"
-                                            Storyboard.TargetProperty="ScaleY"
-                                            To="1.05"
-                                            Duration="0:0:0.1" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                            <EventTrigger RoutedEvent="MouseLeave">
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation
-                                            Storyboard.TargetName="ToggleScale"
-                                            Storyboard.TargetProperty="ScaleX"
-                                            To="1"
-                                            Duration="0:0:0.1" />
-                                        <DoubleAnimation
-                                            Storyboard.TargetName="ToggleScale"
-                                            Storyboard.TargetProperty="ScaleY"
-                                            To="1"
-                                            Duration="0:0:0.1" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
+
+                            <!--  ✔ Отмечен  -->
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource DictAccent}" />
-                                <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" />
-                                <Setter TargetName="Thumb" Property="Margin" Value="0,0,3,0" />
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <!--  Заливка фона  -->
+                                            <ColorAnimation
+                                                Storyboard.TargetName="CheckBorder"
+                                                Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                To="#4F8CFF"
+                                                Duration="0:0:0.2" />
+                                            <ColorAnimation
+                                                Storyboard.TargetName="CheckBorder"
+                                                Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                                To="#4F8CFF"
+                                                Duration="0:0:0.2" />
+                                            <!--  Появление галочки с пружинкой  -->
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="CheckMark"
+                                                Storyboard.TargetProperty="Opacity"
+                                                To="1"
+                                                Duration="0:0:0.15" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="CheckScale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1"
+                                                Duration="0:0:0.35">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <BackEase Amplitude="0.6" EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="CheckScale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1"
+                                                Duration="0:0:0.35">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <BackEase Amplitude="0.6" EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation
+                                                Storyboard.TargetName="CheckBorder"
+                                                Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                To="Transparent"
+                                                Duration="0:0:0.2" />
+                                            <ColorAnimation
+                                                Storyboard.TargetName="CheckBorder"
+                                                Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                                To="#B0B0B0"
+                                                Duration="0:0:0.2" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="CheckMark"
+                                                Storyboard.TargetProperty="Opacity"
+                                                To="0"
+                                                Duration="0:0:0.15" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="CheckScale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="0.3"
+                                                Duration="0:0:0.15" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="CheckScale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="0.3"
+                                                Duration="0:0:0.15" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
                             </Trigger>
+
+                            <!--  Наведение  -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="BorderScale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1.1"
+                                                Duration="0:0:0.15" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="BorderScale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1.1"
+                                                Duration="0:0:0.15" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="BorderScale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1"
+                                                Duration="0:0:0.15" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="BorderScale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1"
+                                                Duration="0:0:0.15" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                            <!--  Нажатие  -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="BorderScale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="0.9"
+                                                Duration="0:0:0.1" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="BorderScale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="0.9"
+                                                Duration="0:0:0.1" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                            </Trigger>
+
+                            <!--  Отключен  -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
+
+
 
 
 
@@ -728,7 +856,7 @@
                         Content="Светлая тема"
                         FontSize="12"
                         Foreground="#CCCCCC"
-                        Style="{StaticResource ToggleSwitchStyle}"
+                        Style="{StaticResource ModernCheckBox}"
                         Unchecked="ThemeCheckBox_Changed" />
                 </StackPanel>
 
@@ -796,6 +924,7 @@
                                 <CheckBox
                                     Margin="0,0,5,0"
                                     VerticalAlignment="Center"
+                                    Style="{StaticResource ModernCheckBox}"
                                     IsChecked="{Binding IsChecked}" />
                                 <TextBlock
                                     Margin="0,0,5,0"
@@ -841,6 +970,7 @@
                                 <CheckBox
                                     Margin="0,0,5,0"
                                     VerticalAlignment="Center"
+                                    Style="{StaticResource ModernCheckBox}"
                                     IsChecked="{Binding IsChecked}" />
                                 <TextBlock
                                     Margin="0,0,5,0"
@@ -1105,8 +1235,7 @@
                     Grid.Row="1"
                     MinHeight="80"
                     Margin="0,0,0,10"
-                    VerticalAlignment="Stretch"
-                    />
+                    VerticalAlignment="Stretch" />
 
                 <!--  Горизонтальный разделитель  -->
                 <GridSplitter
@@ -1180,7 +1309,7 @@
                                 Checked="WordWrapCheckBox_Changed"
                                 Content="Перенос строк"
                                 Foreground="#CCCCCC"
-                                Style="{StaticResource ToggleSwitchStyle}"
+                                Style="{StaticResource ModernCheckBox}"
                                 Unchecked="WordWrapCheckBox_Changed" />
 
                             <TextBlock
@@ -1407,7 +1536,7 @@
                                     Checked="SearchOptions_Changed"
                                     Content="Аа"
                                     Foreground="#CCCCCC"
-                                    Style="{StaticResource ToggleSwitchStyle}"
+                                    Style="{StaticResource ModernCheckBox}"
                                     ToolTip="Учитывать регистр"
                                     Unchecked="SearchOptions_Changed" />
                                 <TextBlock
