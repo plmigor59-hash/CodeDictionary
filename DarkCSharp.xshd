@@ -62,7 +62,7 @@
   <Color name="SemanticKeywords"
          foreground="#D69057" />
   <Color name="DefaultText" 
-         foreground="#C8EEE7" />       
+         foreground="#def8ee" />       
 
   <RuleSet ignoreCase="false">
     <Span color="Comment"
