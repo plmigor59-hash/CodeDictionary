@@ -63,6 +63,7 @@ public partial class MainWindow : Window
     private FoldingManager _foldingManager;
     private BraceFoldingStrategy _foldingStrategy;
     private bool _updateDescription;
+    private bool _isNewRecordDescription;
 
 
 
@@ -79,8 +80,11 @@ public partial class MainWindow : Window
         _data = new CodeDictionaryData();
         _filteredEntries = new List<CodeEntry>();
         _isInitialized = false;
+
         _currentTheme = AppTheme.Dark;
         _appState = new AppState();
+        _isNewRecordDescription = false;
+
 
         LoadCustomHighlighting();
 
@@ -226,6 +230,7 @@ public partial class MainWindow : Window
         {
             return;
         }
+        _isNewRecordDescription = false;
 
         ActivateEditorTab(tab, selectInTabControl: false);
     }
@@ -1780,10 +1785,10 @@ public partial class MainWindow : Window
 
 
                 }
-
-                //ToggleDescription_Open();
-
-
+                if (!_isNewRecordDescription)
+                {
+                    ToggleDescription_Open();
+                }
             }
 
             ClearSearch();
@@ -1797,7 +1802,7 @@ public partial class MainWindow : Window
 
     private void AddEntry_Click(object sender, RoutedEventArgs e)
     {
-       
+        _isNewRecordDescription = true; 
         var newEntry = new CodeEntry();
         _data.Entries.Add(newEntry);
         _currentEntry = newEntry;
