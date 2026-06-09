@@ -47,7 +47,7 @@ public partial class MainWindow : Window
     private IHighlightingDefinition? _standart1CHigh;
     private IHighlightingDefinition? _dark1CHigh;
     private IHighlightingDefinition? _darkXMLHigh;
-    private IHighlightingDefinition? _darkHTMLHigh;     
+    private IHighlightingDefinition? _darkHTMLHigh;
     private IHighlightingDefinition? _darkPythonHigh;
     private IHighlightingDefinition? _lightPythonHigh;
     private string? _currentFilePath = null;  // Хранит путь к текущему открытому файлу0
@@ -71,7 +71,7 @@ public partial class MainWindow : Window
 
     {
         // Загружаем кастомную тему подсветки для тёмного и светлого режимов
-      
+
 
         InitializeComponent();
         LoadWindowState();
@@ -89,7 +89,7 @@ public partial class MainWindow : Window
         _foldingStrategy = new BraceFoldingStrategy();
 
         InitializeEditorTabs();
-       
+
 
 
         // Инициализируем список шрифтов и настроек подсветки
@@ -103,7 +103,7 @@ public partial class MainWindow : Window
         CodeTextBox.TextChanged += CodeTextBox_TextChanged;
         TitleTextBox.TextChanged += EntryField_TextChanged;
         TagsTextBox.TextChanged += EntryField_TextChanged;
-      
+
 
     }
 
@@ -129,13 +129,13 @@ public partial class MainWindow : Window
     {
         _editorTabs.Clear();
 
-       
+
 
         if (EditorTabs != null)
         {
             EditorTabs.ItemsSource = _editorTabs;
             EditorTabs.SelectedItem = _entryEditorTab;
-         
+
         }
 
         ActivateEditorTab(_entryEditorTab, selectInTabControl: false);
@@ -165,10 +165,11 @@ public partial class MainWindow : Window
         LoadSegmentsIntoTab(tab, entry);
         _editorTabs.Add(tab);
         ActivateEditorTab(tab);
+       
         return tab;
     }
 
-   
+
     private void CodeTextBox_TextChanged(object? sender, EventArgs e)
     {
         if (_isSwitchingEditorTab || _isUpdatingEditorContent || _activeEditorTab == null)
@@ -176,7 +177,7 @@ public partial class MainWindow : Window
             return;
         }
 
-      
+
         MarkTabTextDirty();
         SyncActiveEntryTabFromForm();
         UpdateSegmentsAfterTextChange();
@@ -220,15 +221,12 @@ public partial class MainWindow : Window
 
     private void EditorTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-       
-
-
 
         if (_isSwitchingEditorTab || EditorTabs?.SelectedItem is not EditorTabModel tab)
         {
             return;
         }
-      
+
         ActivateEditorTab(tab, selectInTabControl: false);
     }
 
@@ -303,7 +301,7 @@ public partial class MainWindow : Window
         {
             return;
         }
-
+        ToggleDescription_Close();
         _isSwitchingEditorTab = true;
         _isUpdatingEditorContent = true;
         try
@@ -320,7 +318,7 @@ public partial class MainWindow : Window
                 CodeTextBox.Document = tab.Document;
                 _foldingManager = FoldingManager.Install(CodeTextBox.TextArea);
             }
-        
+
             CodeTextBox.TextArea.TextView.Redraw();
             _currentFilePath = tab.FilePath;
             this.Title = !string.IsNullOrWhiteSpace(tab.FilePath)
@@ -337,6 +335,7 @@ public partial class MainWindow : Window
                 TagsTextBox.Text = string.Join(", ", tab.Entry.Tags);
                 _currentEntry = tab.Entry;
                 _selectedCategoryPath = NormalizeCategoryPath(tab.Entry.Category);
+                ToggleDescription_Close();
             }
             else
             {
@@ -382,7 +381,7 @@ public partial class MainWindow : Window
         }
     }
 
-  
+
 
     private EditorTabModel? FindEditorTab(string filePath)
     {
@@ -494,7 +493,7 @@ public partial class MainWindow : Window
             "Minimized" => WindowState.Minimized,
             _ => WindowState.Normal
         };
-    
+
     }
 
     private void ApplyStyleToSelection(string? backgroundColor = null, string? foregroundColor = null,
@@ -632,7 +631,7 @@ public partial class MainWindow : Window
         openFileDialog.Filter = "Текстовые файлы (*.txt;*.xshd;*.bsl;*.cs;*.xaml;*.json;*.xml)|*.txt;*.xshd;*.bsl;*cs;*.xaml;*.json;*.xml|Все файлы (*.*)|*.*";
         openFileDialog.FilterIndex = 1;
         openFileDialog.Multiselect = true;
-      
+
 
         if (openFileDialog.ShowDialog() == true)
         {
@@ -650,7 +649,7 @@ public partial class MainWindow : Window
 
                 return;
 
-              
+
             }
 
 
@@ -661,7 +660,7 @@ public partial class MainWindow : Window
         }
     }
 
-  
+
 
 
     private void ShowAlert(string message, bool isError = false)
@@ -677,8 +676,8 @@ public partial class MainWindow : Window
         var border = new Border
         {
 
-            Background = new SolidColorBrush(isError ? Color.FromRgb(200, 50, 50) : Color.FromRgb(50, 50, 50)),   
-            
+            Background = new SolidColorBrush(isError ? Color.FromRgb(200, 50, 50) : Color.FromRgb(50, 50, 50)),
+
 
             CornerRadius = new CornerRadius(6),
             Padding = new Thickness(12, 6, 12, 6),
@@ -786,9 +785,9 @@ public partial class MainWindow : Window
                     {
                         writer.Write(selectedText);
                     }
-                 
+
                     _snackbar.Show(CodeTextBox, "Выделенный текст успешно сохранён", NotificationType.Success, 1.5);
-                  
+
                 }
                 else
                 {
@@ -798,8 +797,8 @@ public partial class MainWindow : Window
                         CodeTextBox.Save(stream);
                     }
                     _snackbar.Show(CodeTextBox, "Файл успешно сохранён", NotificationType.Success, 1.5);
-                  
-                  }
+
+                }
 
                 // Обновляем заголовок
                 this.Title = $"{Path.GetFileName(_currentFilePath)} ";
@@ -810,7 +809,7 @@ public partial class MainWindow : Window
             }
         }
 
-       
+
     }
 
     // 📝 СОХРАНИТЬ КАК (всегда спрашиваем путь)
@@ -908,14 +907,14 @@ public partial class MainWindow : Window
             if (System.IO.File.Exists(darkXMLXshdPath))
             {
                 using (var reader = new XmlTextReader(darkXMLXshdPath))
-               
+
                 {
                     var xshd = HighlightingLoader.LoadXshd(reader);
                     _darkXMLHigh = HighlightingLoader.Load(xshd, HighlightingManager.Instance);
                     HighlightingManager.Instance.RegisterHighlighting("XML Dark",
                       new[] { ".xml", ".xaml" }, _darkXMLHigh);
                 }
-                }
+            }
         }
         catch
         {
@@ -959,7 +958,7 @@ public partial class MainWindow : Window
             _darkCSharpHighlighting = null;
         }
 
-        
+
         try
         {
             var darkPythonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkPython.xshd");
@@ -1010,7 +1009,7 @@ public partial class MainWindow : Window
             _darkCppHighlighting = null;
         }
 
-        
+
 
         if (_lightCppHighlighting == null)
         {
@@ -1067,8 +1066,8 @@ public partial class MainWindow : Window
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
-       {
-      
+    {
+
 
         _data = await _dataService.LoadDataAsync();
         _appState = await _dataService.LoadStateAsync();
@@ -1078,7 +1077,7 @@ public partial class MainWindow : Window
         DescriptionSplitter.Visibility = Visibility.Collapsed;
         DescriptionRow.Height = new GridLength(0);
         ToggleDescriptionButton.Content = " ▼ Развернуть ";
- 
+
         RefreshEntriesList();
         _selectedCategoryPath = NormalizeCategoryPath(_appState.SelectedCategory);
         if (!string.IsNullOrWhiteSpace(_selectedCategoryPath))
@@ -1096,7 +1095,7 @@ public partial class MainWindow : Window
         ThemeCheckBox.IsChecked = _appState.IsLightTheme;
         ApplyTheme(_appState.IsLightTheme ? AppTheme.Light : AppTheme.Dark);
 
-      
+
 
 
 
@@ -1122,7 +1121,7 @@ public partial class MainWindow : Window
         FontSizeComboBox.SelectedItem = 12;
 
         WordWrapCheckBox.IsChecked = false;
-     
+
         SyntaxHighlightingComboBox.SelectedIndex = 0; // По умолчанию 1C или C#, будет определяться при открытии файла
     }
 
@@ -1153,17 +1152,17 @@ public partial class MainWindow : Window
         {
             CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
         }
-       
+
         else if (selected == "Темная C++")
         {
             CodeTextBox.SyntaxHighlighting = _darkCppHighlighting ?? HighlightingManager.Instance.GetDefinition("C++");
         }
-       
+
         else if (selected == "Стандартная C++")
         {
             CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C++");
         }
-        
+
         else if (selected == "Темная 1C")
         {
             CodeTextBox.SyntaxHighlighting = _dark1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
@@ -1337,7 +1336,7 @@ public partial class MainWindow : Window
             WindowTitle.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
 
             // Текст
-           
+
 
             // Поля ввода
             SearchBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Input));
@@ -1366,15 +1365,15 @@ public partial class MainWindow : Window
             SyntaxHighlightingComboBox?.Items.Add("Темная 1C");
             SyntaxHighlightingComboBox?.Items.Add("Темная С#");
             SyntaxHighlightingComboBox?.Items.Add("Темная C++");
-            SyntaxHighlightingComboBox?.Items.Add("Темная XML");    
-            SyntaxHighlightingComboBox?.Items.Add("Темная HTML");    
+            SyntaxHighlightingComboBox?.Items.Add("Темная XML");
+            SyntaxHighlightingComboBox?.Items.Add("Темная HTML");
             SyntaxHighlightingComboBox?.Items.Add("Темная Python");
 
             // По умолчанию при темном режиме выбираем DarkCSharp или DarkCpp
             if (SyntaxHighlightingComboBox != null)
             {
                 var selected = SyntaxHighlightingComboBox.SelectedItem?.ToString();
-                if ( selected == "Темная С#")
+                if (selected == "Темная С#")
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 1; // DarkCSharp
                 }
@@ -1386,7 +1385,7 @@ public partial class MainWindow : Window
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 0; // Dark1C
                 }
-                else if ( selected == "Темная C++")
+                else if (selected == "Темная C++")
                 {
                     SyntaxHighlightingComboBox.SelectedIndex = 2; // DarkCpp
                 }
@@ -1416,7 +1415,7 @@ public partial class MainWindow : Window
             WindowTitle.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
 
             // Текст
-           
+
 
             // Поля ввода
             SearchBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Input));
@@ -1437,11 +1436,11 @@ public partial class MainWindow : Window
             TagsTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
             TagsTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
 
-           
+
 
             WordWrapCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
 
-             UpdateCodeEditorColors();
+            UpdateCodeEditorColors();
 
             SyntaxHighlightingComboBox?.Items.Clear();
             SyntaxHighlightingComboBox?.Items.Add("Стандартная 1C");
@@ -1466,7 +1465,7 @@ public partial class MainWindow : Window
             {
                 var selected = SyntaxHighlightingComboBox.SelectedItem?.ToString();
 
-                
+
 
                 if (selected == "LightCSharp")
                 {
@@ -1491,7 +1490,7 @@ public partial class MainWindow : Window
             }
         }
     }
-    
+
 
     private void UpdateCodeEditorColors(string? selectedSyntax = null)
     {
@@ -1759,10 +1758,10 @@ public partial class MainWindow : Window
                 var entryTab = OpenEntryTab(entry);
                 ActivateEditorTab(entryTab);
                 _currentEntry = entryTab.Entry;
-                
+
                 if (!string.IsNullOrEmpty(entry.Syntax) && SyntaxHighlightingComboBox != null)
                 {
-                  
+
                     SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
                 }
 
@@ -1779,17 +1778,17 @@ public partial class MainWindow : Window
                         SyntaxHighlightingComboBox.SelectedIndex = 6;
                     else SyntaxHighlightingComboBox.SelectedIndex = 0;
 
-                   
+
                 }
 
-                ToggleDescription_Open();
+                //ToggleDescription_Open();
 
 
             }
 
             ClearSearch();
         }
-    
+
         finally
         {
             _isUpdatingEditorContent = false;
@@ -1798,10 +1797,11 @@ public partial class MainWindow : Window
 
     private void AddEntry_Click(object sender, RoutedEventArgs e)
     {
+       
         var newEntry = new CodeEntry();
         _data.Entries.Add(newEntry);
         _currentEntry = newEntry;
-        _entryEditorTab = OpenEntryTab(newEntry); 
+        _entryEditorTab = OpenEntryTab(newEntry);
         _isUpdatingEditorContent = true;
         LoadEntryToForm(newEntry);
         TitleTextBox.Focus();
@@ -1972,93 +1972,93 @@ public partial class MainWindow : Window
 
 
     private async void SaveEntry_Click(object sender, RoutedEventArgs e)
-     {
-         var activeTab = GetActiveEditorTab();
+    {
+        var activeTab = GetActiveEditorTab();
 
-         if (activeTab != null && activeTab.Entry == null && activeTab.IsFromFile)
-         {
-             bool isHtml = Path.GetExtension(activeTab.FilePath).ToLower() == ".html";
+        if (activeTab != null && activeTab.Entry == null && activeTab.IsFromFile)
+        {
+            bool isHtml = Path.GetExtension(activeTab.FilePath).ToLower() == ".html";
 
-             var entry = new CodeEntry
-             {
-                 Title = Path.GetFileNameWithoutExtension(activeTab.FilePath),
-                 Extension = Path.GetExtension(activeTab.FilePath),
-                 Description = isHtml ? CodeTextBox.Text : "",
-                 Code = isHtml ? "" : CodeTextBox.Text,
-                 Category = NormalizeCategoryPath(CategoryComboBox.Text),
-                 Tags = Array.Empty<string>().ToList(),
-                 Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty
-             };
+            var entry = new CodeEntry
+            {
+                Title = Path.GetFileNameWithoutExtension(activeTab.FilePath),
+                Extension = Path.GetExtension(activeTab.FilePath),
+                Description = isHtml ? CodeTextBox.Text : "",
+                Code = isHtml ? "" : CodeTextBox.Text,
+                Category = NormalizeCategoryPath(CategoryComboBox.Text),
+                Tags = Array.Empty<string>().ToList(),
+                Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty
+            };
 
-             _data.Entries.Add(entry);
-             activeTab.Entry = entry;
-             activeTab.FilePath = null;
-             activeTab.Title = entry.Title;
-             activeTab.IsDirty = false;
-             activeTab.NotifyHeaderChanged();
-            
+            _data.Entries.Add(entry);
+            activeTab.Entry = entry;
+            activeTab.FilePath = null;
+            activeTab.Title = entry.Title;
+            activeTab.IsDirty = false;
+            activeTab.NotifyHeaderChanged();
+
 
             _currentEntry = entry;
-             SaveSegmentsToEntry();
-             await _dataService.SaveDataAsync(_data);
-             RefreshEntriesList();
-             _snackbar.Show(CodeTextBox, "Файл сохранен как запись", NotificationType.Success, 1.5);
-             return;
-         }
+            SaveSegmentsToEntry();
+            await _dataService.SaveDataAsync(_data);
+            RefreshEntriesList();
+            _snackbar.Show(CodeTextBox, "Файл сохранен как запись", NotificationType.Success, 1.5);
+            return;
+        }
 
-         var tabTitle = activeTab?.Title;
+        var tabTitle = activeTab?.Title;
 
-         if (string.IsNullOrWhiteSpace(tabTitle))
-         {
-             ShowAlert("Нет активной закладки", isError: true);
-             return;
-         }
+        if (string.IsNullOrWhiteSpace(tabTitle))
+        {
+            ShowAlert("Нет активной закладки", isError: true);
+            return;
+        }
 
-         if (string.IsNullOrWhiteSpace(TitleTextBox.Text))
-         {
-             ShowAlert("Введите название", isError: true);
-             return;
-         }
+        if (string.IsNullOrWhiteSpace(TitleTextBox.Text))
+        {
+            ShowAlert("Введите название", isError: true);
+            return;
+        }
 
-         var entryToUpdate = _data.Entries.FirstOrDefault(e => e.Title == tabTitle);
-         if (entryToUpdate == null)
-         {
-             ShowAlert("Запись не найдена", isError: true);
-             return;
-         }
+        var entryToUpdate = _data.Entries.FirstOrDefault(e => e.Title == tabTitle);
+        if (entryToUpdate == null)
+        {
+            ShowAlert("Запись не найдена", isError: true);
+            return;
+        }
 
-         entryToUpdate.Title = TitleTextBox.Text;
-         // Описание теперь отображается через WebBrowser и не редактируется напрямую
-         entryToUpdate.Code = CodeTextBox.Text;
-         entryToUpdate.Category = NormalizeCategoryPath(CategoryComboBox.Text);
-         entryToUpdate.Tags = TagsTextBox.Text
-             .Split(',')
-             .Select(t => t.Trim())
-             .Where(t => !string.IsNullOrWhiteSpace(t))
-             .ToList();
-         entryToUpdate.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
-         entryToUpdate.ModifiedAt = DateTime.Now;
+        entryToUpdate.Title = TitleTextBox.Text;
+        // Описание теперь отображается через WebBrowser и не редактируется напрямую
+        entryToUpdate.Code = CodeTextBox.Text;
+        entryToUpdate.Category = NormalizeCategoryPath(CategoryComboBox.Text);
+        entryToUpdate.Tags = TagsTextBox.Text
+            .Split(',')
+            .Select(t => t.Trim())
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .ToList();
+        entryToUpdate.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
+        entryToUpdate.ModifiedAt = DateTime.Now;
 
-         if (activeTab != null)
-         {
-             activeTab.Entry = entryToUpdate;
-             activeTab.Title = entryToUpdate.Title;
-             activeTab.SyntaxName = entryToUpdate.Syntax;
-             activeTab.IsDirty = false;
-         }
+        if (activeTab != null)
+        {
+            activeTab.Entry = entryToUpdate;
+            activeTab.Title = entryToUpdate.Title;
+            activeTab.SyntaxName = entryToUpdate.Syntax;
+            activeTab.IsDirty = false;
+        }
 
-         _currentEntry = entryToUpdate;
-         SaveSegmentsToEntry();
+        _currentEntry = entryToUpdate;
+        SaveSegmentsToEntry();
 
-         EnsureCategoryPathExists(entryToUpdate.Category);
+        EnsureCategoryPathExists(entryToUpdate.Category);
 
-         await _dataService.SaveDataAsync(_data);
-         RefreshEntriesList();
+        await _dataService.SaveDataAsync(_data);
+        RefreshEntriesList();
 
-         _snackbar.Show(CodeTextBox, "Запись сохранена", NotificationType.Success, 1.5);
+        _snackbar.Show(CodeTextBox, "Запись сохранена", NotificationType.Success, 1.5);
 
-      
-     }
+
+    }
 
 
 
@@ -2158,7 +2158,7 @@ public partial class MainWindow : Window
             {
                 _editorTabs.Remove(deletedTab);
             }
-            
+
             if (_currentEntry?.Id == deletedEntryId)
             {
                 _currentEntry = null;
@@ -2191,7 +2191,7 @@ public partial class MainWindow : Window
             }
         }
     }
-   
+
 
     private async void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
@@ -2284,11 +2284,11 @@ public partial class MainWindow : Window
 
     private void ToggleDescription_Close()
     {
-            DescriptionBrowser.Visibility = Visibility.Collapsed;
-            DescriptionSplitter.Visibility = Visibility.Collapsed;
-            DescriptionRow.Height = new GridLength(0);
-            ToggleDescriptionButton.Content = " ▼ Развернуть ";
-           _updateDescription = false;
+        DescriptionBrowser.Visibility = Visibility.Collapsed;
+        DescriptionSplitter.Visibility = Visibility.Collapsed;
+        DescriptionRow.Height = new GridLength(0);
+        ToggleDescriptionButton.Content = " ▼ Развернуть ";
+        _updateDescription = false;
     }
 
 
@@ -2524,10 +2524,10 @@ public partial class MainWindow : Window
                 string bgColor = _currentTheme == AppTheme.Dark ? "#1E1E1E" : "#FFFFFF";
                 string textColor = _currentTheme == AppTheme.Dark ? "#EDF2F7" : "#1F1F1F";
                 string style = $"<style>body {{ background-color: {bgColor}; color: {textColor}; font-family: 'Segoe UI', sans-serif; font-size: 12px; margin: 5px; }} a {{ pointer-events: none; cursor: default; color: inherit; text-decoration: none; }}</style>";
-                
+
                 // JavaScript to ensure links are disabled
                 string script = "<script>window.onload = function() { var links = document.getElementsByTagName('a'); for (var i = 0; i < links.length; i++) { links[i].onclick = function(e) { e.preventDefault(); return false; }; } };</script>";
-                
+
                 DescriptionBrowser.NavigateToString($"<html><head><meta charset='utf-8'>{style}{script}</head><body>{html}</body></html>");
             }
         }
@@ -2576,10 +2576,10 @@ public partial class MainWindow : Window
 
             string folderCategory = string.Join("/", pathParts);
 
-            string category = string.IsNullOrWhiteSpace(baseCategory) 
-                ? folderCategory 
-                : string.IsNullOrWhiteSpace(folderCategory) 
-                    ? baseCategory 
+            string category = string.IsNullOrWhiteSpace(baseCategory)
+                ? folderCategory
+                : string.IsNullOrWhiteSpace(folderCategory)
+                    ? baseCategory
                     : $"{baseCategory}/{folderCategory}";
 
             category = NormalizeCategoryPath(category);
@@ -2635,10 +2635,10 @@ public partial class MainWindow : Window
 
             string folderCategory = string.Join("/", pathParts);
 
-            string category = string.IsNullOrWhiteSpace(baseCategory) 
-                ? folderCategory 
-                : string.IsNullOrWhiteSpace(folderCategory) 
-                    ? baseCategory 
+            string category = string.IsNullOrWhiteSpace(baseCategory)
+                ? folderCategory
+                : string.IsNullOrWhiteSpace(folderCategory)
+                    ? baseCategory
                     : $"{baseCategory}/{folderCategory}";
 
             category = NormalizeCategoryPath(category);
@@ -2701,7 +2701,7 @@ public partial class MainWindow : Window
             }
 
         }
-        else 
+        else
         {
             return;
         }
@@ -3086,7 +3086,7 @@ public partial class MainWindow : Window
         }
 
         EnsureCategoryPathExists(newCategoryPath);
-        
+
         // Сортируем категории для сохранения порядка
         _data.Categories = _data.Categories
             .OrderBy(c => c, StringComparer.CurrentCultureIgnoreCase)
@@ -3094,10 +3094,10 @@ public partial class MainWindow : Window
 
         await _dataService.SaveDataAsync(_data);
         RefreshEntriesList();
-        
+
         _selectedCategoryPath = newCategoryPath;
         CategoryComboBox.Text = newCategoryPath;
-        
+
         // Автоматически раскрываем и выделяем новую категорию
         SelectCategoryInTree(newCategoryPath);
 
@@ -3124,7 +3124,7 @@ public partial class MainWindow : Window
         {
             if (string.Equals(node.FullPath, path, StringComparison.CurrentCultureIgnoreCase))
                 return node;
-            
+
             var found = FindCategoryNode(node.Children, path);
             if (found != null) return found;
         }
@@ -3448,7 +3448,7 @@ public partial class MainWindow : Window
             _snackbar.Show(CodeTextBox, $"Категория '{categoryPath}' и её содержимое удалены", NotificationType.Success, 1.5);
 
         }
-        else 
+        else
         {
             return;
         }
@@ -3484,11 +3484,11 @@ public class CategoryNode : System.ComponentModel.INotifyPropertyChanged
     public bool IsChecked
     {
         get => _isChecked;
-        set 
-        { 
+        set
+        {
             if (_isChecked != value)
             {
-                _isChecked = value; 
+                _isChecked = value;
                 OnPropertyChanged(nameof(IsChecked));
                 // Прокидываем состояние вложенным элементам
                 foreach (var child in Children) child.IsChecked = value;

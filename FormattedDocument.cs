@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-
-
-
-namespace CodeDictionary
+﻿namespace CodeDictionary
 {
     // Модель для хранения форматированного текста
     // Класс-контейнер для сохранения всех сегментов

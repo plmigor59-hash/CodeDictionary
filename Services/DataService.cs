@@ -1,7 +1,7 @@
+using CodeDictionary.Models;
 using System.IO;
 using System.Text.Json;
 using System.Xml.Serialization;
-using CodeDictionary.Models;
 
 namespace CodeDictionary.Services;
 

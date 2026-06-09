@@ -1,8 +1,6 @@
-using CodeDictionary;
 using ICSharpCode.AvalonEdit.Document;
-using CodeDictionary.Models;
-using System.IO;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace CodeDictionary.Models;
@@ -104,7 +102,7 @@ public class EditorTabModel : INotifyPropertyChanged
         ? Path.GetFileName(FilePath)
         : Title;
 
-    public string Header => IsDirty ?  $"{DisplayName} *" : DisplayName;
+    public string Header => IsDirty ? $"{DisplayName} *" : DisplayName;
 
     public bool IsFromFile => !string.IsNullOrWhiteSpace(_filePath);
 
