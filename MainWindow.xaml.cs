@@ -1539,7 +1539,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void RefreshEntriesList()
+    private void RefreshEntriesList(CodeEntry? entryToSelect = null)
     {
         var searchText = SearchBox.Text.ToLower();
 
@@ -1558,7 +1558,18 @@ public partial class MainWindow : Window
             .ToList();
 
         RefreshCategoryFilter();
-        EntriesTreeView.ItemsSource = BuildCategoryTree(_filteredEntries);
+        var tree = BuildCategoryTree(_filteredEntries);
+        EntriesTreeView.ItemsSource = tree;
+
+        if (entryToSelect != null)
+        {
+            var viewEntry = FindEntryViewModel(tree, entryToSelect.Id);
+            if (viewEntry != null)
+            {
+                ExpandAncestors(tree, NormalizeCategoryPath(entryToSelect.Category));
+                viewEntry.IsSelected = true;
+            }
+        }
     }
 
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -2006,7 +2017,7 @@ public partial class MainWindow : Window
             _currentEntry = entry;
             SaveSegmentsToEntry();
             await _dataService.SaveDataAsync(_data);
-            RefreshEntriesList();
+            RefreshEntriesList(entry);
             _snackbar.Show(CodeTextBox, "Файл сохранен как запись", NotificationType.Success, 1.5);
             return;
         }
@@ -2058,7 +2069,7 @@ public partial class MainWindow : Window
         EnsureCategoryPathExists(entryToUpdate.Category);
 
         await _dataService.SaveDataAsync(_data);
-        RefreshEntriesList();
+        RefreshEntriesList(entryToUpdate);
 
         _snackbar.Show(CodeTextBox, "Запись сохранена", NotificationType.Success, 1.5);
 
@@ -3509,6 +3520,7 @@ public class CategoryNode : System.ComponentModel.INotifyPropertyChanged
 public class CodeEntryViewModel : System.ComponentModel.INotifyPropertyChanged
 {
     private bool _isChecked;
+    private bool _isSelected;
     public CodeEntry Entry { get; }
     public string Title => Entry.Title;
 
@@ -3516,6 +3528,12 @@ public class CodeEntryViewModel : System.ComponentModel.INotifyPropertyChanged
     {
         get => _isChecked;
         set { _isChecked = value; OnPropertyChanged(nameof(IsChecked)); }
+    }
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set { _isSelected = value; OnPropertyChanged(nameof(IsSelected)); }
     }
 
     public CodeEntryViewModel(CodeEntry entry)

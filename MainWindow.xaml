@@ -442,7 +442,7 @@
                                     Height="16"
                                     Margin="0,0,4,0"
                                     VerticalAlignment="Center"
-                                    Foreground="Blue"
+                                    Foreground="Red"
                                     Kind="FileOutline"
                                     Visibility="Collapsed" />
                                 <ContentPresenter
