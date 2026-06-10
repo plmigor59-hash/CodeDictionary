@@ -87,6 +87,25 @@ public class DataService
         return JsonSerializer.Deserialize<CodeDictionaryData>(json, _jsonOptions) ?? new CodeDictionaryData();
     }
 
+    public AppState LoadState()
+    {
+        if (!File.Exists(_stateFilePath))
+        {
+            return new AppState();
+        }
+
+        try
+        {
+            var json = File.ReadAllText(_stateFilePath);
+            return JsonSerializer.Deserialize<AppState>(json, _jsonOptions)
+                   ?? new AppState();
+        }
+        catch
+        {
+            return new AppState();
+        }
+    }
+
     public async Task<AppState> LoadStateAsync()
     {
         if (!File.Exists(_stateFilePath))

@@ -73,16 +73,21 @@ public partial class MainWindow : Window
     {
         // Загружаем кастомную тему подсветки для тёмного и светлого режимов
 
+        _dataService = new DataService();
+        _appState = _dataService.LoadState();
 
         InitializeComponent();
         LoadWindowState();
-        _dataService = new DataService();
+        
+        // Применяем тему СРАЗУ после создания компонентов, до отображения окна
+        ApplyTheme(_appState.IsLightTheme ? AppTheme.Light : AppTheme.Dark);
+        ThemeCheckBox.IsChecked = _appState.IsLightTheme;
+
         _data = new CodeDictionaryData();
         _filteredEntries = new List<CodeEntry>();
         _isInitialized = false;
 
-        _currentTheme = AppTheme.Dark;
-        _appState = new AppState();
+        _currentTheme = _appState.IsLightTheme ? AppTheme.Light : AppTheme.Dark;
         _isNewRecordDescription = false;
 
 
@@ -1096,12 +1101,8 @@ public partial class MainWindow : Window
             SelectEntryInTree(_appState.SelectedEntryId.Value);
         }
 
-        // Применяем сохраненную тему
+        // Применяем сохраненную тему (уже применено в конструкторе, но синхронизируем UI)
         ThemeCheckBox.IsChecked = _appState.IsLightTheme;
-        ApplyTheme(_appState.IsLightTheme ? AppTheme.Light : AppTheme.Dark);
-
-
-
 
 
         _isInitialized = true;
@@ -1590,7 +1591,9 @@ public partial class MainWindow : Window
 
         if (e.NewValue is CodeEntryViewModel viewEntry)
         {
-            //LoadEntryToForm(viewEntry.Entry);
+            var categoryPath = NormalizeCategoryPath(viewEntry.Entry.Category);
+            _selectedCategoryPath = categoryPath;
+            CategoryComboBox.Text = categoryPath;
         }
         else if (e.NewValue is CategoryNode categoryNode)
         {
@@ -1813,13 +1816,19 @@ public partial class MainWindow : Window
 
     private void AddEntry_Click(object sender, RoutedEventArgs e)
     {
-        _isNewRecordDescription = true; 
-        var newEntry = new CodeEntry();
+        _isNewRecordDescription = true;
+        var currentCategory = NormalizeCategoryPath(CategoryComboBox.Text);
+        var newEntry = new CodeEntry
+        {
+            Category = currentCategory
+        };
         _data.Entries.Add(newEntry);
         _currentEntry = newEntry;
         _entryEditorTab = OpenEntryTab(newEntry);
         _isUpdatingEditorContent = true;
         LoadEntryToForm(newEntry);
+
+        RefreshEntriesList(newEntry);
         TitleTextBox.Focus();
     }
 
