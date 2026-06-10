@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+    <PackageReference Include="Lusamine.GTranslate" Version="1.2.0" />
     <PackageReference Include="Material.Icons.WPF" Version="3.0.2" />
     <PackageReference Include="Microsoft.Win32" Version="2.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
