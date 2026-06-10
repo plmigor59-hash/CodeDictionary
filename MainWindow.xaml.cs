@@ -31,6 +31,7 @@ public partial class MainWindow : Window
     private const string CategorySeparator = "/";
     private const string UncategorizedCategoryName = "Без категории";
     private readonly DataService _dataService;
+    private readonly MainViewModel _viewModel;
     private CodeDictionaryData _data;
     private List<CodeEntry> _filteredEntries;
     private CodeEntry? _currentEntry;
@@ -71,6 +72,20 @@ public partial class MainWindow : Window
 
 
     {
+        _viewModel = new MainViewModel();
+        DataContext = _viewModel;
+
+        _viewModel.ReplaceSelectedText = (translatedText) =>
+        {
+            if (CodeTextBox.SelectionLength > 0)
+            {
+                int start = CodeTextBox.SelectionStart;
+                CodeTextBox.Document.Replace(start, CodeTextBox.SelectionLength, translatedText);
+                CodeTextBox.Select(start, translatedText.Length);
+            }
+        };
+
+
         // Загружаем кастомную тему подсветки для тёмного и светлого режимов
 
         _dataService = new DataService();
@@ -110,6 +125,16 @@ public partial class MainWindow : Window
 
         // Подписываемся на изменения текста
         CodeTextBox.TextChanged += CodeTextBox_TextChanged;
+        CodeTextBox.TextArea.SelectionChanged += (s, e) =>
+        {
+            _viewModel.SelectedText = CodeTextBox.SelectedText;
+            // Если выделение изменилось, сбрасываем оригинальный текст, 
+            // чтобы не восстановить старый оригинал в новое место
+            if (_viewModel.IsTranslating == false)
+            {
+                _viewModel.OriginalText = null;
+            }
+        };
         TitleTextBox.TextChanged += EntryField_TextChanged;
         TagsTextBox.TextChanged += EntryField_TextChanged;
 

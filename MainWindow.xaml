@@ -39,7 +39,7 @@
 
 
 
-        
+
 
         <Style x:Key="ModernCheckBox" TargetType="CheckBox">
             <Setter Property="Foreground" Value="#333333" />
@@ -924,8 +924,8 @@
                                 <CheckBox
                                     Margin="0,0,5,0"
                                     VerticalAlignment="Center"
-                                    Style="{StaticResource ModernCheckBox}"
-                                    IsChecked="{Binding IsChecked}" />
+                                    IsChecked="{Binding IsChecked}"
+                                    Style="{StaticResource ModernCheckBox}" />
                                 <TextBlock
                                     Margin="0,0,5,0"
                                     Foreground="{DynamicResource DictAccent}"
@@ -970,8 +970,8 @@
                                 <CheckBox
                                     Margin="0,0,5,0"
                                     VerticalAlignment="Center"
-                                    Style="{StaticResource ModernCheckBox}"
-                                    IsChecked="{Binding IsChecked}" />
+                                    IsChecked="{Binding IsChecked}"
+                                    Style="{StaticResource ModernCheckBox}" />
                                 <TextBlock
                                     Margin="0,0,5,0"
                                     Foreground="{DynamicResource DictChat}"
@@ -1547,7 +1547,46 @@
                                     Foreground="{DynamicResource DictTextSecondary}"
                                     Text="" />
                             </StackPanel>
+
+
+
+
                         </Grid>
+
+                        <StackPanel
+                            Grid.Row="0"
+                            Margin="0,0,0,10"
+                            Orientation="Horizontal">
+                            <Button
+                                Width="48"
+                                Margin="5"
+                                Command="{Binding TranslateCommand}"
+                                Content="ru"
+                                Style="{StaticResource ActionButtonStyleGreen}"
+                                IsEnabled="{Binding IsTranslating, Converter={StaticResource InverseBooleanConverter}}" />
+
+                            <Button
+                                Width="48"
+                                Margin="5"
+                                Command="{Binding TranslateToEnglishCommand}"
+                                Content="eng"
+                                Style="{StaticResource ActionButtonStyleGreen}"
+                                IsEnabled="{Binding IsTranslating, Converter={StaticResource InverseBooleanConverter}}" />
+
+                            <Button
+                                Width="100"
+                                Margin="5"
+                                Command="{Binding ClearCommand}"
+                                Style="{StaticResource ActionButtonStyleGreen}"
+                                Content="Очистить" />
+
+                            <TextBlock
+                                Margin="20,0,0,0"
+                                VerticalAlignment="Center"
+                                Foreground="Gray"
+                                Text="{Binding Status}" />
+                        </StackPanel>
+
                     </Grid>
 
                     <!--  Текстовый редактор кода (3/3 от высоты кода)  -->
@@ -1661,6 +1700,26 @@
                                             Height="16"
                                             Kind="Select" />
 
+                                    </MenuItem.Icon>
+                                </MenuItem>
+
+                                <Separator />
+
+                                <MenuItem Command="{Binding TranslateCommand}" Header="Перевод на RU">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="Translate" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+
+                                <MenuItem Command="{Binding TranslateToEnglishCommand}" Header="Перевод на ENG">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="Translate" />
                                     </MenuItem.Icon>
                                 </MenuItem>
                             </ContextMenu>

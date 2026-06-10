@@ -5,23 +5,25 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace CodeDictionary.ViewModels
-{
+namespace CodeDictionary;
     public class MainViewModel : INotifyPropertyChanged
     {
         private readonly TranslationService _translationService;
         private string _text;
         private string _selectedText;
+        private string _originalText;
         private bool _isTranslating;
+        private string _status;
 
         public MainViewModel()
         {
             _translationService = new TranslationService();
             Text = string.Empty;
+            Status = string.Empty;
 
-            TranslateCommand = new RelayCommand(async () => await ExecuteTranslateAsync(), () => !IsTranslating);
-            TranslateToEnglishCommand = new RelayCommand(async () => await ExecuteTranslateToEnglishAsync(), () => !IsTranslating);
-            ClearCommand = new RelayCommand(() => Text = string.Empty);
+            TranslateCommand = new RelayCommand(async () => await ExecuteTranslateAsync(), () => !IsTranslating && !string.IsNullOrWhiteSpace(SelectedText));
+            TranslateToEnglishCommand = new RelayCommand(async () => await ExecuteTranslateToEnglishAsync(), () => !IsTranslating && !string.IsNullOrWhiteSpace(SelectedText));
+            ClearCommand = new RelayCommand(() => ExecuteClear(), () => !IsTranslating && !string.IsNullOrEmpty(OriginalText));
         }
 
         public string Text
@@ -36,10 +38,22 @@ namespace CodeDictionary.ViewModels
             set { _selectedText = value; OnPropertyChanged(); }
         }
 
+        public string OriginalText
+        {
+            get => _originalText;
+            set { _originalText = value; OnPropertyChanged(); }
+        }
+
         public bool IsTranslating
         {
             get => _isTranslating;
             set { _isTranslating = value; OnPropertyChanged(); }
+        }
+
+        public string Status
+        {
+            get => _status;
+            set { _status = value; OnPropertyChanged(); }
         }
 
         public ICommand TranslateCommand { get; }
@@ -56,20 +70,47 @@ namespace CodeDictionary.ViewModels
             await TranslateTextAsync("en");
         }
 
+        private void ExecuteClear()
+        {
+            if (!string.IsNullOrEmpty(OriginalText))
+            {
+                ReplaceSelectedText?.Invoke(OriginalText);
+                OriginalText = null;
+                Status = "Текст восстановлен";
+            }
+        }
+
         private async Task TranslateTextAsync(string targetLanguage)
         {
             if (string.IsNullOrWhiteSpace(SelectedText))
                 return;
 
             IsTranslating = true;
+            Status = "Перевод...";
 
             try
             {
+                // Сохраняем оригинал перед первым переводом
+                if (string.IsNullOrEmpty(OriginalText))
+                {
+                    OriginalText = SelectedText;
+                }
+
                 var translated = await _translationService.TranslateTextAsync(SelectedText, targetLanguage);
 
-                // Опционально: заменяем выделенный текст на перевод
-                // В реальном приложении нужно получить ссылку на TextEditor
-                ReplaceSelectedText(translated);
+                if (translated.StartsWith("Ошибка:"))
+                {
+                    Status = translated;
+                }
+                else
+                {
+                    ReplaceSelectedText?.Invoke(translated);
+                    Status = "Готово";
+                }
+            }
+            catch (Exception ex)
+            {
+                Status = $"Ошибка: {ex.Message}";
             }
             finally
             {
@@ -77,7 +118,7 @@ namespace CodeDictionary.ViewModels
             }
         }
 
-        // Этот метод будет вызываться из code-behind
+        // Этот метод будет вызываться из code-behind для замены текста в AvalonEdit
         public Action<string> ReplaceSelectedText { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -111,7 +152,10 @@ namespace CodeDictionary.ViewModels
 
         public async void Execute(object parameter)
         {
-            await _executeAsync();
+            if (_executeAsync != null)
+                await _executeAsync();
+            else if (_executeSync != null)
+                _executeSync();
         }
 
         public event EventHandler CanExecuteChanged
@@ -120,4 +164,4 @@ namespace CodeDictionary.ViewModels
             remove { CommandManager.RequerySuggested -= value; }
         }
     }
-}
+
