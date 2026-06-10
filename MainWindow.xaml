@@ -1230,15 +1230,19 @@
                 </Grid>
 
                 <!--  Поле описания (1/3 от высоты кода)  -->
+               
+                    
                 <WebBrowser
                     x:Name="DescriptionBrowser"
+                    Visibility="Collapsed"
                     Grid.Row="1"
                     MinHeight="80"
                     Margin="0,0,0,10"
                     VerticalAlignment="Stretch" />
+            
 
                 <!--  Горизонтальный разделитель  -->
-                <GridSplitter
+                    <GridSplitter
                     x:Name="DescriptionSplitter"
                     Grid.Row="2"
                     Height="6"
@@ -1251,7 +1255,7 @@
                     Cursor="SizeNS"
                     ResizeBehavior="PreviousAndNext"
                     Visibility="Collapsed" />
-
+             
                 <!--  Контейнер кода (Row 4)  -->
                 <Grid x:Name="CodeContainer" Grid.Row="4">
                     <Grid.RowDefinitions>

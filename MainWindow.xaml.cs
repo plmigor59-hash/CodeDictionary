@@ -2318,6 +2318,8 @@ public partial class MainWindow : Window
         {
             DescriptionBrowser.Visibility = Visibility.Collapsed;
             DescriptionSplitter.Visibility = Visibility.Collapsed;
+          
+
             DescriptionRow.Height = new GridLength(0);
             ToggleDescriptionButton.Content = " ▼ Развернуть ";
         }
@@ -2325,6 +2327,7 @@ public partial class MainWindow : Window
         {
             DescriptionBrowser.Visibility = Visibility.Visible;
             DescriptionSplitter.Visibility = Visibility.Visible;
+         
             DescriptionRow.Height = new GridLength(150);
             ToggleDescriptionButton.Content = " ▲ Свернуть ";
         }
