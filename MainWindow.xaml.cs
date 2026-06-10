@@ -1587,6 +1587,14 @@ public partial class MainWindow : Window
         var tree = BuildCategoryTree(_filteredEntries);
         EntriesTreeView.ItemsSource = tree;
 
+        if (!string.IsNullOrWhiteSpace(searchText) && searchText != "поиск...")
+        {
+            foreach (var node in tree)
+            {
+                ExpandIfHasEntries(node);
+            }
+        }
+
         if (entryToSelect != null)
         {
             var viewEntry = FindEntryViewModel(tree, entryToSelect.Id);
@@ -3192,6 +3200,28 @@ public partial class MainWindow : Window
             var node = FindCategoryNode(nodes, ancestor);
             if (node != null) node.IsExpanded = true;
         }
+    }
+
+    private bool ExpandIfHasEntries(CategoryNode node)
+    {
+        bool hasMatchingEntries = node.Entries.Count > 0;
+        bool hasMatchingChildren = false;
+
+        foreach (var child in node.Children)
+        {
+            if (ExpandIfHasEntries(child))
+            {
+                hasMatchingChildren = true;
+            }
+        }
+
+        if (hasMatchingEntries || hasMatchingChildren)
+        {
+            node.IsExpanded = true;
+            return true;
+        }
+
+        return false;
     }
 
     private async void RenameCategory_Click(object sender, RoutedEventArgs e)

@@ -8,8 +8,19 @@
         <ResourceDictionary>
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
             <converters:BoolToStatusConverter x:Key="BoolToStatusConverter"/>
+        
+        
+        
+        
         </ResourceDictionary>
+
+      
+
+
+
     </Application.Resources>
 </Application>
+
+  
 
 

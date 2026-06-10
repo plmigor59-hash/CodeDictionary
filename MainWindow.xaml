@@ -38,11 +38,80 @@
         <SolidColorBrush x:Key="DarkBackground" Color="#1E1E1E" />
 
 
+        <Style x:Key="fluentSoftTextBoxDark" TargetType="{x:Type TextBox}">
+            <Setter Property="MinHeight" Value="26" />
+            <Setter Property="MinWidth" Value="200" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="Foreground" Value="{DynamicResource DictTextSecondary}" />
+            <Setter Property="Background" Value="{DynamicResource DictSurface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DictBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="CaretBrush" Value="{DynamicResource DictAccent}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TextBox}">
+                        <Grid>
+                            <Border
+                                x:Name="Chrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12"
+                                SnapsToDevicePixels="True" />
+
+                            <ScrollViewer
+                                x:Name="PART_ContentHost"
+                                Margin="{TemplateBinding Padding}"
+                                VerticalAlignment="Center"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                SnapsToDevicePixels="True" />
+
+                            <TextBlock
+                                x:Name="Watermark"
+                                Margin="20,0"
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                Foreground="#64748B"
+                                IsHitTestVisible="False"
+                                Text="Введите значение…"
+                                Visibility="Collapsed" />
+
+                            <Border
+                                x:Name="FocusGlow"
+                                Background="#60A5FA"
+                                BorderThickness="0"
+                                CornerRadius="12"
+                                IsHitTestVisible="False"
+                                Opacity="0.0" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#60A5FA" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#60A5FA" />
+                                <Setter TargetName="FocusGlow" Property="Opacity" Value="0.08" />
+                            </Trigger>
+                            <Trigger Property="Text" Value="">
+                                <Setter TargetName="Watermark" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.40" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
 
 
 
         <Style x:Key="ModernCheckBox" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="#333333" />
+            <Setter Property="Foreground" Value="{DynamicResource DictTextSecondary}" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -61,7 +130,7 @@
                                 Width="22"
                                 Height="22"
                                 Background="Transparent"
-                                BorderBrush="#B0B0B0"
+                                BorderBrush="{DynamicResource DictBorder}"
                                 BorderThickness="2"
                                 CornerRadius="6"
                                 RenderTransformOrigin="0.5,0.5">
@@ -865,8 +934,8 @@
                     Margin="10,0,10,10"
                     Orientation="Horizontal">
                     <materialIcons:MaterialIcon
-                        Width="26"
-                        Height="26"
+                        Width="20"
+                        Height="30"
                         Margin="0,0,5,0"
                         Foreground="Gold"
                         Kind="Search" />
@@ -875,15 +944,13 @@
                         Width="364"
                         Margin="0,0,5,0"
                         Padding="5"
-                        Background="#3C3C3C"
-                        BorderBrush="#555555"
                         FontSize="14"
-                        Foreground="#000000"
+                        Style="{StaticResource fluentSoftTextBoxDark}"
                         Text=""
                         TextChanged="SearchBox_TextChanged" />
                     <Button
                         Width="30"
-                        Height="26"
+                        Height="30"
                         Margin="5,0,2,0"
                         Click="SearchBox_TextChanged_Click"
                         Content="✘"
@@ -1103,15 +1170,13 @@
                     <TextBlock
                         Margin="0,0,0,5"
                         FontWeight="Bold"
-                        Foreground="#CCCCCC"
+                        Foreground="{DynamicResource DictTextPrimary}"
                         Text="Название:" />
                     <TextBox
                         x:Name="TitleTextBox"
                         Padding="5"
-                        Background="#3C3C3C"
-                        BorderBrush="#555555"
                         FontSize="14"
-                        Foreground="#CCCCCC" />
+                        Style="{StaticResource fluentSoftTextBoxDark}" />
                 </StackPanel>
 
                 <!--  Категория  -->
@@ -1230,19 +1295,19 @@
                 </Grid>
 
                 <!--  Поле описания (1/3 от высоты кода)  -->
-               
-                    
+
+
                 <WebBrowser
                     x:Name="DescriptionBrowser"
-                    Visibility="Collapsed"
                     Grid.Row="1"
                     MinHeight="80"
                     Margin="0,0,0,10"
-                    VerticalAlignment="Stretch" />
-            
+                    VerticalAlignment="Stretch"
+                    Visibility="Collapsed" />
+
 
                 <!--  Горизонтальный разделитель  -->
-                    <GridSplitter
+                <GridSplitter
                     x:Name="DescriptionSplitter"
                     Grid.Row="2"
                     Height="6"
@@ -1255,7 +1320,7 @@
                     Cursor="SizeNS"
                     ResizeBehavior="PreviousAndNext"
                     Visibility="Collapsed" />
-             
+
                 <!--  Контейнер кода (Row 4)  -->
                 <Grid x:Name="CodeContainer" Grid.Row="4">
                     <Grid.RowDefinitions>
@@ -1344,7 +1409,8 @@
                             <StackPanel
                                 Grid.Row="0"
                                 Grid.ColumnSpan="2"
-                                Margin="0,0,0,5"
+                                Height="30"
+                                Margin="0,0,0,25"
                                 Orientation="Horizontal">
                                 <Button
                                     Width="30"
@@ -1360,6 +1426,15 @@
                                     Content="↪️"
                                     Style="{StaticResource TitleBarButtonStyle}"
                                     ToolTip="Повторить" />
+                                <Button
+                                    Width="30"
+                                    Margin="2"
+                                    Click="SelectAllMenuItem_Click"
+                                    Content="🔲"
+                                    Foreground="Aquamarine"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Выделить все" />
+
                                 <Button
                                     Width="30"
                                     Margin="2"
@@ -1381,13 +1456,7 @@
                                     Content="📄"
                                     Style="{StaticResource TitleBarButtonStyle}"
                                     ToolTip="Вставить" />
-                                <Button
-                                    Width="30"
-                                    Margin="2"
-                                    Click="SelectAllMenuItem_Click"
-                                    Content="🔲"
-                                    Style="{StaticResource TitleBarButtonStyle}"
-                                    ToolTip="Выделить все" />
+
                                 <Button
                                     Width="30"
                                     Margin="2"
@@ -1433,6 +1502,11 @@
                                     Content="🗂"
                                     Style="{StaticResource TitleBarButtonStyle}"
                                     ToolTip="Экспорт выбранной категории" />
+                                <TextBlock
+                                    Margin="10,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="#CCCCCC"
+                                    Text="Стиль:" />
 
                                 <Button
                                     Width="30"
@@ -1481,108 +1555,113 @@
                                     ToolTip="Очистить стиль" />
 
                             </StackPanel>
-                            
-                                <!--  Панель поиска  -->
-                                <StackPanel
-                                    Grid.RowSpan="2"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="2"
-                                    Margin="0,40,0,0"
-                                    Orientation="Horizontal">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialIcons:MaterialIcon
-                                            Width="26"
-                                            Height="26"
-                                            Margin="0,0,5,0"
-                                            Foreground="Gold"
-                                            Kind="Search" />
-                                        <TextBlock Text="" />
-                                    </StackPanel>
-                                    <TextBox
-                                        x:Name="SearchInTextBox"
-                                        Width="200"
-                                        Height="26"
-                                        Padding="5,3"
-                                        VerticalContentAlignment="Center"
-                                        Background="FloralWhite"
-                                        BorderBrush="#555555"
-                                        FontSize="12"
-                                        KeyDown="SearchInTextBox_KeyDown"
-                                        TextChanged="SearchInTextBox_TextChanged" />
-                                    <Button
-                                        Width="30"
-                                        Height="26"
-                                        Margin="5,0,2,0"
-                                        Click="ClearSearch_Click"
-                                        Content="✘"
-                                        Foreground="#FFED360C"
-                                        Style="{StaticResource TitleBarButtonStyle}"
-                                        ToolTip="Очистить поиск " />
-                                    <Button
-                                        Width="30"
-                                        Height="26"
-                                        Margin="5,0,2,0"
-                                        Click="FindPrevious_Click"
-                                        Content="▲"
-                                        Style="{StaticResource TitleBarButtonStyle}"
-                                        ToolTip="Предыдущее (Shift+F3)" />
-                                    <Button
-                                        Width="30"
-                                        Height="26"
-                                        Margin="2,0,5,0"
-                                        Click="FindNext_Click"
-                                        Content="▼"
-                                        Style="{StaticResource TitleBarButtonStyle}"
-                                        ToolTip="Следующее (F3)" />
-                                    <CheckBox
-                                        x:Name="MatchCaseCheckBox"
-                                        Margin="5,0,10,0"
-                                        VerticalAlignment="Center"
-                                        Checked="SearchOptions_Changed"
-                                        Content="Аа"
-                                        Foreground="#CCCCCC"
-                                        Style="{StaticResource ModernCheckBox}"
-                                        ToolTip="Учитывать регистр"
-                                        Unchecked="SearchOptions_Changed" />
-                                    <TextBlock
-                                        x:Name="SearchResultsTextBlock"
-                                        Margin="5,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontSize="11"
-                                        Foreground="{DynamicResource DictTextSecondary}"
-                                        Text="" />
-                                    <Button
-                                        Width="48"
-                                        Margin="5"
-                                        Command="{Binding TranslateCommand}"
-                                        Content="ru"
-                                        IsEnabled="{Binding IsTranslating, Converter={StaticResource InverseBooleanConverter}}"
-                                        Style="{StaticResource ActionButtonStyleGreen}" />
-                                    <Button
-                                        Width="48"
-                                        Margin="5"
-                                        Command="{Binding TranslateToEnglishCommand}"
-                                        Content="eng"
-                                        IsEnabled="{Binding IsTranslating, Converter={StaticResource InverseBooleanConverter}}"
-                                        Style="{StaticResource ActionButtonStyleGreen}" />
 
-                                    <Button
-                                        Width="28"
-                                        Margin="5"
-                                        Command="{Binding ClearCommand}"
-                                         Foreground="#FFEC3E0B"
-                                        Content="X"
-                                        Style="{StaticResource TitleBarButtonStyle}" />
-
-                                    <TextBlock
-                                        Margin="20,0,0,0"
-                                        VerticalAlignment="Center"
-                                        Foreground="Lavender"
-                                        Text="{Binding Status}" />
+                            <!--  Панель поиска  -->
+                            <StackPanel
+                                Grid.RowSpan="2"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Margin="0,40,0,0"
+                                Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialIcons:MaterialIcon
+                                        Width="26"
+                                        Height="26"
+                                        Margin="0,0,5,0"
+                                        Foreground="Gold"
+                                        Kind="Search" />
+                                    <TextBlock Text="" />
                                 </StackPanel>
+                                <TextBox
+                                    x:Name="SearchInTextBox"
+                                    Width="220"
+                                    Height="22"
+                                    Padding="5,3"
+                                    VerticalContentAlignment="Center"
+                                    FontSize="12"
+                                    KeyDown="SearchInTextBox_KeyDown"
+                                    Style="{StaticResource fluentSoftTextBoxDark}"
+                                    TextChanged="SearchInTextBox_TextChanged" />
+                                <Button
+                                    Width="30"
+                                    Height="26"
+                                    Margin="5,0,2,0"
+                                    Click="ClearSearch_Click"
+                                    Content="✘"
+                                    Foreground="#FFED360C"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Очистить поиск " />
+                                <Button
+                                    Width="30"
+                                    Height="26"
+                                    Margin="5,0,2,0"
+                                    Click="FindPrevious_Click"
+                                    Content="▲"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Предыдущее (Shift+F3)" />
+                                <Button
+                                    Width="30"
+                                    Height="26"
+                                    Margin="2,0,5,0"
+                                    Click="FindNext_Click"
+                                    Content="▼"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Следующее (F3)" />
+                                <CheckBox
+                                    x:Name="MatchCaseCheckBox"
+                                    Margin="5,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Checked="SearchOptions_Changed"
+                                    Content="Аа"
+                                    Foreground="#CCCCCC"
+                                    Style="{StaticResource ModernCheckBox}"
+                                    ToolTip="Учитывать регистр"
+                                    Unchecked="SearchOptions_Changed" />
+                                <TextBlock
+                                    x:Name="SearchResultsTextBlock"
+                                    Margin="5,0,0,0"
+                                    MinWidth="100"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource DictTextSecondary}"
+                                    Text="" />
+                                <TextBlock
+                                    Margin="10,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="#CCCCCC"
+                                    Text="Перевод:" />
+                                <Button
+                                    Width="48"
+                                    Margin="5"
+                                    Command="{Binding TranslateCommand}"
+                                    Content="ru"
+                                    IsEnabled="{Binding IsTranslating, Converter={StaticResource InverseBooleanConverter}}"
+                                    Style="{StaticResource ActionButtonStyleGreen}" />
+                                <Button
+                                    Width="48"
+                                    Margin="5"
+                                    Command="{Binding TranslateToEnglishCommand}"
+                                    Content="eng"
+                                    IsEnabled="{Binding IsTranslating, Converter={StaticResource InverseBooleanConverter}}"
+                                    Style="{StaticResource ActionButtonStyleGreen}" />
+
+                                <Button
+                                    Width="28"
+                                    Margin="5"
+                                    Command="{Binding ClearCommand}"
+                                    Content="X"
+                                    Foreground="#FFEC3E0B"
+                                    Style="{StaticResource TitleBarButtonStyle}" />
+
+                                <TextBlock
+                                    Margin="20,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="Lavender"
+                                    Text="{Binding Status}" />
+                            </StackPanel>
 
 
-                         
+
 
 
                         </Grid>
