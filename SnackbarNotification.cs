@@ -1,5 +1,8 @@
+using CodeDictionary;
+using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -13,16 +16,13 @@ public enum NotificationType
 
 public class SnackbarNotification
 {
+    private Popup? _popup;
     private Border? _snackbarBorder;
     private DispatcherTimer? _timer;
-    private Panel? _parentPanel;
 
     public void Show(UIElement parent, string message, NotificationType type = NotificationType.Info, double durationSeconds = 2)
     {
         Close();
-
-        _parentPanel = FindParentPanel(parent);
-        if (_parentPanel == null) return;
 
         // Выбираем цвет фона в зависимости от типа
         Brush backgroundBrush;
@@ -80,15 +80,23 @@ public class SnackbarNotification
         {
             Background = backgroundBrush,
             CornerRadius = new CornerRadius(4),
-            Padding = new Thickness(16, 8, 16, 8),
-            Margin = new Thickness(0, 0, 0, 40),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Bottom,
-            Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 10, Opacity = 0.2, ShadowDepth = 2 },
+            Padding = new Thickness(20, 10, 20, 10),
+            Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 15, Opacity = 0.3, ShadowDepth = 3 },
             Child = stackPanel
         };
 
-        _parentPanel.Children.Add(_snackbarBorder);
+        _popup = new Popup
+        {
+            Child = _snackbarBorder,
+            AllowsTransparency = true,
+            PopupAnimation = PopupAnimation.Fade,
+            Placement = PlacementMode.Center,
+            PlacementTarget = Application.Current.MainWindow,
+            VerticalOffset = 250, // Смещение вниз от центра
+            StaysOpen = true
+        };
+
+        _popup.IsOpen = true;
 
         _timer = new DispatcherTimer
         {
@@ -107,32 +115,13 @@ public class SnackbarNotification
             _timer = null;
         }
 
-        if (_snackbarBorder != null && _parentPanel != null)
+        if (_popup != null)
         {
-            _parentPanel.Children.Remove(_snackbarBorder);
-            _snackbarBorder = null;
+            _popup.IsOpen = false;
+            _popup.Child = null;
+            _popup = null;
         }
-    }
-
-    private Panel? FindParentPanel(UIElement element)
-    {
-        // Проверяем, не является ли элемент сам панелью
-        if (element is Panel panel)
-            return panel;
-
-        // Ищем родителя-панель
-        var parent = VisualTreeHelper.GetParent(element);
-        while (parent != null)
-        {
-            if (parent is Panel p)
-                return p;
-            parent = VisualTreeHelper.GetParent(parent);
-        }
-
-        // Запасной вариант - главное окно
-        if (Application.Current.MainWindow?.Content is Panel mainPanel)
-            return mainPanel;
-
-        return null;
+        
+        _snackbarBorder = null;
     }
 }

@@ -61,7 +61,6 @@
         </Style>
     </Window.Resources>
 
-
     <Grid Background="{DynamicResource WindowBackground}">
         <Grid.RowDefinitions>
             <RowDefinition Height="32" />
@@ -98,7 +97,6 @@
                                         <Setter Property="Background" Value="#E81123"/>
                                     </DataTrigger>
                                 </Style.Triggers>
-                               
                             </Style>
                         </Button.Resources>
                     </Button>
@@ -414,4 +412,3 @@
         </Grid>
     </Grid>
 </Window>
-
