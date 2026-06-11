@@ -26,25 +26,27 @@ public class SnackbarNotification
 
         // Выбираем цвет фона в зависимости от типа
         Brush backgroundBrush;
+        Brush foregroundBrush = Brushes.White;
         string icon;
 
         switch (type)
         {
             case NotificationType.Success:
-                backgroundBrush = new SolidColorBrush(Color.FromRgb(40, 167, 69)); // Зеленый
+                backgroundBrush = Application.Current.TryFindResource("SuccessBrush") as Brush ?? new SolidColorBrush(Color.FromRgb(40, 167, 69));
                 icon = "✓ ";
                 break;
             case NotificationType.Warning:
-                backgroundBrush = new SolidColorBrush(Color.FromRgb(255, 193, 7)); // Желтый
+                backgroundBrush = Application.Current.TryFindResource("WarningBrush") as Brush ?? new SolidColorBrush(Color.FromRgb(255, 193, 7));
+                foregroundBrush = Brushes.Black;
                 icon = "⚠️ ";
                 break;
             case NotificationType.Error:
-                backgroundBrush = new SolidColorBrush(Color.FromRgb(220, 53, 69)); // Красный
-                icon = "❌ ";
+                backgroundBrush = Application.Current.TryFindResource("DangerBrush") as Brush ?? new SolidColorBrush(Color.FromRgb(220, 53, 69));
+                icon = "✕ ";
                 break;
             default:
-                backgroundBrush = new SolidColorBrush(Color.FromRgb(23, 162, 184)); // Синий
-                icon = "ℹ️ ";
+                backgroundBrush = Application.Current.TryFindResource("AccentBrush") as Brush ?? new SolidColorBrush(Color.FromRgb(23, 162, 184));
+                icon = "ℹ ";
                 break;
         }
 
@@ -57,16 +59,18 @@ public class SnackbarNotification
         var iconText = new TextBlock
         {
             Text = icon,
-            Foreground = type == NotificationType.Warning ? Brushes.Black : Brushes.White,
+            Foreground = foregroundBrush,
             FontSize = 14,
+            FontWeight = FontWeights.Bold,
             Margin = new Thickness(0, 0, 8, 0)
         };
 
         var messageText = new TextBlock
         {
             Text = message,
-            Foreground = type == NotificationType.Warning ? Brushes.Black : Brushes.White,
-            FontSize = 14
+            Foreground = foregroundBrush,
+            FontSize = 13,
+            VerticalAlignment = VerticalAlignment.Center
         };
 
         stackPanel.Children.Add(iconText);
@@ -75,11 +79,12 @@ public class SnackbarNotification
         _snackbarBorder = new Border
         {
             Background = backgroundBrush,
-            CornerRadius = new CornerRadius(6),
-            Padding = new Thickness(15, 10, 15, 10),
-            Margin = new Thickness(0, 0, 0, 30),
+            CornerRadius = new CornerRadius(4),
+            Padding = new Thickness(16, 8, 16, 8),
+            Margin = new Thickness(0, 0, 0, 40),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Bottom,
+            Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 10, Opacity = 0.2, ShadowDepth = 2 },
             Child = stackPanel
         };
 

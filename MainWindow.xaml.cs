@@ -1299,215 +1299,102 @@ public partial class MainWindow : Window
         _currentTheme = theme;
         Theme.CurrentTheme = theme;
 
-        if (theme == AppTheme.Dark)
+        try
         {
-            // Обновляем динамические ресурсы
-            this.Resources["DictSurface"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#202A38"));
-            this.Resources["DictSurfaceStrong"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#273447"));
-            this.Resources["DictBorder"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#36465E"));
-            this.Resources["DictCardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#202A38"));
-            this.Resources["DictAccent"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#5BA5FF"));
-            this.Resources["DictTextPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#def8ee"));
-            this.Resources["DictTextSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A7B3C5"));
+            var dict = new ResourceDictionary();
+            dict.Source = theme == AppTheme.Dark
+                ? new Uri("Themes/Dark.xaml", UriKind.Relative)
+                : new Uri("Themes/Light.xaml", UriKind.Relative);
 
-            // Основные фоны
-            this.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Background));
-            ((Grid)this.Content).Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Background));
-            SidePanel.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.SidePanel));
+            var mergedDicts = Application.Current.Resources.MergedDictionaries;
+            var themeDict = mergedDicts.FirstOrDefault(d => d.Source != null &&
+                (d.Source.OriginalString.Contains("Dark.xaml") || d.Source.OriginalString.Contains("Light.xaml")));
 
-            // Заголовок окна
-            WindowTitle.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
-
-            // Текст
-
-
-            // Поля ввода
-            SearchBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Input));
-            SearchBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
-            SearchBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
-
-            ThemeCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
-
-            EntriesTreeView.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.SidePanel));
-            EntriesTreeView.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
-            EntriesTreeView.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
-
-            TitleTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Input));
-            TitleTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
-            TitleTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
-
-            TagsTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Input));
-            TagsTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
-            TagsTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
-
-
-            WordWrapCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextPrimary));
-
-            UpdateCodeEditorColors();
-            SyntaxHighlightingComboBox?.Items.Clear();
-            SyntaxHighlightingComboBox?.Items.Add("Темная 1C");
-            SyntaxHighlightingComboBox?.Items.Add("Темная C#");
-            SyntaxHighlightingComboBox?.Items.Add("Темная C++");
-            SyntaxHighlightingComboBox?.Items.Add("Темная XML");
-            SyntaxHighlightingComboBox?.Items.Add("Темная HTML");
-            SyntaxHighlightingComboBox?.Items.Add("Темная Python");
-
-            // По умолчанию при темном режиме выбираем DarkCSharp или DarkCpp
-            if (SyntaxHighlightingComboBox != null)
+            if (themeDict != null)
             {
-                var selected = SyntaxHighlightingComboBox.SelectedItem?.ToString();
-                if (selected == "Темная С#")
-                {
-                    SyntaxHighlightingComboBox.SelectedIndex = 1; // DarkCSharp
-                }
-                else if (selected == "Темная Python")
-                {
-                    SyntaxHighlightingComboBox.SelectedIndex = 5; // DarkPython
-                }
-                else if (selected == "Темная 1C")
-                {
-                    SyntaxHighlightingComboBox.SelectedIndex = 0; // Dark1C
-                }
-                else if (selected == "Темная C++")
-                {
-                    SyntaxHighlightingComboBox.SelectedIndex = 2; // DarkCpp
-                }
-                else if (string.IsNullOrEmpty(selected))
-                {
-                    SyntaxHighlightingComboBox.SelectedIndex = 1; // DarkCSharp
-                }
+                mergedDicts.Remove(themeDict);
             }
-        }
-        else
-        {
-            // Обновляем динамические ресурсы для светлой темы
-            this.Resources["DictSurface"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-            this.Resources["DictSurfaceStrong"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F5F5F5"));
-            this.Resources["DictBorder"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D0D0D0"));
-            this.Resources["DictCardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-            this.Resources["DictAccent"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0078D4"));
-            this.Resources["DictTextPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F1F1F"));
-            this.Resources["DictTextSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B6B6B"));
-
-            // Основные фоны
-            this.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Background));
-            ((Grid)this.Content).Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Background));
-            SidePanel.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.SidePanel));
-
-            // Заголовок окна
-            WindowTitle.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
-
-            // Текст
-
-
-            // Поля ввода
-            SearchBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Input));
-            SearchBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
-            SearchBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
-
-            ThemeCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
-
-            EntriesTreeView.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.SidePanel));
-            EntriesTreeView.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
-            EntriesTreeView.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
-
-            TitleTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Input));
-            TitleTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
-            TitleTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
-
-            TagsTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Input));
-            TagsTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
-            TagsTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
-
-
-
-            WordWrapCheckBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextPrimary));
+            mergedDicts.Add(dict);
 
             UpdateCodeEditorColors();
 
+            _suppressSyntaxSelectionChange = true;
+            var currentSyntax = SyntaxHighlightingComboBox?.SelectedItem?.ToString();
+            
             SyntaxHighlightingComboBox?.Items.Clear();
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная 1C");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная C#");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная C++)");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная Python");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная Java");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная JavaScript");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная HTML");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная XML");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная CSS");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная PHP");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная PowerShell");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная SQL");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная VB");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная ASP/XHTML");
-            SyntaxHighlightingComboBox?.Items.Add("Стандартная Patch");
-
-
-            // По умолчанию при светлом режиме выбираем LightCSharp или LightCpp
-            if (SyntaxHighlightingComboBox != null)
+            if (theme == AppTheme.Dark)
             {
-                var selected = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+                SyntaxHighlightingComboBox?.Items.Add("Темная 1C");
+                SyntaxHighlightingComboBox?.Items.Add("Темная C#");
+                SyntaxHighlightingComboBox?.Items.Add("Темная C++");
+                SyntaxHighlightingComboBox?.Items.Add("Темная XML");
+                SyntaxHighlightingComboBox?.Items.Add("Темная HTML");
+                SyntaxHighlightingComboBox?.Items.Add("Темная Python");
+            }
+            else
+            {
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная 1C");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная C#");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная C++");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная Python");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная Java");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная JavaScript");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная HTML");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная XML");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная CSS");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная PHP");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная PowerShell");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная SQL");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная VB");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная ASP/XHTML");
+                SyntaxHighlightingComboBox?.Items.Add("Стандартная Patch");
+            }
 
-
-
-                if (selected == "LightCSharp")
+            // Restore selection or set default
+            if (!string.IsNullOrEmpty(currentSyntax) && SyntaxHighlightingComboBox != null)
+            {
+                var newSyntaxName = theme == AppTheme.Dark 
+                    ? currentSyntax.Replace("Стандартная", "Темная").Replace("Standart", "Dark")
+                    : currentSyntax.Replace("Темная", "Стандартная").Replace("Dark", "Standart");
+                
+                foreach (var item in SyntaxHighlightingComboBox.Items)
                 {
-                    SyntaxHighlightingComboBox.SelectedIndex = 1; // LightCSharp
-                }
-                else if (selected == "Standart1C")
-                {
-                    SyntaxHighlightingComboBox.SelectedIndex = 0; // Light1C
-                }
-                else if (selected == "Стандартная Python")
-                {
-                    SyntaxHighlightingComboBox.SelectedIndex = 3; // LightPython
-                }
-                else if (selected == "LightCpp")
-                {
-                    SyntaxHighlightingComboBox.SelectedIndex = 2; // LightCpp
-                }
-                else if (string.IsNullOrEmpty(selected))
-                {
-                    SyntaxHighlightingComboBox.SelectedIndex = 1; // LightCSharp
+                    if (item?.ToString() == newSyntaxName || item?.ToString() == currentSyntax)
+                    {
+                        SyntaxHighlightingComboBox.SelectedItem = item;
+                        break;
+                    }
                 }
             }
+            
+            if (SyntaxHighlightingComboBox != null && SyntaxHighlightingComboBox.SelectedItem == null && SyntaxHighlightingComboBox.Items.Count > 1)
+            {
+                SyntaxHighlightingComboBox.SelectedIndex = 1;
+            }
         }
-      
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error applying theme: {ex.Message}");
+        }
+        finally
+        {
+            _suppressSyntaxSelectionChange = false;
+        }
     }
-
 
     private void UpdateCodeEditorColors(string? selectedSyntax = null)
     {
         if (CodeTextBox == null) return;
 
-        var syntax = selectedSyntax ?? SyntaxHighlightingComboBox?.SelectedItem?.ToString();
+        var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
+        var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
+        var lineNumbers = Application.Current.TryFindResource("TextSecondaryBrush") as Brush ?? Brushes.Gray;
+        var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
 
-        if (syntax == "Стандартная 1C")
-        {
-            // Для 1С фон всегда остается светлым
-            CodeTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeBackground));
-            CodeTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeForeground));
-            CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextSecondary));
-            CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
-        }
-        else
-        {
-            // Для остальных языков цвета зависят от темы
-            if (_currentTheme == AppTheme.Dark)
-            {
-                CodeTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.CodeBackground));
-                CodeTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.CodeForeground));
-                CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.TextSecondary));
-                CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Dark.Border));
-            }
-            else
-            {
-                CodeTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeBackground));
-                CodeTextBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.CodeForeground));
-                CodeTextBox.LineNumbersForeground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.TextSecondary));
-                CodeTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Theme.Light.Border));
-            }
-        }
+        CodeTextBox.Background = background;
+        CodeTextBox.Foreground = foreground;
+        CodeTextBox.LineNumbersForeground = lineNumbers;
+        CodeTextBox.BorderBrush = border;
     }
     
     private void FormatCSharpCode_Click(object sender, RoutedEventArgs e)
@@ -3535,78 +3422,4 @@ public partial class MainWindow : Window
             return;
         }
     }
-}
-
-public class CategoryNode : System.ComponentModel.INotifyPropertyChanged
-{
-    private bool _isExpanded;
-    private bool _isSelected;
-    private bool _isChecked;
-    public string Name { get; set; } = string.Empty;
-    public string FullPath { get; set; } = string.Empty;
-    public List<CategoryNode> Children { get; set; } = new();
-    public List<CodeEntryViewModel> Entries { get; set; } = new();
-    public IEnumerable<object> Items => Children.Cast<object>().Concat(Entries);
-    public int TotalEntryCount => Entries.Count + Children.Sum(child => child.TotalEntryCount);
-    public string CountString => $"({TotalEntryCount})";
-    public bool CanDelete => !string.IsNullOrWhiteSpace(FullPath);
-
-    public bool IsExpanded
-    {
-        get => _isExpanded;
-        set { _isExpanded = value; OnPropertyChanged(nameof(IsExpanded)); }
-    }
-
-    public bool IsSelected
-    {
-        get => _isSelected;
-        set { _isSelected = value; OnPropertyChanged(nameof(IsSelected)); }
-    }
-
-    public bool IsChecked
-    {
-        get => _isChecked;
-        set
-        {
-            if (_isChecked != value)
-            {
-                _isChecked = value;
-                OnPropertyChanged(nameof(IsChecked));
-                // Прокидываем состояние вложенным элементам
-                foreach (var child in Children) child.IsChecked = value;
-                foreach (var entry in Entries) entry.IsChecked = value;
-            }
-        }
-    }
-
-    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
-    protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
-}
-
-public class CodeEntryViewModel : System.ComponentModel.INotifyPropertyChanged
-{
-    private bool _isChecked;
-    private bool _isSelected;
-    public CodeEntry Entry { get; }
-    public string Title => Entry.Title;
-
-    public bool IsChecked
-    {
-        get => _isChecked;
-        set { _isChecked = value; OnPropertyChanged(nameof(IsChecked)); }
-    }
-
-    public bool IsSelected
-    {
-        get => _isSelected;
-        set { _isSelected = value; OnPropertyChanged(nameof(IsSelected)); }
-    }
-
-    public CodeEntryViewModel(CodeEntry entry)
-    {
-        Entry = entry;
-    }
-
-    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
-    protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
 }
