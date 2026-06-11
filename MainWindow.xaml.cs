@@ -1130,7 +1130,7 @@ public partial class MainWindow : Window
 
         var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
 
-        if (selected == "Темная С#")
+        if (selected == "Темная C#")
         {
             CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
         }
@@ -1224,6 +1224,7 @@ public partial class MainWindow : Window
 
 
         UpdateCodeEditorColors(selected);
+       
     }
 
     private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1345,7 +1346,7 @@ public partial class MainWindow : Window
             UpdateCodeEditorColors();
             SyntaxHighlightingComboBox?.Items.Clear();
             SyntaxHighlightingComboBox?.Items.Add("Темная 1C");
-            SyntaxHighlightingComboBox?.Items.Add("Темная С#");
+            SyntaxHighlightingComboBox?.Items.Add("Темная C#");
             SyntaxHighlightingComboBox?.Items.Add("Темная C++");
             SyntaxHighlightingComboBox?.Items.Add("Темная XML");
             SyntaxHighlightingComboBox?.Items.Add("Темная HTML");
@@ -1471,6 +1472,7 @@ public partial class MainWindow : Window
                 }
             }
         }
+      
     }
 
 
@@ -1507,6 +1509,42 @@ public partial class MainWindow : Window
             }
         }
     }
+    
+    private void FormatCSharpCode_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedSyntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+        if (selectedSyntax == null || !selectedSyntax.Contains("C#"))
+        {
+            _snackbar.Show(CodeTextBox, "Форматирование поддерживается только для C#", NotificationType.Warning, 2);
+            return;
+        }
+
+        try
+        {
+            var code = CodeTextBox.Text;
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                return;
+            }
+
+            var tree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(code);
+            var root = tree.GetRoot();
+            using (var workspace = new Microsoft.CodeAnalysis.AdhocWorkspace())
+            {
+                var formattedNode = Microsoft.CodeAnalysis.Formatting.Formatter.Format(root, workspace);
+                var formattedText = formattedNode.ToFullString();
+                CodeTextBox.Document.Replace(0, CodeTextBox.Document.TextLength, formattedText);
+            }
+
+            _snackbar.Show(CodeTextBox, "Код C# успешно отформатирован", NotificationType.Success, 1.5);
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Show(CodeTextBox, $"Ошибка форматирования: {ex.Message}", NotificationType.Error, 3);
+        }
+    }
+
+    
 
     private void RefreshCategoryFilter()
     {

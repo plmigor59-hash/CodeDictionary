@@ -1474,6 +1474,15 @@
                                     Style="{StaticResource TitleBarButtonStyle}"
                                     ToolTip="Сохранить ..." />
                                 <Button
+                                    x:Name="FormatCSharpButton"
+                                    Width="30"
+                                    Margin="2"
+                                    Click="FormatCSharpCode_Click"
+                                    Content="🧹"
+                                    Foreground="Cyan"
+                                    Style="{StaticResource TitleBarButtonStyle}"
+                                    ToolTip="Форматировать C# код (Roslyn)" />
+                                <Button
                                     Width="30"
                                     Margin="2"
                                     Click="ExportData_Click"
@@ -1726,123 +1735,133 @@
                         </TabControl.ContentTemplate>
                     </TabControl>
 
-                    <avalonEdit:TextEditor
-                        x:Name="CodeTextBox"
-                        Grid.Row="2"
-                        Margin="0,0,0,10"
-                        Padding="5"
-                        Background="#252526"
-                        BorderBrush="#555555"
-                        BorderThickness="1"
-                        FontFamily="Consolas"
-                        FontSize="12"
-                        Foreground="#D4D4D4"
-                        HorizontalScrollBarVisibility="Auto"
-                        LineNumbersForeground="#858585"
-                        ShowLineNumbers="True"
-                        VerticalScrollBarVisibility="Auto">
-                        <avalonEdit:TextEditor.ContextMenu>
-                            <ContextMenu BorderThickness="1">
-                                <MenuItem Click="UndoMenuItem_Click" Header="Отменить">
-                                    <MenuItem.Icon>
-                                        <materialIcons:MaterialIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="Undo" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
+                    <Grid Grid.Row="2" Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-                                <MenuItem Click="RedoMenuItem_Click" Header="Повторить">
-                                    <MenuItem.Icon>
-                                        <materialIcons:MaterialIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="Redo" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <Separator />
+                        <avalonEdit:TextEditor
+                            x:Name="CodeTextBox"
+                            Grid.Column="0"
+                            Margin="0"
+                            Padding="5"
+                            Background="#252526"
+                            BorderBrush="#555555"
+                            BorderThickness="1"
+                            FontFamily="Consolas"
+                            FontSize="12"
+                            Foreground="#D4D4D4"
+                            HorizontalScrollBarVisibility="Auto"
+                            LineNumbersForeground="#858585"
+                            ShowLineNumbers="True"
+                            VerticalScrollBarVisibility="Auto">
+                            <avalonEdit:TextEditor.ContextMenu>
+                                <ContextMenu BorderThickness="1">
+                                    <MenuItem Click="UndoMenuItem_Click" Header="Отменить">
+                                        <MenuItem.Icon>
+                                            <materialIcons:MaterialIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Undo" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                    <MenuItem Click="RedoMenuItem_Click" Header="Повторить">
+                                        <MenuItem.Icon>
+                                            <materialIcons:MaterialIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Redo" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <Separator />
 
 
-                                <MenuItem Click="CopyMenuItem_Click" Header="Копировать">
-                                    <MenuItem.Icon>
-                                        <materialIcons:MaterialIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="ContentCopy" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Click="CutMenuItem_Click" Header="Вырезать">
+                                    <MenuItem Click="CopyMenuItem_Click" Header="Копировать">
+                                        <MenuItem.Icon>
+                                            <materialIcons:MaterialIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="ContentCopy" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Click="CutMenuItem_Click" Header="Вырезать">
 
-                                    <MenuItem.Icon>
-                                        <materialIcons:MaterialIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="ContentCut" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Click="PasteMenuItem_Click" Header="Вставить">
+                                        <MenuItem.Icon>
+                                            <materialIcons:MaterialIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="ContentCut" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Click="PasteMenuItem_Click" Header="Вставить">
 
-                                    <MenuItem.Icon>
-                                        <materialIcons:MaterialIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="ContentPaste" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
+                                        <MenuItem.Icon>
+                                            <materialIcons:MaterialIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="ContentPaste" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
 
-                                <Separator />
+                                    <Separator />
 
-                                <MenuItem Click="DeleteMenuItem_Click" Header="Удалить выделенное">
-                                    <MenuItem.Icon>
-                                        <materialIcons:MaterialIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="TrashCanOutline" />
+                                    <MenuItem Click="DeleteMenuItem_Click" Header="Удалить выделенное">
+                                        <MenuItem.Icon>
+                                            <materialIcons:MaterialIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="TrashCanOutline" />
 
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <Separator />
-                                <MenuItem Click="SelectAllMenuItem_Click" Header="Выделить всё">
-                                    <MenuItem.Icon>
-                                        <materialIcons:MaterialIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="Select" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <Separator />
+                                    <MenuItem Click="SelectAllMenuItem_Click" Header="Выделить всё">
+                                        <MenuItem.Icon>
+                                            <materialIcons:MaterialIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Select" />
 
-                                    </MenuItem.Icon>
-                                </MenuItem>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
 
-                                <Separator />
+                                    <Separator />
 
-                                <MenuItem Command="{Binding TranslateCommand}" Header="Перевод на RU">
-                                    <MenuItem.Icon>
-                                        <materialIcons:MaterialIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="Translate" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
+                                    <MenuItem Command="{Binding TranslateCommand}" Header="Перевод на RU">
+                                        <MenuItem.Icon>
+                                            <materialIcons:MaterialIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Translate" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
 
-                                <MenuItem Command="{Binding TranslateToEnglishCommand}" Header="Перевод на ENG">
-                                    <MenuItem.Icon>
-                                        <materialIcons:MaterialIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="Translate" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
+                                    <MenuItem Command="{Binding TranslateToEnglishCommand}" Header="Перевод на ENG">
+                                        <MenuItem.Icon>
+                                            <materialIcons:MaterialIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Translate" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
 
-                                <MenuItem Command="{Binding TranslateToSelectedLanguageCommand}" Header="{Binding SelectedLanguage.Name, StringFormat='Перевести на {0}', TargetNullValue='Перевести на...', FallbackValue='Перевести на выбранный'}">
-                                    <MenuItem.Icon>
-                                        <materialIcons:MaterialIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="Translate" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                            </ContextMenu>
-                        </avalonEdit:TextEditor.ContextMenu>
-                    </avalonEdit:TextEditor>
+                                    <MenuItem Command="{Binding TranslateToSelectedLanguageCommand}" Header="{Binding SelectedLanguage.Name, StringFormat='Перевести на {0}', TargetNullValue='Перевести на...', FallbackValue='Перевести на выбранный'}">
+                                        <MenuItem.Icon>
+                                            <materialIcons:MaterialIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Translate" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </avalonEdit:TextEditor.ContextMenu>
+                        </avalonEdit:TextEditor>
+
+                        <!--  Панель контекстной помощи C#  -->
+                        
+                    </Grid>
 
                 </Grid>
                 <!--  Теги  -->
