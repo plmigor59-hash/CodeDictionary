@@ -45,8 +45,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="{DynamicResource SurfaceStrongBackground}"/>
@@ -144,16 +144,49 @@
                           Background="Transparent" BorderThickness="0"
                           SelectedItemChanged="EntriesTreeView_SelectedItemChanged"
                           MouseDoubleClick="EntriesTreeView_MouseDoubleClick">
+                    <TreeView.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Добавить корневую категорию" Click="AddCategoryRoot_Click">
+                                <MenuItem.Icon><materialIcons:MaterialIcon Kind="FolderPlusOutline" Width="16" Height="16"/></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Удалить отмеченные" Click="DeleteEntry_Click" Foreground="{DynamicResource DangerBrush}">
+                                <MenuItem.Icon><materialIcons:MaterialIcon Kind="DeleteSweepOutline" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"/></MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </TreeView.ContextMenu>
                     <TreeView.Resources>
                         <HierarchicalDataTemplate DataType="{x:Type local:CategoryNode}" ItemsSource="{Binding Items}">
-                            <StackPanel Orientation="Horizontal" Margin="0,2">
+                            <StackPanel Orientation="Horizontal" Margin="0,2" Background="Transparent">
+                                <StackPanel.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Добавить подкатегорию" Click="AddCategoryChild_Click" Tag="{Binding}">
+                                            <MenuItem.Icon><materialIcons:MaterialIcon Kind="FolderPlus" Width="16" Height="16"/></MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Переименовать" Click="RenameCategory_Click" Tag="{Binding}">
+                                            <MenuItem.Icon><materialIcons:MaterialIcon Kind="PencilOutline" Width="16" Height="16"/></MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator/>
+                                        <MenuItem Header="Удалить категорию" Click="DeleteCategory_Click" Tag="{Binding}" Foreground="{DynamicResource DangerBrush}">
+                                            <MenuItem.Icon><materialIcons:MaterialIcon Kind="FolderRemoveOutline" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"/></MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </StackPanel.ContextMenu>
+                                <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,4,0" VerticalAlignment="Center"/>
                                 <materialIcons:MaterialIcon Kind="Folder" Foreground="{DynamicResource WarningBrush}" Width="16" Height="16" Margin="0,0,4,0"/>
                                 <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 <TextBlock Text="{Binding CountString}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="4,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </HierarchicalDataTemplate>
                         <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
-                            <StackPanel Orientation="Horizontal" Margin="0,2">
+                            <StackPanel Orientation="Horizontal" Margin="0,2" Background="Transparent">
+                                <StackPanel.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Удалить запись" Click="DeleteSingleEntry_Click" Tag="{Binding}" Foreground="{DynamicResource DangerBrush}">
+                                            <MenuItem.Icon><materialIcons:MaterialIcon Kind="FileRemoveOutline" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"/></MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </StackPanel.ContextMenu>
+                                <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,4,0" VerticalAlignment="Center"/>
                                 <materialIcons:MaterialIcon Kind="FileDocumentOutline" Foreground="{DynamicResource AccentBrush}" Width="16" Height="16" Margin="0,0,4,0"/>
                                 <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                             </StackPanel>
@@ -163,7 +196,16 @@
 
                 <!-- Bottom Actions in SidePanel -->
                 <StackPanel Grid.Row="2" Margin="8">
-                    <Button Content="+ Новая запись" Style="{StaticResource AccentButton}" Click="AddEntry_Click" Margin="0,0,0,8"/>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button Content="+ Новая запись" Style="{StaticResource AccentButton}" Click="AddEntry_Click"/>
+                        <Button Grid.Column="1" Style="{StaticResource IconButton}" Click="DeleteEntry_Click" Margin="4,0,0,0" ToolTip="Удалить отмеченные">
+                            <materialIcons:MaterialIcon Kind="DeleteSweep" Foreground="{DynamicResource DangerBrush}"/>
+                        </Button>
+                    </Grid>
                     
                     <TextBlock Text="Название" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,2"/>
                     <TextBox x:Name="TitleTextBox" Style="{StaticResource ModernTextBox}" Margin="0,0,0,8"/>
@@ -324,6 +366,7 @@
                     <TabControl x:Name="EditorTabs" Grid.Row="0" Background="Transparent" BorderThickness="0"
                                 ItemContainerStyle="{StaticResource EditorTabItemStyle}"
                                 DisplayMemberPath="Header"
+                                Foreground="Transparent"
                                 SelectionChanged="EditorTabs_SelectionChanged">
                     </TabControl>
 
