@@ -68,6 +68,85 @@ public partial class MainWindow : Window
 
 
 
+    private HashSet<string> _expandedCategories = new();
+
+    private void SaveExpansionState()
+    {
+        _expandedCategories.Clear();
+        if (EntriesTreeView.ItemsSource is IEnumerable<CategoryNode> nodes)
+        {
+            SaveExpansionStateRecursive(nodes);
+        }
+    }
+
+    private void SaveExpansionStateRecursive(IEnumerable<CategoryNode> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.IsExpanded)
+            {
+                _expandedCategories.Add(node.FullPath);
+                SaveExpansionStateRecursive(node.Children);
+            }
+        }
+    }
+
+    private void ApplyExpansionState(IEnumerable<CategoryNode> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            if (_expandedCategories.Contains(node.FullPath))
+            {
+                node.IsExpanded = true;
+            }
+            ApplyExpansionState(node.Children);
+        }
+    }
+
+    private object? GetNeighborData(object item)
+    {
+        if (item == null) return null;
+
+        IEnumerable<CategoryNode> roots = EntriesTreeView.ItemsSource as IEnumerable<CategoryNode> ?? new List<CategoryNode>();
+
+        // Helper to find parent and index
+        (object? parent, int index, IList<object>? siblings) FindInNodes(IEnumerable<object> nodes, object target)
+        {
+            var list = nodes.ToList();
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] == target) return (null, i, list);
+
+                if (list[i] is CategoryNode cat)
+                {
+                    var result = FindInNodes(cat.Items, target);
+                    if (result.siblings != null)
+                    {
+                        return (result.parent ?? cat, result.index, result.siblings);
+                    }
+                }
+            }
+            return (null, -1, null);
+        }
+
+        var (parent, index, siblings) = FindInNodes(roots, item);
+        if (siblings == null) return null;
+
+        object? neighbor = null;
+        if (siblings.Count > 1)
+        {
+            if (index + 1 < siblings.Count) neighbor = siblings[index + 1];
+            else if (index - 1 >= 0) neighbor = siblings[index - 1];
+        }
+
+        if (neighbor == null) neighbor = parent;
+
+        if (neighbor is CodeEntryViewModel evm) return evm.Entry;
+        if (neighbor is CategoryNode cn) return cn.FullPath;
+        return neighbor;
+    }
+
+
     public MainWindow()
 
 
@@ -1441,9 +1520,14 @@ public partial class MainWindow : Window
         }
     }
 
-    private void RefreshEntriesList(CodeEntry? entryToSelect = null)
+    private void RefreshEntriesList(object? itemToSelect = null)
     {
         var searchText = SearchBox.Text.ToLower();
+
+        if (string.IsNullOrWhiteSpace(searchText) || searchText == "поиск...")
+        {
+            SaveExpansionState();
+        }
 
         // 1. Фильтруем записи по поисковому запросу
         _filteredEntries = _data.Entries
@@ -1461,6 +1545,12 @@ public partial class MainWindow : Window
 
         RefreshCategoryFilter();
         var tree = BuildCategoryTree(_filteredEntries);
+
+        if (string.IsNullOrWhiteSpace(searchText) || searchText == "поиск...")
+        {
+            ApplyExpansionState(tree);
+        }
+
         EntriesTreeView.ItemsSource = tree;
 
         if (!string.IsNullOrWhiteSpace(searchText) && searchText != "поиск...")
@@ -1471,13 +1561,25 @@ public partial class MainWindow : Window
             }
         }
 
-        if (entryToSelect != null)
+        if (itemToSelect != null)
         {
-            var viewEntry = FindEntryViewModel(tree, entryToSelect.Id);
-            if (viewEntry != null)
+            if (itemToSelect is CodeEntry entry)
             {
-                ExpandAncestors(tree, NormalizeCategoryPath(entryToSelect.Category));
-                viewEntry.IsSelected = true;
+                var viewEntry = FindEntryViewModel(tree, entry.Id);
+                if (viewEntry != null)
+                {
+                    ExpandAncestors(tree, NormalizeCategoryPath(entry.Category));
+                    viewEntry.IsSelected = true;
+                }
+            }
+            else if (itemToSelect is string categoryPath)
+            {
+                var targetNode = FindCategoryNode(tree, categoryPath);
+                if (targetNode != null)
+                {
+                    ExpandAncestors(tree, categoryPath);
+                    targetNode.IsSelected = true;
+                }
             }
         }
     }
@@ -2075,8 +2177,9 @@ public partial class MainWindow : Window
     private async void DeleteSingleEntry_Click(object sender, RoutedEventArgs e)
     {
         CodeEntry? entryToDelete = null;
+        object? selectedItem = EntriesTreeView.SelectedItem;
 
-        if (EntriesTreeView.SelectedItem is CodeEntryViewModel viewEntry)
+        if (selectedItem is CodeEntryViewModel viewEntry)
         {
             entryToDelete = viewEntry.Entry;
         }
@@ -2091,8 +2194,11 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (CustomMessageBox.ShowQuestion("Удалить запись?", "Подтверждение"))
+        if (CustomMessageBox.ShowQuestion($"Удалить запись '{entryToDelete.Title}'?", "Подтверждение"))
         {
+            // Находим соседа ПЕРЕД удалением
+            object? neighborData = GetNeighborData(selectedItem);
+
             var deletedEntryId = entryToDelete.Id;
             _data.Entries.Remove(entryToDelete);
             await _dataService.SaveDataAsync(_data);
@@ -2114,7 +2220,7 @@ public partial class MainWindow : Window
                 InitializeEditorTabs();
             }
 
-            RefreshEntriesList();
+            RefreshEntriesList(neighborData);
             _snackbar.Show(CodeTextBox, "Запись удалена", NotificationType.Success, 1.5);
         }
     }
@@ -3367,6 +3473,9 @@ public partial class MainWindow : Window
         if (CustomMessageBox.ShowQuestion($"Удалить категорию '{categoryPath}' и все вложенные категории?\n\nБудет удалено категорий: {categoriesToDelete.Count}\nБудет удалено записей: {entriesToDelete.Count}", "Подтверждение"))
 
         {
+            // Находим соседа ПЕРЕД удалением
+            object? neighborData = GetNeighborData(categoryNode);
+
             var deletedEntryIds = entriesToDelete.Select(entry => entry.Id).ToHashSet();
             var categoriesToDeleteSet = categoriesToDelete
                 .Select(NormalizeCategoryPath)
@@ -3413,7 +3522,7 @@ public partial class MainWindow : Window
             }
 
             await _dataService.SaveDataAsync(_data);
-            RefreshEntriesList();
+            RefreshEntriesList(neighborData);
             _snackbar.Show(CodeTextBox, $"Категория '{categoryPath}' и её содержимое удалены", NotificationType.Success, 1.5);
 
         }

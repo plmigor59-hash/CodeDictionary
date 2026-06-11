@@ -142,6 +142,12 @@
                           Background="Transparent" BorderThickness="0"
                           SelectedItemChanged="EntriesTreeView_SelectedItemChanged"
                           MouseDoubleClick="EntriesTreeView_MouseDoubleClick">
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="{x:Type TreeViewItem}">
+                            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                        </Style>
+                    </TreeView.ItemContainerStyle>
                     <TreeView.ContextMenu>
                         <ContextMenu>
                             <MenuItem Header="Добавить корневую категорию" Click="AddCategoryRoot_Click">
