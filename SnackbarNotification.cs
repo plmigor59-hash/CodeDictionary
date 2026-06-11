@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -13,9 +13,9 @@ public enum NotificationType
 
 public class SnackbarNotification
 {
-    private Border _snackbarBorder;
-    private DispatcherTimer _timer;
-    private Panel _parentPanel;
+    private Border? _snackbarBorder;
+    private DispatcherTimer? _timer;
+    private Panel? _parentPanel;
 
     public void Show(UIElement parent, string message, NotificationType type = NotificationType.Info, double durationSeconds = 2)
     {
@@ -109,7 +109,7 @@ public class SnackbarNotification
         }
     }
 
-    private Panel FindParentPanel(UIElement element)
+    private Panel? FindParentPanel(UIElement element)
     {
         // Проверяем, не является ли элемент сам панелью
         if (element is Panel panel)

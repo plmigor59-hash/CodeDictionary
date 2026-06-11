@@ -796,55 +796,6 @@ public partial class MainWindow : Window
         {
             ShowAlert($"Ошибка при сохранении: {ex.Message}", isError: true);
         }
-
-        return;
-
-        SaveAsFile_Click(sender, e);
-
-        if (string.IsNullOrEmpty(_currentFilePath))
-        {
-            SaveAsFile_Click(sender, e);  // Если файл новый, вызываем "Сохранить как"
-        }
-        else
-        {
-            try
-            {
-                // Проверяем, есть ли выделенный текст
-                var selection = CodeTextBox.TextArea.Selection;
-                if (!selection.IsEmpty)
-                {
-                    // Сохраняем только выделенные строки
-                    var selectedText = CodeTextBox.SelectedText;
-                    using (var stream = new FileStream(_currentFilePath, FileMode.Create, FileAccess.Write))
-                    using (var writer = new StreamWriter(stream, Encoding.UTF8))
-                    {
-                        writer.Write(selectedText);
-                    }
-
-                    _snackbar.Show(CodeTextBox, "Выделенный текст успешно сохранён", NotificationType.Success, 1.5);
-
-                }
-                else
-                {
-                    // Сохраняем весь файл
-                    using (var stream = new FileStream(_currentFilePath, FileMode.Create, FileAccess.Write))
-                    {
-                        CodeTextBox.Save(stream);
-                    }
-                    _snackbar.Show(CodeTextBox, "Файл успешно сохранён", NotificationType.Success, 1.5);
-
-                }
-
-                // Обновляем заголовок
-                this.Title = $"{Path.GetFileName(_currentFilePath)} ";
-            }
-            catch (Exception ex)
-            {
-                ShowAlert($"Ошибка при сохранении: {ex.Message}", isError: true);
-            }
-        }
-
-
     }
 
     // 📝 СОХРАНИТЬ КАК (всегда спрашиваем путь)
@@ -1721,7 +1672,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private static bool TryGetDraggedItem(DragEventArgs e, out object? draggedItem)
+    private static bool TryGetDraggedItem(DragEventArgs e, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out object? draggedItem)
     {
         draggedItem = null;
         if (!e.Data.GetDataPresent("CodeDictionaryTreeItem"))
@@ -1925,6 +1876,9 @@ public partial class MainWindow : Window
 
     private void SaveSegmentsToEntry()
     {
+        if (_currentEntry == null)
+            return;
+
         // Создаем контейнер с данными
         var container = new FormattingContainer
         {
@@ -1948,6 +1902,12 @@ public partial class MainWindow : Window
     // 📖 ЗАГРУЗКА СЕГМЕНТОВ ИЗ JSON
     private void LoadSegmentsFromEntry()
     {
+        if (_currentEntry == null)
+        {
+            _textSegments.Clear();
+            return;
+        }
+
         // Если данных нет - очищаем сегменты
         if (string.IsNullOrEmpty(_currentEntry.FormattingData))
         {
@@ -2035,12 +1995,13 @@ public partial class MainWindow : Window
 
         if (activeTab != null && activeTab.Entry == null && activeTab.IsFromFile)
         {
-            bool isHtml = Path.GetExtension(activeTab.FilePath).ToLower() == ".html";
+            string filePath = activeTab.FilePath ?? string.Empty;
+            bool isHtml = Path.GetExtension(filePath).ToLower() == ".html";
 
             var entry = new CodeEntry
             {
-                Title = Path.GetFileNameWithoutExtension(activeTab.FilePath),
-                Extension = Path.GetExtension(activeTab.FilePath),
+                Title = Path.GetFileNameWithoutExtension(filePath) ?? "Без названия",
+                Extension = Path.GetExtension(filePath) ?? string.Empty,
                 Description = isHtml ? CodeTextBox.Text : "",
                 Code = isHtml ? "" : CodeTextBox.Text,
                 Category = NormalizeCategoryPath(CategoryComboBox.Text),
@@ -2051,7 +2012,7 @@ public partial class MainWindow : Window
             _data.Entries.Add(entry);
             activeTab.Entry = entry;
             activeTab.FilePath = null;
-            activeTab.Title = entry.Title;
+            activeTab.Title = entry.Title ?? string.Empty;
             activeTab.IsDirty = false;
             activeTab.NotifyHeaderChanged();
 

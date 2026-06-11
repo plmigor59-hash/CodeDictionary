@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +22,7 @@ public class TranslationService
     /// <param name="targetLanguage">Целевой язык (по умолчанию "ru")</param>
     /// <param name="sourceLanguage">Исходный язык (null = автоопределение)</param>
     /// <returns>Переведенный текст</returns>
-    public async Task<string> TranslateTextAsync(string text, string targetLanguage = "ru", string sourceLanguage = null)
+    public async Task<string> TranslateTextAsync(string text, string targetLanguage = "ru", string? sourceLanguage = null)
     {
         if (string.IsNullOrWhiteSpace(text))
             return string.Empty;
@@ -82,7 +82,7 @@ public class TranslationService
             languages.Add(new LanguageInfo { Code = code, Name = name });
         }
 
-        return languages;
+        return languages.OrderBy(l => l.Name).ToList();
     }
 
     public void Dispose()
@@ -93,6 +93,6 @@ public class TranslationService
 
 public class LanguageInfo
 {
-    public string Code { get; set; }
-    public string Name { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 }
