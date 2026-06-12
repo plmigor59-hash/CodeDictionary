@@ -20,6 +20,9 @@ public class BookmarkBackgroundRenderer : IBackgroundRenderer
     public void Draw(TextView textView, DrawingContext drawingContext)
     {
         var bookmarks = _bookmarksProvider();
+
+        var isDarkTheme = Application.Current.Resources["IsDarkTheme"] is bool dark && dark;
+
         if (bookmarks == null) return;
 
         foreach (var lineNumber in bookmarks)
@@ -28,12 +31,17 @@ public class BookmarkBackgroundRenderer : IBackgroundRenderer
 
             var line = textView.Document.GetLineByNumber(lineNumber);
             var visualLine = textView.VisualLines.FirstOrDefault(vl => vl.FirstDocumentLine.LineNumber == lineNumber);
-            
+
             if (visualLine != null)
             {
                 var rect = new Rect(0, visualLine.VisualTop - textView.VerticalOffset, textView.ActualWidth, visualLine.Height);
                 // Draw a light blue background for the bookmarked line
-                drawingContext.DrawRectangle(new SolidColorBrush(Color.FromArgb(50, 0, 0, 255)), null, rect);
+
+                if (isDarkTheme)
+                    drawingContext.DrawRectangle(new SolidColorBrush(Color.FromArgb(222, 255, 248, 238)), null, rect);
+                else
+
+                    drawingContext.DrawRectangle(new SolidColorBrush(Color.FromArgb(83, 92, 89, 255)), null, rect);
             }
         }
     }

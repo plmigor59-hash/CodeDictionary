@@ -227,8 +227,73 @@ public partial class MainWindow : Window
             }
         };
         
-        // Add hotkey
+        // Add hotkeys
         CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ToggleBookmarkAtCaret), new KeyGesture(Key.F2, ModifierKeys.Alt)));
+        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(GoToNextBookmark), new KeyGesture(Key.Down, ModifierKeys.Control | ModifierKeys.Alt)));
+        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(GoToPreviousBookmark), new KeyGesture(Key.Up, ModifierKeys.Control | ModifierKeys.Alt)));
+        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ShowBookmarkList), new KeyGesture(Key.F3)));
+    }
+
+    private void ShowBookmarkList()
+    {
+        var tab = GetActiveEditorTab();
+        if (tab == null || tab.Bookmarks.Count == 0) return;
+
+        var window = new BookmarkListWindow(tab, NavigateToLine);
+        window.Owner = this;
+        window.ShowDialog();
+    }
+
+    private void NavigateToLine(int lineNumber)
+    {
+        CodeTextBox.ScrollToLine(lineNumber);
+        CodeTextBox.TextArea.Caret.Line = lineNumber;
+        CodeTextBox.TextArea.Caret.BringCaretToView();
+        CodeTextBox.Focus();
+    }
+
+    private void GoToNextBookmark()
+    {
+        var tab = GetActiveEditorTab();
+        if (tab == null || tab.Bookmarks.Count == 0) return;
+
+        int currentLine = CodeTextBox.TextArea.Caret.Line;
+        var nextLine = tab.Bookmarks
+            .Where(b => b > currentLine)
+            .OrderBy(b => b)
+            .FirstOrDefault();
+
+        if (nextLine == 0) // Wrap around
+            nextLine = tab.Bookmarks.OrderBy(b => b).FirstOrDefault();
+
+        if (nextLine != 0)
+        {
+            CodeTextBox.ScrollToLine(nextLine);
+            CodeTextBox.TextArea.Caret.Line = nextLine;
+            CodeTextBox.TextArea.Caret.BringCaretToView();
+        }
+    }
+
+    private void GoToPreviousBookmark()
+    {
+        var tab = GetActiveEditorTab();
+        if (tab == null || tab.Bookmarks.Count == 0) return;
+
+        int currentLine = CodeTextBox.TextArea.Caret.Line;
+        var prevLine = tab.Bookmarks
+            .Where(b => b < currentLine)
+            .OrderByDescending(b => b)
+            .FirstOrDefault();
+
+        if (prevLine == 0) // Wrap around
+            prevLine = tab.Bookmarks.OrderByDescending(b => b).FirstOrDefault();
+
+        if (prevLine != 0)
+        {
+            CodeTextBox.ScrollToLine(prevLine);
+            CodeTextBox.TextArea.Caret.Line = prevLine;
+            CodeTextBox.TextArea.Caret.BringCaretToView();
+        }
     }
 
     private void ToggleBookmarkAtCaret()
@@ -392,6 +457,10 @@ public partial class MainWindow : Window
             .Where(tag => !string.IsNullOrWhiteSpace(tag))
             .ToList();
         entry.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
+        
+        // Sync bookmarks
+        entry.Bookmarks = activeTab.Bookmarks.ToList();
+        
         activeTab.Title = entry.Title;
         activeTab.SyntaxName = entry.Syntax;
         activeTab.IsDirty = true;
@@ -1013,7 +1082,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var standart1CXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Standart1C.xshd");
+            var standart1CXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Xshd", "Standart1C.xshd");
             if (System.IO.File.Exists(standart1CXshdPath))
             {
                 using (var reader = new XmlTextReader(standart1CXshdPath))
@@ -1029,7 +1098,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var dark1CXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dark1C.xshd");
+            var dark1CXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Xshd", "Dark1C.xshd");
             if (System.IO.File.Exists(dark1CXshdPath))
             {
                 using (var reader = new XmlTextReader(dark1CXshdPath))
@@ -1045,7 +1114,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var darkXMLXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkXML.xshd");
+            var darkXMLXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Xshd", "DarkXML.xshd");
             if (System.IO.File.Exists(darkXMLXshdPath))
             {
                 using (var reader = new XmlTextReader(darkXMLXshdPath))
@@ -1065,7 +1134,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var darkHTMLXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkHTML.xshd");
+            var darkHTMLXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Xshd", "DarkHTML.xshd");
             if (System.IO.File.Exists(darkHTMLXshdPath))
             {
                 using (var reader = new XmlTextReader(darkHTMLXshdPath))
@@ -1086,7 +1155,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var darkXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkCSharp.xshd");
+            var darkXshdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Xshd", "DarkCSharp.xshd");
             if (System.IO.File.Exists(darkXshdPath))
             {
                 using (var reader = new XmlTextReader(darkXshdPath))
@@ -1103,7 +1172,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var darkPythonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkPython.xshd");
+            var darkPythonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Xshd", "DarkPython.xshd");
             if (System.IO.File.Exists(darkPythonPath))
             {
                 using (var reader = new XmlTextReader(darkPythonPath))
@@ -1117,7 +1186,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var lightPythonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LightPython.xshd");
+            var lightPythonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Xshd", "LightPython.xshd");
             if (System.IO.File.Exists(lightPythonPath))
             {
                 using (var reader = new XmlTextReader(lightPythonPath))
@@ -1137,7 +1206,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var darkCppPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DarkCpp.xshd");
+            var darkCppPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Xshd", "DarkCpp.xshd");
             if (System.IO.File.Exists(darkCppPath))
             {
                 using (var reader = new XmlTextReader(darkCppPath))

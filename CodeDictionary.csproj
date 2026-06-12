@@ -45,11 +45,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="DarkCSharp.xshd">
+    <None Update="Xshd\DarkCSharp.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
    
-    <None Update="DarkCpp.xshd">
+    <None Update="Xshd\DarkCpp.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
    
@@ -57,16 +57,16 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Update="Standart1C.xshd">
+    <None Update="Xshd\Standart1C.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	  <None Update="Dark1C.xshd">
+	  <None Update="Xshd\Dark1C.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DarkXML.xshd">
+    <None Update="Xshd\DarkXML.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DarkHTML.xshd">
+    <None Update="Xshd\DarkHTML.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
