@@ -46,7 +46,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="BorderBrush" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="{DynamicResource SurfaceStrongBackground}"/>
@@ -81,7 +81,7 @@
 
                 <StackPanel Orientation="Horizontal" Margin="8,0">
                     <TextBlock Text="📚" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="WindowTitle" Text="CodeDictionary" 
+                    <TextBlock x:Name="WindowTitle" Text="Справочник кода" 
                                VerticalAlignment="Center" FontWeight="SemiBold" 
                                Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12"/>
                 </StackPanel>
@@ -141,7 +141,12 @@
                 <TreeView x:Name="EntriesTreeView" Grid.Row="1" Margin="8,0"
                           Background="Transparent" BorderThickness="0"
                           SelectedItemChanged="EntriesTreeView_SelectedItemChanged"
-                          MouseDoubleClick="EntriesTreeView_MouseDoubleClick">
+                          MouseDoubleClick="EntriesTreeView_MouseDoubleClick"
+                          AllowDrop="True"
+                          PreviewMouseLeftButtonDown="EntriesTreeView_PreviewMouseLeftButtonDown"
+                          PreviewMouseMove="EntriesTreeView_PreviewMouseMove"
+                          DragOver="EntriesTreeView_DragOver"
+                          Drop="EntriesTreeView_Drop">
                     <TreeView.ItemContainerStyle>
                         <Style TargetType="{x:Type TreeViewItem}">
                             <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
