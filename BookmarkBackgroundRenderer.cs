@@ -40,10 +40,10 @@ public class BookmarkBackgroundRenderer : IBackgroundRenderer
                 var rect = new Rect(0, visualLine.VisualTop - textView.VerticalOffset, textView.ActualWidth, visualLine.Height);
                
 
-                //if (isDarkTheme)
+                if (!isDarkTheme)
                    drawingContext.DrawRectangle(new SolidColorBrush(Color.FromArgb(183, 92, 89, 238)), null, rect);
-                   //else
-                   // drawingContext.DrawRectangle(new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)), null, rect);
+                   else
+                   drawingContext.DrawRectangle(Application.Current.TryFindResource("WarningBrush") as Brush, null, rect);
             }
         }
     }

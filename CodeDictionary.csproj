@@ -57,6 +57,14 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+   
+    <None Update="Xshd\DarkPython.xshd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+   
+    <None Update="Xshd\LightPython.xshd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Xshd\Standart1C.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
