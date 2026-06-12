@@ -226,6 +226,33 @@ public partial class MainWindow : Window
                 margin.MouseDown += Margin_MouseDown;
             }
         };
+        
+        // Add hotkey
+        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ToggleBookmarkAtCaret), new KeyGesture(Key.F2, ModifierKeys.Alt)));
+    }
+
+    private void ToggleBookmarkAtCaret()
+    {
+        // Ensure we get the correct document line number from the caret
+        int lineNumber = CodeTextBox.TextArea.Caret.Line;
+        ToggleBookmark(lineNumber);
+    }
+
+    private void ToggleBookmark(int lineNumber)
+    {
+        var tab = GetActiveEditorTab();
+        if (tab != null)
+        {
+            if (tab.Bookmarks.Contains(lineNumber))
+            {
+                tab.Bookmarks.Remove(lineNumber);
+            }
+            else
+            {
+                tab.Bookmarks.Add(lineNumber);
+            }
+            CodeTextBox.TextArea.TextView.Redraw();
+        }
     }
 
     private void Margin_MouseDown(object sender, MouseButtonEventArgs e)
@@ -237,20 +264,25 @@ public partial class MainWindow : Window
         if (visualLine != null)
         {
            int lineNumber = visualLine.FirstDocumentLine.LineNumber;
-           var tab = GetActiveEditorTab();
-           if (tab != null)
+           
+           if (e.ChangedButton == MouseButton.Left)
            {
-               if (tab.Bookmarks.Contains(lineNumber))
-               {
-                   tab.Bookmarks.Remove(lineNumber);
-               }
-               else
-               {
-                   tab.Bookmarks.Add(lineNumber);
-               }
-               textView.Redraw();
+                ToggleBookmark(lineNumber);
+                e.Handled = true;
            }
-           e.Handled = true;
+           else if (e.ChangedButton == MouseButton.Right)
+           {
+                var contextMenu = new ContextMenu();
+                var tab = GetActiveEditorTab();
+                bool isBookmarked = tab?.Bookmarks.Contains(lineNumber) ?? false;
+                
+                var menuItem = new MenuItem { Header = isBookmarked ? "Удалить закладку" : "Добавить закладку" };
+                menuItem.Click += (s, args) => ToggleBookmark(lineNumber);
+                contextMenu.Items.Add(menuItem);
+                
+                contextMenu.IsOpen = true;
+                e.Handled = true;
+           }
         }
     }
 
