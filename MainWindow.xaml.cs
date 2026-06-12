@@ -404,6 +404,37 @@ public partial class MainWindow : Window
 
 
 
+    private void Window_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            e.Effects = DragDropEffects.Copy;
+        }
+        else
+        {
+            e.Effects = DragDropEffects.None;
+        }
+        e.Handled = true;
+    }
+
+    private void Window_Drop(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (files != null && files.Length > 0)
+            {
+                foreach (var file in files)
+                {
+                    if (File.Exists(file))
+                    {
+                        OpenEditorTab(file);
+                    }
+                }
+            }
+        }
+    }
+
     private void DescriptionBrowser_Navigating(object sender, NavigatingCancelEventArgs e)
     {
         // Отменяем переход по любой ссылке
@@ -1358,6 +1389,21 @@ public partial class MainWindow : Window
 
 
         _isInitialized = true;
+
+        // Обработка аргументов командной строки для открытия файлов
+        var args = Environment.GetCommandLineArgs();
+        if (args.Length > 1)
+        {
+            // Первый аргумент - это путь к самому приложению
+            for (int i = 1; i < args.Length; i++)
+            {
+                string filePath = args[i];
+                if (File.Exists(filePath))
+                {
+                    OpenEditorTab(filePath);
+                }
+            }
+        }
     }
 
     private void InitializeFontSettings()
