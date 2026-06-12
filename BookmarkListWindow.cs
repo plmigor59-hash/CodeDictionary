@@ -22,8 +22,8 @@ public partial class BookmarkListWindow : Window
     private void InitializeComponent()
     {
         this.Title = "Закладки";
-        this.Width = 300;
-        this.Height = 400;
+        this.Width = 500;
+        this.Height = 500;
         this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
         
         // Use resources from MainWindow/App
