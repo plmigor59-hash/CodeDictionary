@@ -28,6 +28,8 @@ public class EditorTabModel : INotifyPropertyChanged
 
     public List<TextSegmentStyle> Segments { get; } = new();
 
+    public HashSet<int> Bookmarks { get; } = new();
+
     public string? FilePath
     {
         get => _filePath;

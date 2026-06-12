@@ -63,6 +63,7 @@ public partial class MainWindow : Window
     private bool _suppressSyntaxSelectionChange;
     private FoldingManager _foldingManager;
     private BraceFoldingStrategy _foldingStrategy;
+    private BookmarkBackgroundRenderer _bookmarkRenderer;
     private bool _updateDescription;
     private bool _isNewRecordDescription;
 
@@ -216,8 +217,41 @@ public partial class MainWindow : Window
         };
         TitleTextBox.TextChanged += EntryField_TextChanged;
         TagsTextBox.TextChanged += EntryField_TextChanged;
+        
+        // Bookmark margin handler
+        CodeTextBox.TextArea.Loaded += (s, e) => {
+            var margin = CodeTextBox.TextArea.LeftMargins.OfType<ICSharpCode.AvalonEdit.Editing.LineNumberMargin>().FirstOrDefault();
+            if (margin != null)
+            {
+                margin.MouseDown += Margin_MouseDown;
+            }
+        };
+    }
 
-
+    private void Margin_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        var margin = (ICSharpCode.AvalonEdit.Editing.LineNumberMargin)sender;
+        var textView = margin.TextView;
+        var visualLine = textView.GetVisualLineFromVisualTop(e.GetPosition(textView).Y);
+        
+        if (visualLine != null)
+        {
+           int lineNumber = visualLine.FirstDocumentLine.LineNumber;
+           var tab = GetActiveEditorTab();
+           if (tab != null)
+           {
+               if (tab.Bookmarks.Contains(lineNumber))
+               {
+                   tab.Bookmarks.Remove(lineNumber);
+               }
+               else
+               {
+                   tab.Bookmarks.Add(lineNumber);
+               }
+               textView.Redraw();
+           }
+           e.Handled = true;
+        }
     }
 
 
@@ -429,8 +463,19 @@ public partial class MainWindow : Window
                 {
                     FoldingManager.Uninstall(_foldingManager);
                 }
+                
+                // Remove old renderer
+                if (_bookmarkRenderer != null)
+                {
+                   CodeTextBox.TextArea.TextView.BackgroundRenderers.Remove(_bookmarkRenderer);
+                }
+
                 CodeTextBox.Document = tab.Document;
                 _foldingManager = FoldingManager.Install(CodeTextBox.TextArea);
+                
+                // Add new renderer
+                _bookmarkRenderer = new BookmarkBackgroundRenderer(CodeTextBox.TextArea.TextView, () => tab.Bookmarks.ToList());
+                CodeTextBox.TextArea.TextView.BackgroundRenderers.Add(_bookmarkRenderer);
             }
 
             CodeTextBox.TextArea.TextView.Redraw();
