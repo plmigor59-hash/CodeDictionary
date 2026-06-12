@@ -109,6 +109,7 @@
                 <ColumnDefinition Width="300" MinWidth="200" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" MinWidth="400" />
+                <ColumnDefinition x:Name="HelpColumn" Width="0" />
             </Grid.ColumnDefinitions>
 
             <!-- Left Panel -->
@@ -420,6 +421,89 @@
                             Style="{StaticResource ModernButton}" Click="ToggleDescriptionButton_Click" Height="26" Padding="8,2"/>
                 </Grid>
             </Grid>
+
+            <GridSplitter x:Name="HelpSplitter" Grid.Column="3" Width="4" HorizontalAlignment="Left" Background="{DynamicResource BorderBrush}" Visibility="Collapsed"/>
+            <Border x:Name="HelpPanel" Grid.Column="3" Background="{DynamicResource SidePanelBackground}" Visibility="Collapsed" BorderThickness="1,0,0,0" BorderBrush="{DynamicResource BorderBrush}">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                        <TextBlock Text="Горячие клавиши" Foreground="{DynamicResource WarningBrush}" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBlock Text="Справочная информация по приложению" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"/>
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Text="Редактор" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" Margin="0,8,0,4"/>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Key" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <TextBlock Text="F1" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Esc" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="F3" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Shift+F3" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Ctrl+S" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Ctrl+O" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Ctrl+Z" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Ctrl+Y" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Показать/скрыть помощь" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Закрыть помощь" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Найти следующее" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Найти предыдущее" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Сохранить файл" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Открыть файл" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Отменить" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Повторить" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="Закладки" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" Margin="0,8,0,4"/>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Key" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <TextBlock Text="Alt+F2" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Ctrl+Alt+↓" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Ctrl+Alt+↑" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="F3 (в списке)" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Переключить закладку" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Следующая закладка" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Предыдущая закладка" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Список закладок" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="Интерфейс" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" Margin="0,8,0,4"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Key" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <TextBlock Text="Ctrl+N" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Delete" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Новая запись" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Удалить выбранное" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </Window>

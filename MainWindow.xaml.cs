@@ -64,6 +64,7 @@ public partial class MainWindow : Window
     private FoldingManager _foldingManager;
     private BraceFoldingStrategy _foldingStrategy;
     private BookmarkBackgroundRenderer _bookmarkRenderer;
+    private BookmarkMargin _bookmarkMargin;
     private bool _updateDescription;
     private bool _isNewRecordDescription;
 
@@ -219,6 +220,13 @@ public partial class MainWindow : Window
         TagsTextBox.TextChanged += EntryField_TextChanged;
         
         // Bookmark margin handler
+        _bookmarkMargin = new BookmarkMargin(
+            () => GetActiveEditorTab()?.Bookmarks ?? new HashSet<int>(),
+            () => (Brush)Application.Current.TryFindResource("AccentBrush") ?? Brushes.Blue
+        );
+        CodeTextBox.TextArea.LeftMargins.Insert(0, _bookmarkMargin);
+        _bookmarkMargin.MouseDown += Margin_MouseDown;
+
         CodeTextBox.TextArea.Loaded += (s, e) => {
             var margin = CodeTextBox.TextArea.LeftMargins.OfType<ICSharpCode.AvalonEdit.Editing.LineNumberMargin>().FirstOrDefault();
             if (margin != null)
@@ -232,6 +240,34 @@ public partial class MainWindow : Window
         CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(GoToNextBookmark), new KeyGesture(Key.Down, ModifierKeys.Control | ModifierKeys.Alt)));
         CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(GoToPreviousBookmark), new KeyGesture(Key.Up, ModifierKeys.Control | ModifierKeys.Alt)));
         CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ShowBookmarkList), new KeyGesture(Key.F3)));
+        
+        // Help and Global shortcuts
+        this.InputBindings.Add(new InputBinding(new RelayCommand(ToggleHelp), new KeyGesture(Key.F1)));
+        this.InputBindings.Add(new InputBinding(new RelayCommand(CloseHelp), new KeyGesture(Key.Escape)));
+        this.InputBindings.Add(new InputBinding(new RelayCommand(() => SaveFile_Click(null, null)), new KeyGesture(Key.S, ModifierKeys.Control)));
+        this.InputBindings.Add(new InputBinding(new RelayCommand(() => OpenFile_Click(null, null)), new KeyGesture(Key.O, ModifierKeys.Control)));
+        this.InputBindings.Add(new InputBinding(new RelayCommand(() => AddEntry_Click(null, null)), new KeyGesture(Key.N, ModifierKeys.Control)));
+    }
+
+    private void ToggleHelp()
+    {
+        if (HelpPanel.Visibility == Visibility.Collapsed)
+        {
+            HelpColumn.Width = new GridLength(300);
+            HelpSplitter.Visibility = Visibility.Visible;
+            HelpPanel.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            CloseHelp();
+        }
+    }
+
+    private void CloseHelp()
+    {
+        HelpColumn.Width = new GridLength(0);
+        HelpSplitter.Visibility = Visibility.Collapsed;
+        HelpPanel.Visibility = Visibility.Collapsed;
     }
 
     private void ShowBookmarkList()
@@ -317,14 +353,21 @@ public partial class MainWindow : Window
                 tab.Bookmarks.Add(lineNumber);
             }
             CodeTextBox.TextArea.TextView.Redraw();
+            _bookmarkMargin?.Redraw();
         }
     }
 
     private void Margin_MouseDown(object sender, MouseButtonEventArgs e)
     {
-        var margin = (ICSharpCode.AvalonEdit.Editing.LineNumberMargin)sender;
+        if (sender is not ICSharpCode.AvalonEdit.Editing.AbstractMargin margin) return;
         var textView = margin.TextView;
-        var visualLine = textView.GetVisualLineFromVisualTop(e.GetPosition(textView).Y);
+        if (textView == null) return;
+
+        // Get the position relative to the TextView to account for scrolling
+        var pos = e.GetPosition(textView);
+        
+        // Adjust Y position by the vertical offset to get the correct visual line
+        var visualLine = textView.GetVisualLineFromVisualTop(pos.Y + textView.VerticalOffset);
         
         if (visualLine != null)
         {
