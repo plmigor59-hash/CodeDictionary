@@ -247,6 +247,14 @@ public partial class MainWindow : Window
         this.InputBindings.Add(new InputBinding(new RelayCommand(() => SaveFile_Click(null, null)), new KeyGesture(Key.S, ModifierKeys.Control)));
         this.InputBindings.Add(new InputBinding(new RelayCommand(() => OpenFile_Click(null, null)), new KeyGesture(Key.O, ModifierKeys.Control)));
         this.InputBindings.Add(new InputBinding(new RelayCommand(() => AddEntry_Click(null, null)), new KeyGesture(Key.N, ModifierKeys.Control)));
+        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ShowGoToLineWindow), new KeyGesture(Key.G, ModifierKeys.Control)));
+    }
+
+    private void ShowGoToLineWindow()
+    {
+        var dialog = new GoToLineWindow(CodeTextBox.TextArea.Caret.Line, CodeTextBox.Document.LineCount, NavigateToLine);
+        dialog.Owner = this;
+        dialog.ShowDialog();
     }
 
     private void ToggleHelp()

@@ -452,6 +452,7 @@
                                     <TextBlock Text="Ctrl+O" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
                                     <TextBlock Text="Ctrl+Z" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
                                     <TextBlock Text="Ctrl+Y" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Ctrl+G" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
                                     <TextBlock Text="Показать/скрыть помощь" Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -462,6 +463,7 @@
                                     <TextBlock Text="Открыть файл" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     <TextBlock Text="Отменить" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     <TextBlock Text="Повторить" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Перейти к строке" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 </StackPanel>
                             </Grid>
 
