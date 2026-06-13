@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 
 namespace CodeDictionary;
 
@@ -14,7 +13,7 @@ public partial class GoToLineWindow : Window
     {
         _maxLine = maxLine;
         _onGoToLine = onGoToLine;
-        
+
         InitializeComponent();
         LineNumberTextBox.Text = currentLine.ToString();
         LineNumberTextBox.SelectAll();
@@ -31,9 +30,9 @@ public partial class GoToLineWindow : Window
         this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
         this.ResizeMode = ResizeMode.NoResize;
         this.WindowStyle = WindowStyle.ToolWindow;
-        
+
         this.SetResourceReference(Window.BackgroundProperty, "WindowBackground");
-        
+
         var grid = new Grid();
         grid.Margin = new Thickness(15);
         this.Content = grid;
@@ -41,8 +40,8 @@ public partial class GoToLineWindow : Window
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-        var label = new TextBlock 
-        { 
+        var label = new TextBlock
+        {
             Text = $"Номер строки (1-{_maxLine}):",
             Margin = new Thickness(0, 0, 0, 8)
         };
@@ -59,18 +58,19 @@ public partial class GoToLineWindow : Window
         LineNumberTextBox.SetResourceReference(TextBox.BackgroundProperty, "SurfaceBackground");
         LineNumberTextBox.SetResourceReference(TextBox.ForegroundProperty, "TextPrimaryBrush");
         LineNumberTextBox.SetResourceReference(TextBox.BorderBrushProperty, "BorderBrush");
-        
-        LineNumberTextBox.KeyDown += (s, e) => {
+
+        LineNumberTextBox.KeyDown += (s, e) =>
+        {
             if (e.Key == Key.Enter) Confirm();
             if (e.Key == Key.Escape) this.Close();
         };
-        
+
         Grid.SetRow(LineNumberTextBox, 1);
         grid.Children.Add(LineNumberTextBox);
-        
-        var buttonPanel = new StackPanel 
-        { 
-            Orientation = Orientation.Horizontal, 
+
+        var buttonPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
             Margin = new Thickness(0, 15, 0, 0)
         };
@@ -78,7 +78,7 @@ public partial class GoToLineWindow : Window
         // but we can make it look decent.
         var okButton = new Button { Content = "Перейти", Width = 75, Height = 26, IsDefault = true };
         okButton.Click += (s, e) => Confirm();
-        
+
         buttonPanel.Children.Add(okButton);
         // Note: In a real app we'd use XAML for proper styling, but this works for a quick functional addition.
     }

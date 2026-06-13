@@ -1,211 +1,209 @@
-using CodeDictionary.Services;
-using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace CodeDictionary;
-    public class MainViewModel : INotifyPropertyChanged
+
+public class MainViewModel : INotifyPropertyChanged
+{
+    private readonly TranslationService _translationService;
+    private string _text = string.Empty;
+    private string _selectedText = string.Empty;
+    private string? _originalText;
+    private bool _isTranslating;
+    private string _status = string.Empty;
+    private List<LanguageInfo> _languages = new();
+    private LanguageInfo? _selectedLanguage;
+
+    public MainViewModel()
     {
-        private readonly TranslationService _translationService;
-        private string _text = string.Empty;
-        private string _selectedText = string.Empty;
-        private string? _originalText;
-        private bool _isTranslating;
-        private string _status = string.Empty;
-        private List<LanguageInfo> _languages = new();
-        private LanguageInfo? _selectedLanguage;
+        _translationService = new TranslationService();
+        Text = string.Empty;
+        Status = string.Empty;
 
-        public MainViewModel()
+        Languages = _translationService.GetAllLanguages();
+        SelectedLanguage = Languages.FirstOrDefault(l => l.Code.Equals("ru", StringComparison.OrdinalIgnoreCase))
+                           ?? Languages.FirstOrDefault(l => l.Code.Equals("en", StringComparison.OrdinalIgnoreCase))
+                           ?? Languages.FirstOrDefault();
+
+        TranslateCommand = new RelayCommand(async () => await ExecuteTranslateAsync(), () => !IsTranslating && !string.IsNullOrWhiteSpace(SelectedText));
+        TranslateToEnglishCommand = new RelayCommand(async () => await ExecuteTranslateToEnglishAsync(), () => !IsTranslating && !string.IsNullOrWhiteSpace(SelectedText));
+        TranslateToSelectedLanguageCommand = new RelayCommand(async () => await ExecuteTranslateToSelectedLanguageAsync(), () => !IsTranslating && !string.IsNullOrWhiteSpace(SelectedText) && SelectedLanguage != null);
+        ClearCommand = new RelayCommand(() => ExecuteClear(), () => !IsTranslating && !string.IsNullOrEmpty(OriginalText));
+    }
+
+    public string Text
+    {
+        get => _text;
+        set { _text = value; OnPropertyChanged(); }
+    }
+
+    public string SelectedText
+    {
+        get => _selectedText;
+        set { _selectedText = value; OnPropertyChanged(); }
+    }
+
+    public string? OriginalText
+    {
+        get => _originalText;
+        set { _originalText = value; OnPropertyChanged(); }
+    }
+
+    public bool IsTranslating
+    {
+        get => _isTranslating;
+        set { _isTranslating = value; OnPropertyChanged(); }
+    }
+
+    public string Status
+    {
+        get => _status;
+        set { _status = value; OnPropertyChanged(); }
+    }
+
+    public List<LanguageInfo> Languages
+    {
+        get => _languages;
+        private set { _languages = value; OnPropertyChanged(); }
+    }
+
+    public LanguageInfo? SelectedLanguage
+    {
+        get => _selectedLanguage;
+        set { _selectedLanguage = value; OnPropertyChanged(); }
+    }
+
+    public ICommand TranslateCommand { get; }
+    public ICommand TranslateToEnglishCommand { get; }
+    public ICommand TranslateToSelectedLanguageCommand { get; }
+    public ICommand ClearCommand { get; }
+
+    private async Task ExecuteTranslateAsync()
+    {
+        await TranslateTextAsync("ru");
+    }
+
+    private async Task ExecuteTranslateToEnglishAsync()
+    {
+        await TranslateTextAsync("en");
+    }
+
+    private async Task ExecuteTranslateToSelectedLanguageAsync()
+    {
+        if (SelectedLanguage != null)
         {
-            _translationService = new TranslationService();
-            Text = string.Empty;
-            Status = string.Empty;
-
-            Languages = _translationService.GetAllLanguages();
-            SelectedLanguage = Languages.FirstOrDefault(l => l.Code.Equals("ru", StringComparison.OrdinalIgnoreCase))
-                               ?? Languages.FirstOrDefault(l => l.Code.Equals("en", StringComparison.OrdinalIgnoreCase))
-                               ?? Languages.FirstOrDefault();
-
-            TranslateCommand = new RelayCommand(async () => await ExecuteTranslateAsync(), () => !IsTranslating && !string.IsNullOrWhiteSpace(SelectedText));
-            TranslateToEnglishCommand = new RelayCommand(async () => await ExecuteTranslateToEnglishAsync(), () => !IsTranslating && !string.IsNullOrWhiteSpace(SelectedText));
-            TranslateToSelectedLanguageCommand = new RelayCommand(async () => await ExecuteTranslateToSelectedLanguageAsync(), () => !IsTranslating && !string.IsNullOrWhiteSpace(SelectedText) && SelectedLanguage != null);
-            ClearCommand = new RelayCommand(() => ExecuteClear(), () => !IsTranslating && !string.IsNullOrEmpty(OriginalText));
+            await TranslateTextAsync(SelectedLanguage.Code);
         }
+    }
 
-        public string Text
+    private void ExecuteClear()
+    {
+        if (!string.IsNullOrEmpty(OriginalText))
         {
-            get => _text;
-            set { _text = value; OnPropertyChanged(); }
+            ReplaceSelectedText?.Invoke(OriginalText);
+            OriginalText = null;
+            Status = "Текст восстановлен";
         }
+    }
 
-        public string SelectedText
+    private async Task TranslateTextAsync(string targetLanguage)
+    {
+        if (string.IsNullOrWhiteSpace(SelectedText))
+            return;
+
+        IsTranslating = true;
+        Status = "Перевод...";
+
+        try
         {
-            get => _selectedText;
-            set { _selectedText = value; OnPropertyChanged(); }
-        }
-
-        public string? OriginalText
-        {
-            get => _originalText;
-            set { _originalText = value; OnPropertyChanged(); }
-        }
-
-        public bool IsTranslating
-        {
-            get => _isTranslating;
-            set { _isTranslating = value; OnPropertyChanged(); }
-        }
-
-        public string Status
-        {
-            get => _status;
-            set { _status = value; OnPropertyChanged(); }
-        }
-
-        public List<LanguageInfo> Languages
-        {
-            get => _languages;
-            private set { _languages = value; OnPropertyChanged(); }
-        }
-
-        public LanguageInfo? SelectedLanguage
-        {
-            get => _selectedLanguage;
-            set { _selectedLanguage = value; OnPropertyChanged(); }
-        }
-
-        public ICommand TranslateCommand { get; }
-        public ICommand TranslateToEnglishCommand { get; }
-        public ICommand TranslateToSelectedLanguageCommand { get; }
-        public ICommand ClearCommand { get; }
-
-        private async Task ExecuteTranslateAsync()
-        {
-            await TranslateTextAsync("ru");
-        }
-
-        private async Task ExecuteTranslateToEnglishAsync()
-        {
-            await TranslateTextAsync("en");
-        }
-
-        private async Task ExecuteTranslateToSelectedLanguageAsync()
-        {
-            if (SelectedLanguage != null)
+            // Сохраняем оригинал перед первым переводом
+            if (string.IsNullOrEmpty(OriginalText))
             {
-                await TranslateTextAsync(SelectedLanguage.Code);
+                OriginalText = SelectedText;
             }
-        }
 
-        private void ExecuteClear()
-        {
-            if (!string.IsNullOrEmpty(OriginalText))
-            {
-                ReplaceSelectedText?.Invoke(OriginalText);
-                OriginalText = null;
-                Status = "Текст восстановлен";
-            }
-        }
-
-        private async Task TranslateTextAsync(string targetLanguage)
-        {
-            if (string.IsNullOrWhiteSpace(SelectedText))
-                return;
-
-            IsTranslating = true;
-            Status = "Перевод...";
-
+            // В фоновом режиме пытаемся определить язык перед переводом
+            string sourceLangDisplay = "...";
             try
             {
-                // Сохраняем оригинал перед первым переводом
-                if (string.IsNullOrEmpty(OriginalText))
-                {
-                    OriginalText = SelectedText;
-                }
-
-                // В фоновом режиме пытаемся определить язык перед переводом
-                string sourceLangDisplay = "...";
-                try
-                {
-                    var sourceCode = await _translationService.DetectLanguageAsync(SelectedText);
-                    var matchedLang = Languages.FirstOrDefault(l => l.Code.Equals(sourceCode, StringComparison.OrdinalIgnoreCase));
-                    sourceLangDisplay = matchedLang?.Name ?? sourceCode;
-                }
-                catch
-                {
-                    // Игнорируем ошибку автоопределения
-                }
-
-                var targetLangDisplay = Languages.FirstOrDefault(l => l.Code.Equals(targetLanguage, StringComparison.OrdinalIgnoreCase))?.Name ?? targetLanguage;
-
-                var translated = await _translationService.TranslateTextAsync(SelectedText, targetLanguage);
-
-                if (translated.StartsWith("Ошибка:"))
-                {
-                    Status = translated;
-                }
-                else
-                {
-                    ReplaceSelectedText?.Invoke(translated);
-                    Status = $"{sourceLangDisplay} ➔ {targetLangDisplay}";
-                }
+                var sourceCode = await _translationService.DetectLanguageAsync(SelectedText);
+                var matchedLang = Languages.FirstOrDefault(l => l.Code.Equals(sourceCode, StringComparison.OrdinalIgnoreCase));
+                sourceLangDisplay = matchedLang?.Name ?? sourceCode;
             }
-            catch (Exception ex)
+            catch
             {
-                Status = $"Ошибка: {ex.Message}";
+                // Игнорируем ошибку автоопределения
             }
-            finally
+
+            var targetLangDisplay = Languages.FirstOrDefault(l => l.Code.Equals(targetLanguage, StringComparison.OrdinalIgnoreCase))?.Name ?? targetLanguage;
+
+            var translated = await _translationService.TranslateTextAsync(SelectedText, targetLanguage);
+
+            if (translated.StartsWith("Ошибка:"))
             {
-                IsTranslating = false;
+                Status = translated;
+            }
+            else
+            {
+                ReplaceSelectedText?.Invoke(translated);
+                Status = $"{sourceLangDisplay} ➔ {targetLangDisplay}";
             }
         }
-
-        // Этот метод будет вызываться из code-behind для замены текста в AvalonEdit
-        public Action<string>? ReplaceSelectedText { get; set; }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected void OnPropertyChanged([CallerMemberName] string? name = null)
+        catch (Exception ex)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            Status = $"Ошибка: {ex.Message}";
+        }
+        finally
+        {
+            IsTranslating = false;
         }
     }
 
-    public class RelayCommand : ICommand
+    // Этот метод будет вызываться из code-behind для замены текста в AvalonEdit
+    public Action<string>? ReplaceSelectedText { get; set; }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected void OnPropertyChanged([CallerMemberName] string? name = null)
     {
-        private readonly Func<Task>? _executeAsync;
-        private readonly Action? _executeSync;
-        private readonly Func<bool>? _canExecute;
-
-        public RelayCommand(Func<Task> executeAsync, Func<bool>? canExecute = null)
-        {
-            _executeAsync = executeAsync;
-            _canExecute = canExecute;
-        }
-
-        // ✅ Для синхронных команд (добавить этот конструктор)
-        public RelayCommand(Action executeSync, Func<bool>? canExecute = null)
-        {
-            _executeSync = executeSync;
-            _canExecute = canExecute;
-        }
-
-        public bool CanExecute(object? parameter) => _canExecute == null || _canExecute();
-
-        public async void Execute(object? parameter)
-        {
-            if (_executeAsync != null)
-                await _executeAsync();
-            else if (_executeSync != null)
-                _executeSync();
-        }
-
-        public event EventHandler? CanExecuteChanged
-        {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
-        }
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
+}
+
+public class RelayCommand : ICommand
+{
+    private readonly Func<Task>? _executeAsync;
+    private readonly Action? _executeSync;
+    private readonly Func<bool>? _canExecute;
+
+    public RelayCommand(Func<Task> executeAsync, Func<bool>? canExecute = null)
+    {
+        _executeAsync = executeAsync;
+        _canExecute = canExecute;
+    }
+
+    // ✅ Для синхронных команд (добавить этот конструктор)
+    public RelayCommand(Action executeSync, Func<bool>? canExecute = null)
+    {
+        _executeSync = executeSync;
+        _canExecute = canExecute;
+    }
+
+    public bool CanExecute(object? parameter) => _canExecute == null || _canExecute();
+
+    public async void Execute(object? parameter)
+    {
+        if (_executeAsync != null)
+            await _executeAsync();
+        else if (_executeSync != null)
+            _executeSync();
+    }
+
+    public event EventHandler? CanExecuteChanged
+    {
+        add { CommandManager.RequerySuggested += value; }
+        remove { CommandManager.RequerySuggested -= value; }
+    }
+}
 

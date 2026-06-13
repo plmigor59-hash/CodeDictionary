@@ -1,5 +1,3 @@
-using CodeDictionary;
-using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -121,7 +119,7 @@ public class SnackbarNotification
             _popup.Child = null;
             _popup = null;
         }
-        
+
         _snackbarBorder = null;
     }
 }

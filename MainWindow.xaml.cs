@@ -129,7 +129,7 @@ public partial class MainWindow : Window
         if (items.Any())
         {
             _completionWindow = new CompletionWindow(CodeTextBox.TextArea);
-            
+
             // Применяем цвета темы к окну автодополнения
             var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
             var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
@@ -138,7 +138,7 @@ public partial class MainWindow : Window
             _completionWindow.Background = background;
             _completionWindow.Foreground = foreground;
             _completionWindow.BorderBrush = border;
-            
+
             // Установка цветов для самого списка внутри окна
             if (_completionWindow.CompletionList != null)
             {
@@ -248,7 +248,7 @@ public partial class MainWindow : Window
 
         InitializeComponent();
         LoadWindowState();
-        
+
         // Применяем тему СРАЗУ после создания компонентов, до отображения окна
         ApplyTheme(_appState.IsLightTheme ? AppTheme.Light : AppTheme.Dark);
         ThemeCheckBox.IsChecked = _appState.IsLightTheme;
@@ -294,7 +294,7 @@ public partial class MainWindow : Window
         };
         TitleTextBox.TextChanged += EntryField_TextChanged;
         TagsTextBox.TextChanged += EntryField_TextChanged;
-        
+
         CodeTextBox.TextArea.TextEntering += CodeTextBox_TextEntering;
         CodeTextBox.TextArea.KeyDown += CodeTextBox_KeyDown;
 
@@ -306,20 +306,21 @@ public partial class MainWindow : Window
         CodeTextBox.TextArea.LeftMargins.Insert(0, _bookmarkMargin);
         _bookmarkMargin.MouseDown += Margin_MouseDown;
 
-        CodeTextBox.TextArea.Loaded += (s, e) => {
+        CodeTextBox.TextArea.Loaded += (s, e) =>
+        {
             var margin = CodeTextBox.TextArea.LeftMargins.OfType<ICSharpCode.AvalonEdit.Editing.LineNumberMargin>().FirstOrDefault();
             if (margin != null)
             {
                 margin.MouseDown += Margin_MouseDown;
             }
         };
-        
+
         // Add hotkeys
         CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ToggleBookmarkAtCaret), new KeyGesture(Key.F2, ModifierKeys.Alt)));
         CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(GoToNextBookmark), new KeyGesture(Key.Down, ModifierKeys.Control | ModifierKeys.Alt)));
         CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(GoToPreviousBookmark), new KeyGesture(Key.Up, ModifierKeys.Control | ModifierKeys.Alt)));
         CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ShowBookmarkList), new KeyGesture(Key.F3)));
-        
+
         // Help and Global shortcuts
         this.InputBindings.Add(new InputBinding(new RelayCommand(ToggleHelp), new KeyGesture(Key.F1)));
         this.InputBindings.Add(new InputBinding(new RelayCommand(CloseHelp), new KeyGesture(Key.Escape)));
@@ -452,32 +453,32 @@ public partial class MainWindow : Window
 
         // Get the position relative to the TextView to account for scrolling
         var pos = e.GetPosition(textView);
-        
+
         // Adjust Y position by the vertical offset to get the correct visual line
         var visualLine = textView.GetVisualLineFromVisualTop(pos.Y + textView.VerticalOffset);
-        
+
         if (visualLine != null)
         {
-           int lineNumber = visualLine.FirstDocumentLine.LineNumber;
-           
-           if (e.ChangedButton == MouseButton.Left)
-           {
+            int lineNumber = visualLine.FirstDocumentLine.LineNumber;
+
+            if (e.ChangedButton == MouseButton.Left)
+            {
                 ToggleBookmark(lineNumber);
                 e.Handled = true;
-           }
-           else if (e.ChangedButton == MouseButton.Right)
-           {
+            }
+            else if (e.ChangedButton == MouseButton.Right)
+            {
                 var contextMenu = new ContextMenu();
                 var tab = GetActiveEditorTab();
                 bool isBookmarked = tab?.Bookmarks.Contains(lineNumber) ?? false;
-                
+
                 var menuItem = new MenuItem { Header = isBookmarked ? "Удалить закладку" : "Добавить закладку" };
                 menuItem.Click += (s, args) => ToggleBookmark(lineNumber);
                 contextMenu.Items.Add(menuItem);
-                
+
                 contextMenu.IsOpen = true;
                 e.Handled = true;
-           }
+            }
         }
     }
 
@@ -570,7 +571,7 @@ public partial class MainWindow : Window
         LoadSegmentsIntoTab(tab, entry);
         _editorTabs.Add(tab);
         ActivateEditorTab(tab);
-       
+
         return tab;
     }
 
@@ -618,10 +619,10 @@ public partial class MainWindow : Window
             .Where(tag => !string.IsNullOrWhiteSpace(tag))
             .ToList();
         entry.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
-        
+
         // Sync bookmarks
         entry.Bookmarks = activeTab.Bookmarks.ToList();
-        
+
         activeTab.Title = entry.Title;
         activeTab.SyntaxName = entry.Syntax;
         activeTab.IsDirty = true;
@@ -725,16 +726,16 @@ public partial class MainWindow : Window
                 {
                     FoldingManager.Uninstall(_foldingManager);
                 }
-                
+
                 // Remove old renderer
                 if (_bookmarkRenderer != null)
                 {
-                   CodeTextBox.TextArea.TextView.BackgroundRenderers.Remove(_bookmarkRenderer);
+                    CodeTextBox.TextArea.TextView.BackgroundRenderers.Remove(_bookmarkRenderer);
                 }
 
                 CodeTextBox.Document = tab.Document;
                 _foldingManager = FoldingManager.Install(CodeTextBox.TextArea);
-                
+
                 // Add new renderer
                 _bookmarkRenderer = new BookmarkBackgroundRenderer(CodeTextBox.TextArea.TextView, () => tab.Bookmarks.ToList());
                 CodeTextBox.TextArea.TextView.BackgroundRenderers.Add(_bookmarkRenderer);
@@ -1625,7 +1626,7 @@ public partial class MainWindow : Window
 
 
         UpdateCodeEditorColors(selected);
-       
+
     }
 
     private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1721,7 +1722,7 @@ public partial class MainWindow : Window
 
             _suppressSyntaxSelectionChange = true;
             var currentSyntax = SyntaxHighlightingComboBox?.SelectedItem?.ToString();
-            
+
             SyntaxHighlightingComboBox?.Items.Clear();
             if (theme == AppTheme.Dark)
             {
@@ -1754,10 +1755,10 @@ public partial class MainWindow : Window
             // Restore selection or set default
             if (!string.IsNullOrEmpty(currentSyntax) && SyntaxHighlightingComboBox != null)
             {
-                var newSyntaxName = theme == AppTheme.Dark 
+                var newSyntaxName = theme == AppTheme.Dark
                     ? currentSyntax.Replace("Стандартная", "Темная").Replace("Standart", "Dark")
                     : currentSyntax.Replace("Темная", "Стандартная").Replace("Dark", "Standart");
-                
+
                 foreach (var item in SyntaxHighlightingComboBox.Items)
                 {
                     if (item?.ToString() == newSyntaxName || item?.ToString() == currentSyntax)
@@ -1767,7 +1768,7 @@ public partial class MainWindow : Window
                     }
                 }
             }
-            
+
             if (SyntaxHighlightingComboBox != null && SyntaxHighlightingComboBox.SelectedItem == null && SyntaxHighlightingComboBox.Items.Count > 1)
             {
                 SyntaxHighlightingComboBox.SelectedIndex = 1;
@@ -1797,7 +1798,7 @@ public partial class MainWindow : Window
         CodeTextBox.LineNumbersForeground = lineNumbers;
         CodeTextBox.BorderBrush = border;
     }
-    
+
     private void FormatCSharpCode_Click(object sender, RoutedEventArgs e)
     {
         var selectedSyntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
@@ -1832,7 +1833,7 @@ public partial class MainWindow : Window
         }
     }
 
-    
+
 
     private void RefreshCategoryFilter()
     {
@@ -2640,7 +2641,7 @@ public partial class MainWindow : Window
         {
             DescriptionBrowser.Visibility = Visibility.Collapsed;
             DescriptionSplitter.Visibility = Visibility.Collapsed;
-          
+
 
             DescriptionRow.Height = new GridLength(0);
             ToggleDescriptionButton.Content = " ▼ Развернуть ";
@@ -2649,7 +2650,7 @@ public partial class MainWindow : Window
         {
             DescriptionBrowser.Visibility = Visibility.Visible;
             DescriptionSplitter.Visibility = Visibility.Visible;
-         
+
             DescriptionRow.Height = new GridLength(150);
             ToggleDescriptionButton.Content = " ▲ Свернуть ";
         }

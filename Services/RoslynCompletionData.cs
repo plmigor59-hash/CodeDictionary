@@ -2,7 +2,6 @@ using ICSharpCode.AvalonEdit.CodeCompletion;
 using Material.Icons;
 using Material.Icons.WPF;
 using Microsoft.CodeAnalysis.Completion;
-using System;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -28,7 +27,7 @@ namespace CodeDictionary.Services
             get
             {
                 var stack = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
-                
+
                 // Определяем цвета на основе темы
                 var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
 

@@ -1,10 +1,7 @@
-using System.Windows;
-using System.Windows.Media;
 using ICSharpCode.AvalonEdit.Editing;
 using ICSharpCode.AvalonEdit.Rendering;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Windows;
+using System.Windows.Media;
 
 namespace CodeDictionary;
 
@@ -58,7 +55,7 @@ public class BookmarkMargin : AbstractMargin
             if (bookmarks.Contains(lineNumber))
             {
                 double y = visualLine.VisualTop - textView.VerticalOffset;
-                
+
                 // Draw a simple ribbon shape
                 var geometry = new StreamGeometry();
                 using (var ctx = geometry.Open())
@@ -70,7 +67,7 @@ public class BookmarkMargin : AbstractMargin
                     ctx.LineTo(new Point(4, y + 16), true, false);
                 }
                 geometry.Freeze();
-                
+
                 drawingContext.DrawGeometry(brush, null, geometry);
             }
         }

@@ -1,6 +1,6 @@
 using ICSharpCode.AvalonEdit.Rendering;
-using System.Windows.Media;
 using System.Windows;
+using System.Windows.Media;
 
 namespace CodeDictionary;
 
@@ -31,16 +31,16 @@ public class BookmarkBackgroundRenderer : IBackgroundRenderer
 
             var line = textView.Document.GetLineByNumber(lineNumber);
             var visualLine = textView.VisualLines.FirstOrDefault(vl => vl.FirstDocumentLine.LineNumber == lineNumber);
-            
-            
+
+
 
 
             if (visualLine != null)
             {
                 var rect = new Rect(0, visualLine.VisualTop - textView.VerticalOffset, textView.ActualWidth, visualLine.Height);
-               
-                   drawingContext.DrawRectangle(new SolidColorBrush(Color.FromArgb(183, 92, 89, 238)), null, rect);
-               
+
+                drawingContext.DrawRectangle(new SolidColorBrush(Color.FromArgb(183, 92, 89, 238)), null, rect);
+
             }
         }
     }

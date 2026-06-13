@@ -1,7 +1,6 @@
+using CodeDictionary.Models;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using CodeDictionary.Models;
 
 namespace CodeDictionary;
 
@@ -14,7 +13,7 @@ public partial class BookmarkListWindow : Window
     {
         _tab = tab;
         _navigateToLine = navigateToLine;
-        
+
         InitializeComponent();
         LoadBookmarks();
     }
@@ -25,10 +24,10 @@ public partial class BookmarkListWindow : Window
         this.Width = 500;
         this.Height = 500;
         this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-        
+
         // Use resources from MainWindow/App
         this.SetResourceReference(Window.BackgroundProperty, "WindowBackground");
-        
+
         var grid = new Grid();
         this.Content = grid;
 
@@ -37,8 +36,9 @@ public partial class BookmarkListWindow : Window
         listbox.SetResourceReference(ListBox.ForegroundProperty, "TextPrimaryBrush");
         listbox.BorderThickness = new Thickness(0);
         listbox.Margin = new Thickness(8);
-        
-        listbox.MouseDoubleClick += (s, e) => {
+
+        listbox.MouseDoubleClick += (s, e) =>
+        {
             if (listbox.SelectedItem is BookmarkItem item)
             {
                 _navigateToLine(item.LineNumber);
@@ -57,7 +57,8 @@ public partial class BookmarkListWindow : Window
     private void LoadBookmarks()
     {
         var listbox = (ListBox)((Grid)this.Content).Children[0];
-        var bookmarks = _tab.Bookmarks.OrderBy(b => b).Select(b => {
+        var bookmarks = _tab.Bookmarks.OrderBy(b => b).Select(b =>
+        {
             var line = _tab.Document.GetLineByNumber(b);
             var text = _tab.Document.GetText(line.Offset, line.Length).Trim();
             if (text.Length > 50) text = text.Substring(0, 47) + "...";
