@@ -1,6 +1,7 @@
 using CodeDictionary.Models;
 using CodeDictionary.Properties;
 using CodeDictionary.Services;
+using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
@@ -70,6 +71,9 @@ public partial class MainWindow : Window
 
 
 
+    private readonly RoslynCompletionService _roslynCompletionService;
+    private CompletionWindow? _completionWindow;
+
     private HashSet<string> _expandedCategories = new();
 
     private void SaveExpansionState()
@@ -78,6 +82,76 @@ public partial class MainWindow : Window
         if (EntriesTreeView.ItemsSource is IEnumerable<CategoryNode> nodes)
         {
             SaveExpansionStateRecursive(nodes);
+        }
+    }
+
+    private void CodeTextBox_TextEntering(object sender, TextCompositionEventArgs e)
+    {
+        if (e.Text.Length > 0 && _completionWindow != null)
+        {
+            if (!char.IsLetterOrDigit(e.Text[0]))
+            {
+                _completionWindow.CompletionList.RequestInsertion(e);
+            }
+        }
+
+        if (e.Text == ".")
+        {
+            var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+            if (syntax != null && syntax.Contains("C#"))
+            {
+                // Задержка необходима, чтобы символ '.' был добавлен в документ
+                // перед тем, как Roslyn проанализирует контекст
+                Dispatcher.BeginInvoke(new Action(() => ShowCompletion()));
+            }
+        }
+    }
+
+    private void CodeTextBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Space && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+            if (syntax != null && syntax.Contains("C#"))
+            {
+                ShowCompletion();
+                e.Handled = true;
+            }
+        }
+    }
+
+    private async void ShowCompletion()
+    {
+        var code = CodeTextBox.Text;
+        var position = CodeTextBox.CaretOffset;
+        var items = await _roslynCompletionService.GetCompletionItemsAsync(code, position);
+
+        if (items.Any())
+        {
+            _completionWindow = new CompletionWindow(CodeTextBox.TextArea);
+            
+            // Применяем цвета темы к окну автодополнения
+            var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
+            var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
+            var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
+
+            _completionWindow.Background = background;
+            _completionWindow.Foreground = foreground;
+            _completionWindow.BorderBrush = border;
+            
+            // Установка цветов для самого списка внутри окна
+            if (_completionWindow.CompletionList != null)
+            {
+                _completionWindow.CompletionList.Background = background;
+                _completionWindow.CompletionList.Foreground = foreground;
+            }
+
+            foreach (var item in items)
+            {
+                _completionWindow.CompletionList.CompletionData.Add(new RoslynCompletionData(item, _roslynCompletionService, code));
+            }
+            _completionWindow.Closed += (s, e) => _completionWindow = null;
+            _completionWindow.Show();
         }
     }
 
@@ -187,6 +261,8 @@ public partial class MainWindow : Window
         _isNewRecordDescription = false;
 
 
+        _roslynCompletionService = new RoslynCompletionService();
+
         LoadCustomHighlighting();
 
         CodeTextBox.TextArea.TextView.LineTransformers.Add(new CustomColorTransformer(() => _textSegments));
@@ -219,6 +295,9 @@ public partial class MainWindow : Window
         TitleTextBox.TextChanged += EntryField_TextChanged;
         TagsTextBox.TextChanged += EntryField_TextChanged;
         
+        CodeTextBox.TextArea.TextEntering += CodeTextBox_TextEntering;
+        CodeTextBox.TextArea.KeyDown += CodeTextBox_KeyDown;
+
         // Bookmark margin handler
         _bookmarkMargin = new BookmarkMargin(
             () => GetActiveEditorTab()?.Bookmarks ?? new HashSet<int>(),

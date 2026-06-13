@@ -15,9 +15,27 @@
     ResizeMode="CanResize"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
+    UseLayoutRounding="True"
+    SnapsToDevicePixels="True"
     AllowDrop="True"
     Drop="Window_Drop"
     mc:Ignorable="d">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" 
+                      ResizeBorderThickness="8" 
+                      CornerRadius="0" 
+                      GlassFrameThickness="0" />
+    </WindowChrome.WindowChrome>
+    <Window.Style>
+        <Style TargetType="Window">
+            <Setter Property="BorderThickness" Value="0" />
+            <Style.Triggers>
+                <Trigger Property="WindowState" Value="Maximized">
+                    <Setter Property="Padding" Value="8" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Style>
     <Window.Resources>
         <!-- Specialized local styles only -->
         <Style x:Key="EditorTabItemStyle" TargetType="TabItem">
@@ -82,7 +100,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" Margin="8,0">
-                    <TextBlock Text="📚" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="📚" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="Orange"/>
                     <TextBlock x:Name="WindowTitle" Text="Справочник кода" 
                                VerticalAlignment="Center" FontWeight="SemiBold" 
                                Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12"/>
