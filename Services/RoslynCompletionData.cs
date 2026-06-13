@@ -128,7 +128,21 @@ namespace CodeDictionary.Services
         public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
         {
             var span = _item.Span;
-            textArea.Document.Replace(span.Start, span.Length, _item.DisplayText);
+            string textToInsert = _item.DisplayText;
+            bool isMethod = _item.Tags.Contains("Method");
+
+            if (isMethod)
+            {
+                textToInsert += "()";
+            }
+
+            textArea.Document.Replace(span.Start, span.Length, textToInsert);
+
+            if (isMethod)
+            {
+                // Ставим курсор внутри скобок
+                textArea.Caret.Offset = span.Start + _item.DisplayText.Length + 1;
+            }
         }
     }
 }

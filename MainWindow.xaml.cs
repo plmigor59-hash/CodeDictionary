@@ -148,10 +148,10 @@ public partial class MainWindow : Window
 
             foreach (var item in items)
             {
-                _completionWindow.CompletionList.CompletionData.Add(new RoslynCompletionData(item, _roslynCompletionService, code));
+                _completionWindow?.CompletionList?.CompletionData.Add(new RoslynCompletionData(item, _roslynCompletionService, code));
             }
-            _completionWindow.Closed += (s, e) => _completionWindow = null;
-            _completionWindow.Show();
+            _completionWindow?.Closed += (s, e) => _completionWindow = null;
+            _completionWindow?.Show();
         }
     }
 
