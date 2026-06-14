@@ -8,11 +8,11 @@
     xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="Справочник кода"
-    Width="1200"
-    Height="700"
+    Width="800"
+    Height="400"
     AllowsTransparency="False"
     Background="{DynamicResource WindowBackground}"
-    ResizeMode="CanResize"
+    ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
     UseLayoutRounding="True"
@@ -141,7 +141,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Search and Theme Toggle -->
-                <StackPanel Grid.Row="0" Margin="8">
+                <StackPanel Grid.Row="0" Margin="8" Background="{DynamicResource SidePanelBackground}">
                     <Grid Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -154,6 +154,7 @@
                     </Grid>
                     
                     <CheckBox x:Name="ThemeCheckBox" Content="Светлая тема" 
+                              HorizontalAlignment="Right"
                               Checked="ThemeCheckBox_Changed" Unchecked="ThemeCheckBox_Changed"
                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"/>
                 </StackPanel>

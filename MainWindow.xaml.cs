@@ -1409,15 +1409,47 @@ public partial class MainWindow : Window
         {
             // Двойной клик - развернуть/свернуть
             if (WindowState == WindowState.Maximized)
-                WindowState = WindowState.Normal;
+
+            { WindowState = WindowState.Normal;
+                Width = 1200;
+                Height = 800;
+            }
+            
             else
                 WindowState = WindowState.Maximized;
-        }
+            }
         else
         {
             // Одиночный клик - перетаскивание
+            //DragMove();
+        }
+
+
+        if (e.ClickCount == 1 && e.ButtonState == MouseButtonState.Pressed)
+        {
+            // Если окно развернуто на весь экран
+            if (WindowState == WindowState.Maximized)
+            {
+                // Сохраняем позицию курсора относительно окна
+                var mouseX = e.GetPosition(this).X;
+
+                // Вычисляем процентное смещение курсора от ширины окна
+                double percent = mouseX / ActualWidth;
+
+                // Переводим окно в нормальное состояние
+                WindowState = WindowState.Normal;
+                Width = 1200;
+                Height = 800;
+
+                // Перемещаем окно так, чтобы курсор остался примерно на том же месте
+                Left = System.Windows.Forms.Cursor.Position.X - (RestoreBounds.Width * percent);
+                Top = System.Windows.Forms.Cursor.Position.Y - 10; // чуть ниже верхней границы
+            }
+
+            // Запускаем стандартное перемещение окна
             DragMove();
         }
+
     }
 
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)
@@ -1440,6 +1472,12 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+
+        var workingArea = SystemParameters.WorkArea;
+        this.MaxWidth = workingArea.Width;
+        this.MaxHeight = workingArea.Height;
+        this.Left = workingArea.Left + (workingArea.Width - this.Width) / 2;
+        this.Top = workingArea.Top + (workingArea.Height - this.Height) / 2;
 
 
         _data = await _dataService.LoadDataAsync();
@@ -2333,9 +2371,6 @@ public partial class MainWindow : Window
         // Например, перерисовка TextView
         CodeTextBox.TextArea.TextView.Redraw();
     }
-
-
-
 
 
 
