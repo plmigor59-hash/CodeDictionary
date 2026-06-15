@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace CodeDictionary.Analysis
 {
     public sealed class BslSyntaxError
@@ -19,7 +15,7 @@ namespace CodeDictionary.Analysis
         public string Type { get; set; } = string.Empty;
         public int Line { get; set; }
         public int Column { get; set; }
-        
+
         // Useful for UI display
         public string Position => $"Стр. {Line}, Кол. {Column}";
     }

@@ -3,6 +3,7 @@ using CodeDictionary.Models;
 using CodeDictionary.Properties;
 using CodeDictionary.Services;
 using CodeDictionary.SyntaxChecking;
+using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
@@ -88,7 +89,7 @@ public partial class MainWindow : Window
 
 
     private readonly RoslynCompletionService _roslynCompletionService;
-  
+
     private HashSet<string> _expandedCategories = new();
 
     private void SaveExpansionState()
@@ -132,8 +133,180 @@ public partial class MainWindow : Window
                 ShowCompletion();
                 e.Handled = true;
             }
+
+            if (syntax != null && syntax.Contains("1C"))
+            {
+                e.Handled = true;
+                ShowCompletion1C(string.Empty, true);
+            }
+
+
         }
     }
+
+    private void AddStandardSymbols(System.Collections.Generic.IList<ICompletionData> data)
+    {
+        string[] keywords = { 
+                // Русский вариант
+                "Процедура", "Функция", "КонецПроцедуры", "КонецФункции",
+                "Если", "Тогда", "Иначе", "ИначеЕсли", "КонецЕсли",
+                "Для", "Каждого", "Из", "По", "Цикл", "КонецЦикла",
+                "Пока", "Прервать", "Продолжить", "Возврат",
+                "Попытка", "Исключение", "КонецПопытки", "ВызватьИсключение",
+                "Перем", "Знач", "Экспорт", "Истина", "Ложь", "Неопределено", "Null",
+                "Новый", "Перейти", "КонецПротокола", "Выполнить",
+
+                // Английский вариант (синонимы)
+                "Procedure", "Function", "EndProcedure", "EndFunction",
+                "If", "Then", "Else", "ElsIf", "EndIf",
+                "For", "Each", "In", "To", "Do", "EndDo",
+                "While", "Break", "Continue", "Return",
+                "Try", "Except", "EndTry", "Raise",
+                "Var", "Val", "Export", "True", "False", "Undefined",
+                "New", "And", "Or", "Not"
+            };
+
+        foreach (var kw in keywords)
+        {
+            if (!data.Any(d => d.Text.Equals(kw, StringComparison.OrdinalIgnoreCase)))
+            {
+                data.Add(new BslCompletionData(kw, "Ключевое слово", "Keyword"));
+            }
+        }
+    }
+
+    private static bool IsIdentifierChar(char c)
+    {
+        return char.IsLetterOrDigit(c) || c == '_' || c == '.';
+    }
+
+    private string GetWordAtOffset(int offset)
+    {
+        var document = CodeTextBox.Document;
+        if (document.TextLength == 0) return string.Empty;
+
+        if (offset >= document.TextLength)
+            offset = document.TextLength - 1;
+
+        if (!IsIdentifierChar(document.GetCharAt(offset)) && offset > 0 && IsIdentifierChar(document.GetCharAt(offset - 1)))
+            offset--;
+
+        if (!IsIdentifierChar(document.GetCharAt(offset)))
+            return string.Empty;
+
+        int start = offset;
+        while (start > 0 && IsIdentifierChar(document.GetCharAt(start - 1)))
+            start--;
+
+        int end = offset;
+        while (end < document.TextLength - 1 && IsIdentifierChar(document.GetCharAt(end + 1)))
+            end++;
+
+        return document.GetText(start, end - start + 1);
+    }
+
+
+    private void OnTextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
+     {
+         // Добавьте эту строку для отладки
+         System.Diagnostics.Debug.WriteLine($"OnTextEntered: {e.Text}");
+    
+         if (e.Text.Length > 0 && (char.IsLetter(e.Text[0]) || e.Text[0] == '_' || e.Text[0] == '.'))
+         {
+            ShowCompletion1C(e.Text, false);
+         }
+    }
+
+
+    private void ShowCompletion1C(string enteredText, bool controlSpace)
+    {
+        // Сначала собираем все возможные данные
+        var allData = new List<ICompletionData>();
+
+        // Добавляем символы из анализатора
+        if (_analyzer is CodeAnalyzer coreAnalyzer)
+        {
+            foreach (var symbol in coreAnalyzer.Symbols)
+            {
+                if (!allData.Any(d => d.Text == symbol.Name))
+                {
+                    allData.Add(new BslCompletionData(symbol.Name, symbol.Name, symbol.Type));
+                }
+            }
+        }
+
+        // Добавляем стандартные ключевые слова BSL
+        AddStandardSymbols(allData);
+
+        // Если это автоматический вызов (не через Ctrl+Space), фильтруем список
+        var filteredList = allData.ToList();
+        if (!controlSpace && !string.IsNullOrEmpty(enteredText))
+        {
+            // Получаем слово целиком до курсора для более точной фильтрации
+            string currentWord = GetWordAtOffset(CodeTextBox.CaretOffset);
+            if (!string.IsNullOrEmpty(currentWord))
+            {
+                filteredList = allData.Where(d => d.Text.StartsWith(currentWord, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+        }
+
+        if (filteredList.Any())
+        {
+            if (_completionWindow == null)
+            {
+                _completionWindow = new CompletionWindow(CodeTextBox.TextArea);
+                
+                // Применяем цвета темы при создании окна
+                var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
+                var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
+                var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
+                
+                _completionWindow.Background = background;
+                _completionWindow.Foreground = foreground;
+                _completionWindow.BorderBrush = border;
+                
+                if (_completionWindow.CompletionList != null)
+                {
+                    _completionWindow.CompletionList.Background = background;
+                    _completionWindow.CompletionList.Foreground = foreground;
+                }
+
+                _completionWindow.Closed += delegate { _completionWindow = null; };
+            }
+            
+            var data = _completionWindow.CompletionList.CompletionData;
+
+            // Очищаем существующие данные, так как мы будем добавлять новые
+            data.Clear();
+
+            foreach (var item in filteredList.OrderBy(d => d.Text))
+            {
+                data.Add(item);
+            }
+
+            if (_completionWindow.Visibility != Visibility.Visible)
+            {
+                _completionWindow.Show();
+            }
+
+            // В AvalonEdit CompletionList сам подсветит лучшее совпадение при вводе, 
+            // но для надежности укажем текущий префикс
+            if (!controlSpace && !string.IsNullOrEmpty(enteredText))
+            {
+                _completionWindow.CompletionList.SelectItem(enteredText);
+            }
+        }
+        else
+        {
+            // Если совпадений нет, закрываем окно
+            if (_completionWindow != null)
+            {
+                _completionWindow.Close();
+                _completionWindow = null;
+            }
+        }
+    }
+
 
     private async void ShowCompletion()
     {
@@ -297,6 +470,7 @@ public partial class MainWindow : Window
 
         CodeTextBox.TextArea.TextView.MouseHover += OnTextViewMouseHover;
         CodeTextBox.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
+        CodeTextBox.TextArea.TextEntered += OnTextEntered;
 
         // Инициализируем список шрифтов и настроек подсветки
         InitializeFontSettings();
@@ -321,7 +495,9 @@ public partial class MainWindow : Window
         TagsTextBox.TextChanged += EntryField_TextChanged;
 
         CodeTextBox.TextArea.TextEntering += CodeTextBox_TextEntering;
+        CodeTextBox.TextArea.TextEntered += OnTextEntered; // Subscribe to TextEntered
         CodeTextBox.TextArea.KeyDown += CodeTextBox_KeyDown;
+      
 
         // Bookmark margin handler
         _bookmarkMargin = new BookmarkMargin(
@@ -1452,14 +1628,15 @@ public partial class MainWindow : Window
             // Двойной клик - развернуть/свернуть
             if (WindowState == WindowState.Maximized)
 
-            { WindowState = WindowState.Normal;
+            {
+                WindowState = WindowState.Normal;
                 Width = 1200;
                 Height = 800;
             }
-            
+
             else
                 WindowState = WindowState.Maximized;
-            }
+        }
         else
         {
             // Одиночный клик - перетаскивание
@@ -1693,7 +1870,7 @@ public partial class MainWindow : Window
         {
             return;
         }
-      
+
 
         var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
         if (selected != null)
@@ -1702,7 +1879,7 @@ public partial class MainWindow : Window
         }
         else { }
 
-       
+
     }
 
     private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1861,8 +2038,8 @@ public partial class MainWindow : Window
         }
 
 
-       var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
-       SelectSyntax(selected!);
+        var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
+        SelectSyntax(selected!);
 
     }
 
@@ -3968,9 +4145,9 @@ public partial class MainWindow : Window
         // Если панель была закрыта вручную, мы её не открываем автоматически 
         // до следующего сеанса анализа или изменения состояния (опционально)
         // Но здесь мы просто следуем логике: если есть ошибки и анализ включен - показываем.
-        
+
         ErrorListGrid.ItemsSource = shouldShow ? result.Errors : null;
-        
+
         // Если ошибок нет - всегда скрываем
         if (!shouldShow)
         {

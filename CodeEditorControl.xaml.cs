@@ -53,8 +53,9 @@ namespace CodeDictionary
 
             // Настройка сворачивания
             _foldingManager = FoldingManager.Install(_textEditor.TextArea);
-            
-            var foldingUpdateTimer = new DispatcherTimer(TimeSpan.FromSeconds(2), DispatcherPriority.Background, (s, e) => {
+
+            var foldingUpdateTimer = new DispatcherTimer(TimeSpan.FromSeconds(2), DispatcherPriority.Background, (s, e) =>
+            {
                 UpdateFoldings();
             }, Dispatcher.CurrentDispatcher);
 
@@ -86,6 +87,7 @@ namespace CodeDictionary
 
         private void OnTextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
         {
+            System.Diagnostics.Debug.WriteLine($"OnTextEntered: {e.Text}");
             if (e.Text.Length > 0 && (char.IsLetter(e.Text[0]) || e.Text[0] == '_' || e.Text[0] == '.'))
             {
                 ShowCompletion(e.Text, false);
@@ -94,8 +96,6 @@ namespace CodeDictionary
 
         private void ShowCompletion(string enteredText, bool controlSpace)
         {
-            if (_completionWindow != null) return;
-
             // Сначала собираем все возможные данные
             var allData = new List<ICompletionData>();
 
@@ -128,22 +128,41 @@ namespace CodeDictionary
 
             if (filteredList.Any())
             {
-                _completionWindow = new CompletionWindow(_textEditor.TextArea);
-                IList<ICompletionData> data = _completionWindow.CompletionList.CompletionData;
+                if (_completionWindow == null)
+                {
+                    _completionWindow = new CompletionWindow(_textEditor.TextArea);
+                    _completionWindow.Closed += delegate { _completionWindow = null; };
+                }
+                
+                var data = _completionWindow.CompletionList.CompletionData;
+
+                // Очищаем существующие данные, так как мы будем добавлять новые
+                data.Clear();
 
                 foreach (var item in filteredList.OrderBy(d => d.Text))
                 {
                     data.Add(item);
                 }
 
-                _completionWindow.Show();
-                _completionWindow.Closed += delegate { _completionWindow = null; };
+                if (_completionWindow.Visibility != Visibility.Visible)
+                {
+                    _completionWindow.Show();
+                }
 
                 // В AvalonEdit CompletionList сам подсветит лучшее совпадение при вводе, 
                 // но для надежности укажем текущий префикс
                 if (!controlSpace && !string.IsNullOrEmpty(enteredText))
                 {
                     _completionWindow.CompletionList.SelectItem(enteredText);
+                }
+            }
+            else
+            {
+                // Если совпадений нет, закрываем окно
+                if (_completionWindow != null)
+                {
+                    _completionWindow.Close();
+                    _completionWindow = null;
                 }
             }
         }
@@ -364,7 +383,7 @@ namespace CodeDictionary
             foreach (var line in lines)
             {
                 var trimmed = line.Trim();
-                
+
                 // Уменьшаем отступ, если строка начинается с ключевого слова конца блока
                 var upperLine = trimmed.ToUpper();
                 if (blockEnd.Any(b => upperLine.StartsWith(b.ToUpper())))

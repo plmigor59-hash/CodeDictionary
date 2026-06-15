@@ -134,6 +134,7 @@
                         Width="32"
                         Height="32"
                         Click="MinimizeButton_Click"
+                         Foreground="{DynamicResource TextPrimaryBrush}"
                         Content="─"
                         Style="{StaticResource IconButton}" />
                     <Button
@@ -141,6 +142,7 @@
                         Width="32"
                         Height="32"
                         Click="MaximizeButton_Click"
+                         Foreground="{DynamicResource TextPrimaryBrush}"
                         Content="□"
                         Style="{StaticResource IconButton}" />
                     <Button
@@ -148,6 +150,7 @@
                         Width="32"
                         Height="32"
                         Click="CloseButton_Click"
+                         Foreground="{DynamicResource TextPrimaryBrush}"
                         Content="✕"
                         Style="{StaticResource IconButton}">
                         <Button.Resources>

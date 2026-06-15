@@ -1,14 +1,9 @@
+using CodeDictionary.Analysis;
 using OneScript.Language;
 using OneScript.Language.LexicalAnalysis;
 using OneScript.Language.Sources;
 using OneScript.Language.SyntaxAnalysis;
 using OneScript.Sources;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using CodeDictionary.Analysis;
 
 namespace CodeDictionary.SyntaxChecking
 {
@@ -53,7 +48,7 @@ namespace CodeDictionary.SyntaxChecking
                 {
                     Iterator = iterator
                 };
-     
+
 
                 lexer.UnexpectedCharacterFound += (s, args) =>
                 {
@@ -94,7 +89,7 @@ namespace CodeDictionary.SyntaxChecking
                 {
                     var extractor = new SymbolExtractor();
                     extractor.Visit(parserResult);
-                    
+
                     foreach (var symbol in extractor.Symbols)
                     {
                         newSymbols.Add(symbol);

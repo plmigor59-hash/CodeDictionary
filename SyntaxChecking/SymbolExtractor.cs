@@ -1,11 +1,8 @@
+using CodeDictionary.Analysis;
 using OneScript.Language.LexicalAnalysis;
 using OneScript.Language.SyntaxAnalysis;
 using OneScript.Language.SyntaxAnalysis.AstNodes;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System;
-using CodeDictionary.Analysis;
 
 namespace CodeDictionary.SyntaxChecking
 {
@@ -181,7 +178,7 @@ namespace CodeDictionary.SyntaxChecking
                     Debug.WriteLine($"  >>> Auto-declared variable: {varName}");
                 }
             }
-            base.VisitAssignmentLeftPart(node); 
+            base.VisitAssignmentLeftPart(node);
         }
 
         // Итератор цикла (для циклов For Each)
@@ -198,7 +195,7 @@ namespace CodeDictionary.SyntaxChecking
 
             base.VisitIteratorLoopVariable(node);
         }
-        
+
         // Вспомогательный метод проверки объявления переменной
         private bool IsVariableDeclared(string name)
         {
@@ -208,7 +205,7 @@ namespace CodeDictionary.SyntaxChecking
                 if (scope.Contains(name))
                     return true;
             }
-            
+
             return false;
         }
 
@@ -230,7 +227,7 @@ namespace CodeDictionary.SyntaxChecking
         private void AddSymbol(string name, string type, CodeRange location)
         {
             if (string.IsNullOrWhiteSpace(name)) return;
-            
+
             Symbols.Add(new SymbolInfo
             {
                 Name = name,
@@ -313,7 +310,7 @@ namespace CodeDictionary.SyntaxChecking
             {
                 case "Preprocessor":
                     Debug.WriteLine($"  Skipping preprocessor directive: {nodeType}");
-                    break; 
+                    break;
                 case "CallNode":
                     AnalyzeMethodCall(node);
                     break;

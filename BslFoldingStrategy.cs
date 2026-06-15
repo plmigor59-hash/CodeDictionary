@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
 
@@ -55,7 +52,7 @@ namespace CodeDictionary
                     {
                         // Check if it matches the top of the stack (simplified)
                         var startItem = stack.Pop();
-                        
+
                         // Basic matching logic:
                         // Процедура -> КонецПроцедуры
                         // Функция -> КонецФункции

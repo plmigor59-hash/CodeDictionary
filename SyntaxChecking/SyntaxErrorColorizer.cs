@@ -1,11 +1,7 @@
+using CodeDictionary.Analysis;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Rendering;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
 using System.Windows.Media;
-using CodeDictionary.Analysis;
 
 namespace CodeDictionary.SyntaxChecking
 {
