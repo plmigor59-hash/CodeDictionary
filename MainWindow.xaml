@@ -190,6 +190,7 @@
                 <StackPanel
                     Grid.Row="0"
                     Margin="8"
+                  
                     Background="{DynamicResource SidePanelBackground}">
                     <Grid Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
@@ -198,6 +199,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBox
                             x:Name="SearchBox"
+                            Foreground="{DynamicResource DictTextPrimary}"
                             Style="{StaticResource ModernTextBox}"
                             Tag="Поиск..."
                             TextChanged="SearchBox_TextChanged" />
@@ -206,6 +208,7 @@
                             Margin="4,0,0,0"
                             Click="SearchBox_TextChanged_Click"
                             Content="✕"
+                            Foreground="{DynamicResource DictTextPrimary}"
                             Style="{StaticResource IconButton}"
                             ToolTip="Очистить поиск" />
                     </Grid>
@@ -714,11 +717,13 @@
                             <Button
                                 Click="FindPrevious_Click"
                                 Content="▲"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
                                 Style="{StaticResource IconButton}"
                                 ToolTip="Предыдущее (Shift+F3)" />
                             <Button
                                 Click="FindNext_Click"
                                 Content="▼"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
                                 Style="{StaticResource IconButton}"
                                 ToolTip="Следующее (F3)" />
                             <CheckBox
@@ -734,9 +739,10 @@
                                 x:Name="SearchResultsTextBlock"
                                 MinWidth="40"
                                 Margin="4,0"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 VerticalAlignment="Center"
                                 FontSize="10"
-                                Foreground="{DynamicResource TextSecondaryBrush}" />
+                                 />
                             <CheckBox
                                 x:Name="WordWrapCheckBox"
                                 VerticalAlignment="Center"
@@ -786,6 +792,7 @@
 
                             <Button
                                 Command="{Binding TranslateToSelectedLanguageCommand}"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
                                 Style="{StaticResource IconButton}"
                                 ToolTip="Перевести на выбранный">
                                 <materialIcons:MaterialIcon
@@ -920,7 +927,7 @@
                                 Kind="Close" />
                         </Button>
                     </Grid>
-                   
+
                     <StackPanel
                         x:Name="ErrorListSplitter"
                         Grid.Row="4"

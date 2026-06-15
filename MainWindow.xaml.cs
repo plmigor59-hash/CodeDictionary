@@ -81,6 +81,7 @@ public partial class MainWindow : Window
     private CompletionWindow? _completionWindow;
     private CancellationTokenSource _parseCts = new CancellationTokenSource();
     private readonly DispatcherTimer _debounceTimer;
+    private readonly DispatcherTimer _searchDebounceTimer; // Added timer
     private SyntaxErrorColorizer? _colorizer;
     private TextMarkerService? _markerService;
     /// 
@@ -468,6 +469,13 @@ public partial class MainWindow : Window
             Interval = TimeSpan.FromMilliseconds(500)
         };
         _debounceTimer.Tick += DebounceTimer_Tick;
+        
+        // Инициализация компонента для поиска (Debouncing)
+        _searchDebounceTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(300)
+        };
+        _searchDebounceTimer.Tick += SearchDebounceTimer_Tick;
         
 
         CodeTextBox.TextArea.TextView.MouseHover += OnTextViewMouseHover;
@@ -2168,11 +2176,18 @@ public partial class MainWindow : Window
         }
     }
 
+    private void SearchDebounceTimer_Tick(object? sender, EventArgs e)
+    {
+        _searchDebounceTimer.Stop();
+        RefreshEntriesList();
+    }
+
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (_isInitialized)
         {
-            RefreshEntriesList();
+            _searchDebounceTimer.Stop();
+            _searchDebounceTimer.Start();
         }
     }
 
