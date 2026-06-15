@@ -1547,29 +1547,8 @@ public partial class MainWindow : Window
         SyntaxHighlightingComboBox.SelectedIndex = 0; // По умолчанию 1C или C#, будет определяться при открытии файла
     }
 
-    private void SyntaxHighlightingComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void SelectSyntax(string selected)
     {
-        if (_suppressSyntaxSelectionChange || SyntaxHighlightingComboBox?.SelectedItem == null)
-        {
-            return;
-        }
-
-        var selectedSyntax = SyntaxHighlightingComboBox.SelectedItem.ToString();
-        if (_activeEditorTab != null)
-        {
-            _activeEditorTab.SyntaxName = selectedSyntax;
-            if (_activeEditorTab.Entry != null)
-            {
-                _activeEditorTab.Entry.Syntax = selectedSyntax ?? string.Empty;
-                _activeEditorTab.IsDirty = false;
-            }
-        }
-
-        //ApplySyntaxHighlighting(selectedSyntax);
-        //return;
-
-        var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
-
         if (selected == "Темная C#")
         {
             CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
@@ -1664,7 +1643,24 @@ public partial class MainWindow : Window
 
 
         UpdateCodeEditorColors(selected);
+    }
 
+    private void SyntaxHighlightingComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressSyntaxSelectionChange || SyntaxHighlightingComboBox?.SelectedItem == null)
+        {
+            return;
+        }
+      
+
+        var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
+        if (selected != null)
+        {
+            SelectSyntax(selected);
+        }
+        else { }
+
+       
     }
 
     private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1727,6 +1723,7 @@ public partial class MainWindow : Window
         if (ThemeCheckBox.IsChecked == true)
         {
             ApplyTheme(AppTheme.Light);
+
         }
         else
         {
@@ -1820,6 +1817,11 @@ public partial class MainWindow : Window
         {
             _suppressSyntaxSelectionChange = false;
         }
+
+
+       var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
+       SelectSyntax(selected!);
+
     }
 
     private void UpdateCodeEditorColors(string? selectedSyntax = null)
