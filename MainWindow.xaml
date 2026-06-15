@@ -134,24 +134,24 @@
                         Width="32"
                         Height="32"
                         Click="MinimizeButton_Click"
-                         Foreground="{DynamicResource TextPrimaryBrush}"
                         Content="─"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
                         Style="{StaticResource IconButton}" />
                     <Button
                         x:Name="MaximizeButton"
                         Width="32"
                         Height="32"
                         Click="MaximizeButton_Click"
-                         Foreground="{DynamicResource TextPrimaryBrush}"
                         Content="□"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
                         Style="{StaticResource IconButton}" />
                     <Button
                         x:Name="CloseButton"
                         Width="32"
                         Height="32"
                         Click="CloseButton_Click"
-                         Foreground="{DynamicResource TextPrimaryBrush}"
                         Content="✕"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
                         Style="{StaticResource IconButton}">
                         <Button.Resources>
                             <Style TargetType="Border">
@@ -460,19 +460,23 @@
                         <Button
                             Click="UndoMenuItem_Click"
                             Content="↩"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
                             Style="{StaticResource IconButton}"
                             ToolTip="Отменить" />
                         <Button
                             Click="RedoMenuItem_Click"
                             Content="↪"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
                             Style="{StaticResource IconButton}"
                             ToolTip="Повторить" />
                         <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
                         <Button
                             Click="CopyMenuItem_Click"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
                             Style="{StaticResource IconButton}"
                             ToolTip="Копировать">
+
                             <materialIcons:MaterialIcon
                                 Width="16"
                                 Height="16"
@@ -480,6 +484,7 @@
                         </Button>
                         <Button
                             Click="PasteMenuItem_Click"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
                             Style="{StaticResource IconButton}"
                             ToolTip="Вставить">
                             <materialIcons:MaterialIcon
@@ -674,14 +679,7 @@
 
                         <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
-                        <CheckBox
-                            x:Name="WordWrapCheckBox"
-                            VerticalAlignment="Center"
-                            Checked="WordWrapCheckBox_Changed"
-                            Content="Перенос"
-                            FontSize="11"
-                            Foreground="{DynamicResource TextSecondaryBrush}"
-                            Unchecked="WordWrapCheckBox_Changed" />
+
                     </WrapPanel>
                 </Border>
 
@@ -739,6 +737,14 @@
                                 VerticalAlignment="Center"
                                 FontSize="10"
                                 Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <CheckBox
+                                x:Name="WordWrapCheckBox"
+                                VerticalAlignment="Center"
+                                Checked="WordWrapCheckBox_Changed"
+                                Content="Перенос"
+                                FontSize="11"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Unchecked="WordWrapCheckBox_Changed" />
                         </StackPanel>
 
                         <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
@@ -850,10 +856,12 @@
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1"
                         FontFamily="Consolas"
-                        FontSize="12"
+                        FontSize="14"
                         Foreground="{DynamicResource TextPrimaryBrush}"
+                        HorizontalScrollBarVisibility="Auto"
                         LineNumbersForeground="{DynamicResource TextSecondaryBrush}"
-                        ShowLineNumbers="True">
+                        ShowLineNumbers="True"
+                        VerticalScrollBarVisibility="Auto">
                         <avalonEdit:TextEditor.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Click="CopyMenuItem_Click" Header="Копировать">
@@ -880,9 +888,10 @@
                         x:Name="ErrorListHeader"
                         Grid.Row="2"
                         Background="{DynamicResource SidePanelBackground}"
-                        Visibility="Collapsed">
+                        Visibility="Visible">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Margin="10,2" Orientation="Horizontal">
@@ -911,13 +920,13 @@
                                 Kind="Close" />
                         </Button>
                     </Grid>
-
-                    <GridSplitter
+                   
+                    <StackPanel
                         x:Name="ErrorListSplitter"
-                        Grid.Row="3"
+                        Grid.Row="4"
                         Height="4"
                         HorizontalAlignment="Stretch"
-                        VerticalAlignment="Center"
+                        VerticalAlignment="Stretch"
                         Background="{DynamicResource BorderBrush}"
                         Visibility="Collapsed" />
 
@@ -931,9 +940,9 @@
                         CanUserAddRows="False"
                         HeadersVisibility="Column"
                         IsReadOnly="True"
+                        MouseDoubleClick="ErrorListGrid_MouseDoubleClick"
                         SelectionMode="Single"
-                        Visibility="Collapsed"
-                        MouseDoubleClick="ErrorListGrid_MouseDoubleClick">
+                        Visibility="Collapsed">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Width="30" Header="">
                                 <DataGridTemplateColumn.CellTemplate>

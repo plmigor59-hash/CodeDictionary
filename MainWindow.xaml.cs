@@ -454,6 +454,8 @@ public partial class MainWindow : Window
         LoadCustomHighlighting();
 
         CodeTextBox.TextArea.TextView.LineTransformers.Add(new CustomColorTransformer(() => _textSegments));
+        
+
         _foldingManager = FoldingManager.Install(CodeTextBox.TextArea);
         _foldingStrategy = new BraceFoldingStrategy();
         _bslFoldingStrategy = new BslFoldingStrategy();
@@ -466,7 +468,7 @@ public partial class MainWindow : Window
             Interval = TimeSpan.FromMilliseconds(500)
         };
         _debounceTimer.Tick += DebounceTimer_Tick;
-
+        
 
         CodeTextBox.TextArea.TextView.MouseHover += OnTextViewMouseHover;
         CodeTextBox.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
