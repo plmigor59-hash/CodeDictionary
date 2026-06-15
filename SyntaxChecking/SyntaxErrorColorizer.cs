@@ -48,11 +48,25 @@ namespace CodeDictionary.SyntaxChecking
             if (!_errorsByLine.TryGetValue(line.LineNumber, out var errors))
                 return;
 
+            int lineStart = line.Offset;
+            int lineEnd = line.EndOffset;
+
             foreach (var error in errors)
             {
-                // We keep this to potentially change the foreground color 
-                // or just to have a placeholder for line transformation logic.
-                // Currently, we'll just let the squiggle do the work.
+                // Calculate start and length within line
+                int startOffset = lineStart + Math.Max(0, error.Column - 1);
+                int length = Math.Max(1, error.Length);
+
+                // Ensure it doesn't exceed line boundaries
+                if (startOffset >= lineEnd) continue;
+                int endOffset = Math.Min(lineEnd, startOffset + length);
+
+                if (endOffset <= startOffset) continue;
+
+                ChangeLinePart(startOffset, endOffset, element =>
+                {
+                    element.TextRunProperties.SetForegroundBrush(Brushes.Red);
+                });
             }
         }
     }

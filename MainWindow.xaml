@@ -10,21 +10,22 @@
     Title="Справочник кода"
     Width="800"
     Height="400"
+    AllowDrop="True"
     AllowsTransparency="False"
     Background="{DynamicResource WindowBackground}"
+    Drop="Window_Drop"
     ResizeMode="CanResizeWithGrip"
+    SnapsToDevicePixels="True"
+    UseLayoutRounding="True"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
-    UseLayoutRounding="True"
-    SnapsToDevicePixels="True"
-    AllowDrop="True"
-    Drop="Window_Drop"
     mc:Ignorable="d">
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="0" 
-                      ResizeBorderThickness="8" 
-                      CornerRadius="0" 
-                      GlassFrameThickness="0" />
+        <WindowChrome
+            CaptionHeight="0"
+            CornerRadius="0"
+            GlassFrameThickness="0"
+            ResizeBorderThickness="8" />
     </WindowChrome.WindowChrome>
     <Window.Style>
         <Style TargetType="Window">
@@ -37,7 +38,7 @@
         </Style>
     </Window.Style>
     <Window.Resources>
-        <!-- Specialized local styles only -->
+        <!--  Specialized local styles only  -->
         <Style x:Key="EditorTabItemStyle" TargetType="TabItem">
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
             <Setter Property="Background" Value="Transparent" />
@@ -47,32 +48,43 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Margin="0,0,4,0">
+                        <Border
+                            x:Name="border"
+                            Margin="0,0,4,0"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
                             <StackPanel Orientation="Horizontal">
-                                <materialIcons:MaterialIcon x:Name="icon" Kind="FileOutline" Width="14" Height="14" Margin="0,0,4,0" Visibility="Collapsed"/>
-                                <ContentPresenter ContentSource="Header" VerticalAlignment="Center"/>
-                                <Button x:Name="CloseButton" 
-                                        Style="{StaticResource IconButton}" 
-                                        Width="16" Height="16" Margin="4,0,0,0" 
-                                        Content="✕" FontSize="10" 
-                                        Click="CloseTabButton_Click"
-                                        Visibility="{Binding IsClosable, Converter={StaticResource BoolToStatusConverter}}"/>
+                                <materialIcons:MaterialIcon
+                                    x:Name="icon"
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,4,0"
+                                    Kind="FileOutline"
+                                    Visibility="Collapsed" />
+                                <ContentPresenter VerticalAlignment="Center" ContentSource="Header" />
+                                <Button
+                                    x:Name="CloseButton"
+                                    Width="16"
+                                    Height="16"
+                                    Margin="4,0,0,0"
+                                    Click="CloseTabButton_Click"
+                                    Content="✕"
+                                    FontSize="10"
+                                    Style="{StaticResource IconButton}"
+                                    Visibility="{Binding IsClosable, Converter={StaticResource BoolToStatusConverter}}" />
                             </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="BorderBrush" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                <Setter Property="BorderBrush" Value="Transparent" />
+                                <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource SurfaceStrongBackground}"/>
+                                <Setter Property="Background" Value="{DynamicResource SurfaceStrongBackground}" />
                             </Trigger>
                             <DataTrigger Binding="{Binding IsFromFile}" Value="True">
-                                <Setter TargetName="icon" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="icon" Property="Visibility" Value="Visible" />
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -87,34 +99,62 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Custom Title Bar -->
-        <Border x:Name="TitleBar" Grid.Row="0" 
-                Background="{DynamicResource SidePanelBackground}" 
-                BorderBrush="{DynamicResource BorderBrush}" 
-                BorderThickness="0,0,0,1"
-                MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+        <!--  Custom Title Bar  -->
+        <Border
+            x:Name="TitleBar"
+            Grid.Row="0"
+            Background="{DynamicResource SidePanelBackground}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,0,0,1"
+            MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Orientation="Horizontal" Margin="8,0">
-                    <TextBlock Text="📚" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="Orange"/>
-                    <TextBlock x:Name="WindowTitle" Text="Справочник кода" 
-                               VerticalAlignment="Center" FontWeight="SemiBold" 
-                               Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12"/>
+                <StackPanel Margin="8,0" Orientation="Horizontal">
+                    <TextBlock
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        Foreground="Orange"
+                        Text="📚" />
+                    <TextBlock
+                        x:Name="WindowTitle"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
+                        Text="Справочник кода" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button x:Name="MinimizeButton" Content="─" Style="{StaticResource IconButton}" Click="MinimizeButton_Click" Width="32" Height="32"/>
-                    <Button x:Name="MaximizeButton" Content="□" Style="{StaticResource IconButton}" Click="MaximizeButton_Click" Width="32" Height="32"/>
-                    <Button x:Name="CloseButton" Content="✕" Style="{StaticResource IconButton}" Click="CloseButton_Click" Width="32" Height="32">
+                    <Button
+                        x:Name="MinimizeButton"
+                        Width="32"
+                        Height="32"
+                        Click="MinimizeButton_Click"
+                        Content="─"
+                        Style="{StaticResource IconButton}" />
+                    <Button
+                        x:Name="MaximizeButton"
+                        Width="32"
+                        Height="32"
+                        Click="MaximizeButton_Click"
+                        Content="□"
+                        Style="{StaticResource IconButton}" />
+                    <Button
+                        x:Name="CloseButton"
+                        Width="32"
+                        Height="32"
+                        Click="CloseButton_Click"
+                        Content="✕"
+                        Style="{StaticResource IconButton}">
                         <Button.Resources>
                             <Style TargetType="Border">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
-                                        <Setter Property="Background" Value="#E81123"/>
+                                        <Setter Property="Background" Value="#E81123" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -132,43 +172,65 @@
                 <ColumnDefinition x:Name="HelpColumn" Width="0" />
             </Grid.ColumnDefinitions>
 
-            <!-- Left Panel -->
-            <Grid x:Name="SidePanel" Grid.Column="0" Background="{DynamicResource SidePanelBackground}">
+            <!--  Left Panel  -->
+            <Grid
+                x:Name="SidePanel"
+                Grid.Column="0"
+                Background="{DynamicResource SidePanelBackground}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <!-- Search and Theme Toggle -->
-                <StackPanel Grid.Row="0" Margin="8" Background="{DynamicResource SidePanelBackground}">
+                <!--  Search and Theme Toggle  -->
+                <StackPanel
+                    Grid.Row="0"
+                    Margin="8"
+                    Background="{DynamicResource SidePanelBackground}">
                     <Grid Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Name="SearchBox" Style="{StaticResource ModernTextBox}" 
-                                 Tag="Поиск..." TextChanged="SearchBox_TextChanged" />
-                        <Button Grid.Column="1" Style="{StaticResource IconButton}" 
-                                Content="✕" Click="SearchBox_TextChanged_Click" Margin="4,0,0,0" ToolTip="Очистить поиск"/>
+                        <TextBox
+                            x:Name="SearchBox"
+                            Style="{StaticResource ModernTextBox}"
+                            Tag="Поиск..."
+                            TextChanged="SearchBox_TextChanged" />
+                        <Button
+                            Grid.Column="1"
+                            Margin="4,0,0,0"
+                            Click="SearchBox_TextChanged_Click"
+                            Content="✕"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Очистить поиск" />
                     </Grid>
-                    
-                    <CheckBox x:Name="ThemeCheckBox" Content="Светлая тема" 
-                              HorizontalAlignment="Right"
-                              Checked="ThemeCheckBox_Changed" Unchecked="ThemeCheckBox_Changed"
-                              Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"/>
+
+                    <CheckBox
+                        x:Name="ThemeCheckBox"
+                        HorizontalAlignment="Right"
+                        Checked="ThemeCheckBox_Changed"
+                        Content="Светлая тема"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
+                        Unchecked="ThemeCheckBox_Changed" />
                 </StackPanel>
 
-                <!-- Entries TreeView -->
-                <TreeView x:Name="EntriesTreeView" Grid.Row="1" Margin="8,0"
-                          Background="Transparent" BorderThickness="0"
-                          SelectedItemChanged="EntriesTreeView_SelectedItemChanged"
-                          MouseDoubleClick="EntriesTreeView_MouseDoubleClick"
-                          AllowDrop="True"
-                          PreviewMouseLeftButtonDown="EntriesTreeView_PreviewMouseLeftButtonDown"
-                          PreviewMouseMove="EntriesTreeView_PreviewMouseMove"
-                          DragOver="EntriesTreeView_DragOver"
-                          Drop="EntriesTreeView_Drop">
+                <!--  Entries TreeView  -->
+                <TreeView
+                    x:Name="EntriesTreeView"
+                    Grid.Row="1"
+                    Margin="8,0"
+                    AllowDrop="True"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    DragOver="EntriesTreeView_DragOver"
+                    Drop="EntriesTreeView_Drop"
+                    MouseDoubleClick="EntriesTreeView_MouseDoubleClick"
+                    PreviewMouseLeftButtonDown="EntriesTreeView_PreviewMouseLeftButtonDown"
+                    PreviewMouseMove="EntriesTreeView_PreviewMouseMove"
+                    SelectedItemChanged="EntriesTreeView_SelectedItemChanged">
                     <TreeView.ItemContainerStyle>
                         <Style TargetType="{x:Type TreeViewItem}">
                             <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -177,87 +239,201 @@
                     </TreeView.ItemContainerStyle>
                     <TreeView.ContextMenu>
                         <ContextMenu>
-                            <MenuItem Header="Добавить корневую категорию" Click="AddCategoryRoot_Click">
-                                <MenuItem.Icon><materialIcons:MaterialIcon Kind="FolderPlusOutline" Width="16" Height="16"/></MenuItem.Icon>
+                            <MenuItem Click="AddCategoryRoot_Click" Header="Добавить корневую категорию">
+                                <MenuItem.Icon>
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FolderPlusOutline" />
+                                </MenuItem.Icon>
                             </MenuItem>
-                            <MenuItem Header="Удалить отмеченные" Click="DeleteEntry_Click" Foreground="{DynamicResource DangerBrush}">
-                                <MenuItem.Icon><materialIcons:MaterialIcon Kind="DeleteSweepOutline" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"/></MenuItem.Icon>
+                            <MenuItem
+                                Click="DeleteEntry_Click"
+                                Foreground="{DynamicResource DangerBrush}"
+                                Header="Удалить отмеченные">
+                                <MenuItem.Icon>
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Foreground="{DynamicResource DangerBrush}"
+                                        Kind="DeleteSweepOutline" />
+                                </MenuItem.Icon>
                             </MenuItem>
                         </ContextMenu>
                     </TreeView.ContextMenu>
                     <TreeView.Resources>
                         <HierarchicalDataTemplate DataType="{x:Type local:CategoryNode}" ItemsSource="{Binding Items}">
-                            <StackPanel Orientation="Horizontal" Margin="0,2" Background="Transparent">
+                            <StackPanel
+                                Margin="0,2"
+                                Background="Transparent"
+                                Orientation="Horizontal">
                                 <StackPanel.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="Добавить подкатегорию" Click="AddCategoryChild_Click" Tag="{Binding}">
-                                            <MenuItem.Icon><materialIcons:MaterialIcon Kind="FolderPlus" Width="16" Height="16"/></MenuItem.Icon>
+                                        <MenuItem
+                                            Click="AddCategoryChild_Click"
+                                            Header="Добавить подкатегорию"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="FolderPlus" />
+                                            </MenuItem.Icon>
                                         </MenuItem>
-                                        <MenuItem Header="Переименовать" Click="RenameCategory_Click" Tag="{Binding}">
-                                            <MenuItem.Icon><materialIcons:MaterialIcon Kind="PencilOutline" Width="16" Height="16"/></MenuItem.Icon>
+                                        <MenuItem
+                                            Click="RenameCategory_Click"
+                                            Header="Переименовать"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="PencilOutline" />
+                                            </MenuItem.Icon>
                                         </MenuItem>
-                                        <Separator/>
-                                        <MenuItem Header="Удалить категорию" Click="DeleteCategory_Click" Tag="{Binding}" Foreground="{DynamicResource DangerBrush}">
-                                            <MenuItem.Icon><materialIcons:MaterialIcon Kind="FolderRemoveOutline" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"/></MenuItem.Icon>
+                                        <Separator />
+                                        <MenuItem
+                                            Click="DeleteCategory_Click"
+                                            Foreground="{DynamicResource DangerBrush}"
+                                            Header="Удалить категорию"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Foreground="{DynamicResource DangerBrush}"
+                                                    Kind="FolderRemoveOutline" />
+                                            </MenuItem.Icon>
                                         </MenuItem>
                                     </ContextMenu>
                                 </StackPanel.ContextMenu>
-                                <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                <materialIcons:MaterialIcon Kind="Folder" Foreground="{DynamicResource WarningBrush}" Width="16" Height="16" Margin="0,0,4,0"/>
-                                <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <TextBlock Text="{Binding CountString}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                <CheckBox
+                                    Margin="0,0,4,0"
+                                    VerticalAlignment="Center"
+                                    IsChecked="{Binding IsChecked}" />
+                                <materialIcons:MaterialIcon
+                                    Width="16"
+                                    Height="16"
+                                    Margin="0,0,4,0"
+                                    Foreground="{DynamicResource WarningBrush}"
+                                    Kind="Folder" />
+                                <TextBlock Foreground="{DynamicResource TextPrimaryBrush}" Text="{Binding Name}" />
+                                <TextBlock
+                                    Margin="4,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="10"
+                                    Foreground="{DynamicResource TextSecondaryBrush}"
+                                    Text="{Binding CountString}" />
                             </StackPanel>
                         </HierarchicalDataTemplate>
                         <DataTemplate DataType="{x:Type local:CodeEntryViewModel}">
-                            <StackPanel Orientation="Horizontal" Margin="0,2" Background="Transparent">
+                            <StackPanel
+                                Margin="0,2"
+                                Background="Transparent"
+                                Orientation="Horizontal">
                                 <StackPanel.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="Удалить запись" Click="DeleteSingleEntry_Click" Tag="{Binding}" Foreground="{DynamicResource DangerBrush}">
-                                            <MenuItem.Icon><materialIcons:MaterialIcon Kind="FileRemoveOutline" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"/></MenuItem.Icon>
+                                        <MenuItem
+                                            Click="DeleteSingleEntry_Click"
+                                            Foreground="{DynamicResource DangerBrush}"
+                                            Header="Удалить запись"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Foreground="{DynamicResource DangerBrush}"
+                                                    Kind="FileRemoveOutline" />
+                                            </MenuItem.Icon>
                                         </MenuItem>
                                     </ContextMenu>
                                 </StackPanel.ContextMenu>
-                                <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                <materialIcons:MaterialIcon Kind="FileDocumentOutline" Foreground="{DynamicResource AccentBrush}" Width="16" Height="16" Margin="0,0,4,0"/>
-                                <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <CheckBox
+                                    Margin="0,0,4,0"
+                                    VerticalAlignment="Center"
+                                    IsChecked="{Binding IsChecked}" />
+                                <materialIcons:MaterialIcon
+                                    Width="16"
+                                    Height="16"
+                                    Margin="0,0,4,0"
+                                    Foreground="{DynamicResource AccentBrush}"
+                                    Kind="FileDocumentOutline" />
+                                <TextBlock Foreground="{DynamicResource TextPrimaryBrush}" Text="{Binding Title}" />
                             </StackPanel>
                         </DataTemplate>
                     </TreeView.Resources>
                 </TreeView>
 
-                <!-- Bottom Actions in SidePanel -->
+                <!--  Bottom Actions in SidePanel  -->
                 <StackPanel Grid.Row="2" Margin="8">
                     <Grid Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Button Content="+ Новая запись" Style="{StaticResource AccentButton}" Click="AddEntry_Click"/>
-                        <Button Grid.Column="1" Style="{StaticResource IconButton}" Click="DeleteEntry_Click" Margin="4,0,0,0" ToolTip="Удалить отмеченные">
-                            <materialIcons:MaterialIcon Kind="DeleteSweep" Foreground="{DynamicResource DangerBrush}"/>
+                        <Button
+                            Click="AddEntry_Click"
+                            Content="+ Новая запись"
+                            Style="{StaticResource AccentButton}" />
+                        <Button
+                            Grid.Column="1"
+                            Margin="4,0,0,0"
+                            Click="DeleteEntry_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Удалить отмеченные">
+                            <materialIcons:MaterialIcon Foreground="{DynamicResource DangerBrush}" Kind="DeleteSweep" />
                         </Button>
                     </Grid>
-                    
-                    <TextBlock Text="Название" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,2"/>
-                    <TextBox x:Name="TitleTextBox" Style="{StaticResource ModernTextBox}" Margin="0,0,0,8"/>
-                    
-                    <TextBlock Text="Категория" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,2"/>
-                    <ComboBox x:Name="CategoryComboBox" IsEditable="True" Height="28" Margin="0,0,0,8"/>
+
+                    <TextBlock
+                        Margin="0,0,0,2"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
+                        Text="Название" />
+                    <TextBox
+                        x:Name="TitleTextBox"
+                        Margin="0,0,0,8"
+                        Style="{StaticResource ModernTextBox}" />
+
+                    <TextBlock
+                        Margin="0,0,0,2"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
+                        Text="Категория" />
+                    <ComboBox
+                        x:Name="CategoryComboBox"
+                        Height="28"
+                        Margin="0,0,0,8"
+                        IsEditable="True" />
 
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="Сохранить" Style="{StaticResource ModernButton}" Click="SaveEntry_Click" Margin="0,0,4,0"/>
-                        <Button Grid.Column="1" Content="Удалить" Style="{StaticResource ModernButton}" Click="DeleteSingleEntry_Click" Margin="4,0,0,0"/>
+                        <Button
+                            Grid.Column="0"
+                            Margin="0,0,4,0"
+                            Click="SaveEntry_Click"
+                            Content="Сохранить"
+                            Style="{StaticResource ModernButton}" />
+                        <Button
+                            Grid.Column="1"
+                            Margin="4,0,0,0"
+                            Click="DeleteSingleEntry_Click"
+                            Content="Удалить"
+                            Style="{StaticResource ModernButton}" />
                     </Grid>
                 </StackPanel>
             </Grid>
 
-            <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" Background="{DynamicResource BorderBrush}" />
+            <GridSplitter
+                Grid.Column="1"
+                Width="4"
+                HorizontalAlignment="Center"
+                Background="{DynamicResource BorderBrush}" />
 
-            <!-- Right Panel (Editor) -->
+            <!--  Right Panel (Editor)  -->
             <Grid Grid.Column="2" Margin="8">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -268,183 +444,575 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <!-- Editor Toolbar -->
-                <Border Grid.Row="0" Background="{DynamicResource SurfaceBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="4" Margin="0,0,0,8">
-                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Style="{StaticResource IconButton}" Content="↩" ToolTip="Отменить" Click="UndoMenuItem_Click"/>
-                        <Button Style="{StaticResource IconButton}" Content="↪" ToolTip="Повторить" Click="RedoMenuItem_Click"/>
-                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
-                        
-                        <Button Style="{StaticResource IconButton}" ToolTip="Копировать" Click="CopyMenuItem_Click">
-                            <materialIcons:MaterialIcon Kind="ContentCopy" Width="16" Height="16"/>
-                        </Button>
-                        <Button Style="{StaticResource IconButton}" ToolTip="Вставить" Click="PasteMenuItem_Click">
-                            <materialIcons:MaterialIcon Kind="ContentPaste" Width="16" Height="16"/>
-                        </Button>
-                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
+                <!--  Editor Toolbar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,8"
+                    Padding="4"
+                    Background="{DynamicResource SurfaceBackground}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                    <WrapPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <Button
+                            Click="UndoMenuItem_Click"
+                            Content="↩"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Отменить" />
+                        <Button
+                            Click="RedoMenuItem_Click"
+                            Content="↪"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Повторить" />
+                        <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
-                        <ComboBox x:Name="FontFamilyComboBox" Width="120" Height="24" FontSize="11" Margin="2,0" SelectionChanged="FontFamilyComboBox_SelectionChanged"/>
-                        <ComboBox x:Name="FontSizeComboBox" Width="50" Height="24" FontSize="11" Margin="2,0" SelectionChanged="FontSizeComboBox_SelectionChanged"/>
-                        
-                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
+                        <Button
+                            Click="CopyMenuItem_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Копировать">
+                            <materialIcons:MaterialIcon
+                                Width="16"
+                                Height="16"
+                                Kind="ContentCopy" />
+                        </Button>
+                        <Button
+                            Click="PasteMenuItem_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Вставить">
+                            <materialIcons:MaterialIcon
+                                Width="16"
+                                Height="16"
+                                Kind="ContentPaste" />
+                        </Button>
+                        <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
-                        <!-- Style Buttons -->
-                        <Button Style="{StaticResource IconButton}" ToolTip="Цвет фона" Click="ChangeBackground_Click">
-                            <materialIcons:MaterialIcon Kind="FormatColorFill" Width="16" Height="16" Foreground="{DynamicResource WarningBrush}"/>
+                        <ComboBox
+                            x:Name="FontFamilyComboBox"
+                            Width="120"
+                            Height="24"
+                            Margin="2,0"
+                            FontSize="11"
+                            SelectionChanged="FontFamilyComboBox_SelectionChanged" />
+                        <ComboBox
+                            x:Name="FontSizeComboBox"
+                            Width="50"
+                            Height="24"
+                            Margin="2,0"
+                            FontSize="11"
+                            SelectionChanged="FontSizeComboBox_SelectionChanged" />
+
+                        <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
+                        <!--  Style Buttons  -->
+                        <Button
+                            Click="ChangeBackground_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Цвет фона">
+                            <materialIcons:MaterialIcon
+                                Width="16"
+                                Height="16"
+                                Foreground="{DynamicResource WarningBrush}"
+                                Kind="FormatColorFill" />
                         </Button>
-                        <Button Style="{StaticResource IconButton}" ToolTip="Цвет текста" Click="ChangeForeground_Click">
-                            <materialIcons:MaterialIcon Kind="FormatColorText" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"/>
+                        <Button
+                            Click="ChangeForeground_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Цвет текста">
+                            <materialIcons:MaterialIcon
+                                Width="16"
+                                Height="16"
+                                Foreground="{DynamicResource DangerBrush}"
+                                Kind="FormatColorText" />
                         </Button>
-                        <Button Style="{StaticResource IconButton}" ToolTip="Жирный" Click="MakeBold_Click">
-                            <TextBlock Text="B" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <Button
+                            Click="MakeBold_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Жирный">
+                            <TextBlock
+                                FontWeight="Bold"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                Text="B" />
                         </Button>
-                        <Button Style="{StaticResource IconButton}" ToolTip="Курсив" Click="MakeItalic_Click">
-                            <TextBlock Text="I" FontStyle="Italic" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <Button
+                            Click="MakeItalic_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Курсив">
+                            <TextBlock
+                                FontStyle="Italic"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                Text="I" />
                         </Button>
-                        <Button Style="{StaticResource IconButton}" ToolTip="Подчеркнутый" Click="MakeUnderline_Click">
-                            <TextBlock Text="U" TextDecorations="Underline" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <Button
+                            Click="MakeUnderline_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Подчеркнутый">
+                            <TextBlock
+                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                Text="U"
+                                TextDecorations="Underline" />
                         </Button>
-                        <Button Style="{StaticResource IconButton}" ToolTip="Очистить стиль" Click="ClearStyle_Click">
-                            <materialIcons:MaterialIcon Kind="FormatClear" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"/>
+                        <Button
+                            Click="ClearStyle_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Очистить стиль">
+                            <materialIcons:MaterialIcon
+                                Width="16"
+                                Height="16"
+                                Foreground="{DynamicResource DangerBrush}"
+                                Kind="FormatClear" />
                         </Button>
 
-                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
+                        <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
-                        <Button Style="{StaticResource IconButton}" ToolTip="Открыть файл" Click="OpenFile_Click">
-                            <materialIcons:MaterialIcon Kind="FolderOpenOutline" Width="18" Height="18" Foreground="{DynamicResource WarningBrush}"/>
+                        <Button
+                            Click="OpenFile_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Открыть файл">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource WarningBrush}"
+                                Kind="FolderOpenOutline" />
                         </Button>
-                        <Button Style="{StaticResource IconButton}" ToolTip="Сохранить файл" Click="SaveFile_Click">
-                            <materialIcons:MaterialIcon Kind="ContentSaveOutline" Width="18" Height="18" Foreground="{DynamicResource SuccessBrush}"/>
+                        <Button
+                            Click="SaveFile_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Сохранить файл">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource SuccessBrush}"
+                                Kind="ContentSaveOutline" />
                         </Button>
-                        <Button Style="{StaticResource IconButton}" ToolTip="Форматировать C#" Click="FormatCSharpCode_Click">
-                            <materialIcons:MaterialIcon Kind="CodeBraces" Width="18" Height="18" Foreground="{DynamicResource AccentBrush}"/>
+                        <Button
+                            Click="FormatCSharpCode_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Форматировать C#">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Kind="CodeBraces" />
+                        </Button>
+                        <Button
+                            x:Name="Format1CCodeButton"
+                            Click="Format1CCode_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Форматировать 1С">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="Orange"
+                                Kind="FormatIndentIncrease" />
+                        </Button>
+                        <ToggleButton
+                            x:Name="Analysis1CToggle"
+                            Click="Analysis1CToggle_Click"
+                            Style="{StaticResource IconToggleButton}"
+                            ToolTip="Синтаксический анализ 1С">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource DangerBrush}"
+                                Kind="TextSearch" />
+                        </ToggleButton>
+
+                        <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
+                        <Button
+                            Click="ExportData_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Экспорт базы (JSON/XML)">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Kind="DatabaseExportOutline" />
+                        </Button>
+                        <Button
+                            Click="ImportData_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Импорт базы (JSON/XML)">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Kind="DatabaseImportOutline" />
+                        </Button>
+                        <Button
+                            Click="ImportFolder_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Импорт из папки (bsl/html)">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource WarningBrush}"
+                                Kind="FolderDownloadOutline" />
+                        </Button>
+                        <Button
+                            Click="ExportSelectedCategory_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Экспорт выбранной категории">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource SuccessBrush}"
+                                Kind="FolderUploadOutline" />
                         </Button>
 
-                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
+                        <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
-                        <Button Style="{StaticResource IconButton}" ToolTip="Экспорт базы (JSON/XML)" Click="ExportData_Click">
-                            <materialIcons:MaterialIcon Kind="DatabaseExportOutline" Width="18" Height="18" Foreground="{DynamicResource AccentBrush}"/>
-                        </Button>
-                        <Button Style="{StaticResource IconButton}" ToolTip="Импорт базы (JSON/XML)" Click="ImportData_Click">
-                            <materialIcons:MaterialIcon Kind="DatabaseImportOutline" Width="18" Height="18" Foreground="{DynamicResource AccentBrush}"/>
-                        </Button>
-                        <Button Style="{StaticResource IconButton}" ToolTip="Импорт из папки (bsl/html)" Click="ImportFolder_Click">
-                            <materialIcons:MaterialIcon Kind="FolderDownloadOutline" Width="18" Height="18" Foreground="{DynamicResource WarningBrush}"/>
-                        </Button>
-                        <Button Style="{StaticResource IconButton}" ToolTip="Экспорт выбранной категории" Click="ExportSelectedCategory_Click">
-                            <materialIcons:MaterialIcon Kind="FolderUploadOutline" Width="18" Height="18" Foreground="{DynamicResource SuccessBrush}"/>
-                        </Button>
-                        
-                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
-                        
-                        <ComboBox x:Name="SyntaxHighlightingComboBox" Width="140" Height="24" FontSize="11" SelectionChanged="SyntaxHighlightingComboBox_SelectionChanged"/>
-                        
-                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
-                        
-                        <CheckBox x:Name="WordWrapCheckBox" Content="Перенос" VerticalAlignment="Center" FontSize="11" 
-                                  Checked="WordWrapCheckBox_Changed" Unchecked="WordWrapCheckBox_Changed"
-                                  Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <ComboBox
+                            x:Name="SyntaxHighlightingComboBox"
+                            Width="140"
+                            Height="24"
+                            FontSize="11"
+                            SelectionChanged="SyntaxHighlightingComboBox_SelectionChanged" />
+
+                        <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
+                        <CheckBox
+                            x:Name="WordWrapCheckBox"
+                            VerticalAlignment="Center"
+                            Checked="WordWrapCheckBox_Changed"
+                            Content="Перенос"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextSecondaryBrush}"
+                            Unchecked="WordWrapCheckBox_Changed" />
                     </WrapPanel>
                 </Border>
 
-                <!-- Search In Code Bar & Translator -->
-                <Border Grid.Row="1" Background="{DynamicResource SurfaceStrongBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="4" Margin="0,0,0,8">
-                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Search Part -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
-                            <materialIcons:MaterialIcon Kind="Magnify" Width="16" Height="16" Margin="4,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBox x:Name="SearchInTextBox" Width="180" Style="{StaticResource ModernTextBox}" BorderThickness="0" Background="Transparent" Tag="Найти в коде..." TextChanged="SearchInTextBox_TextChanged" KeyDown="SearchInTextBox_KeyDown"/>
-                            <Button Style="{StaticResource IconButton}" Content="▲" Click="FindPrevious_Click" ToolTip="Предыдущее (Shift+F3)"/>
-                            <Button Style="{StaticResource IconButton}" Content="▼" Click="FindNext_Click" ToolTip="Следующее (F3)"/>
-                            <CheckBox x:Name="MatchCaseCheckBox" Content="Аа" VerticalAlignment="Center" Margin="4,0" FontSize="11" Checked="SearchOptions_Changed" Unchecked="SearchOptions_Changed" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock x:Name="SearchResultsTextBlock" VerticalAlignment="Center" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="4,0" MinWidth="40"/>
+                <!--  Search In Code Bar & Translator  -->
+                <Border
+                    Grid.Row="1"
+                    Margin="0,0,0,8"
+                    Padding="4"
+                    Background="{DynamicResource SurfaceStrongBackground}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                    <WrapPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <!--  Search Part  -->
+                        <StackPanel Margin="0,0,8,0" Orientation="Horizontal">
+                            <materialIcons:MaterialIcon
+                                Width="16"
+                                Height="16"
+                                Margin="4,0"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Kind="Magnify" />
+                            <TextBox
+                                x:Name="SearchInTextBox"
+                                Width="180"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                KeyDown="SearchInTextBox_KeyDown"
+                                Style="{StaticResource ModernTextBox}"
+                                Tag="Найти в коде..."
+                                TextChanged="SearchInTextBox_TextChanged" />
+                            <Button
+                                Click="FindPrevious_Click"
+                                Content="▲"
+                                Style="{StaticResource IconButton}"
+                                ToolTip="Предыдущее (Shift+F3)" />
+                            <Button
+                                Click="FindNext_Click"
+                                Content="▼"
+                                Style="{StaticResource IconButton}"
+                                ToolTip="Следующее (F3)" />
+                            <CheckBox
+                                x:Name="MatchCaseCheckBox"
+                                Margin="4,0"
+                                VerticalAlignment="Center"
+                                Checked="SearchOptions_Changed"
+                                Content="Аа"
+                                FontSize="11"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Unchecked="SearchOptions_Changed" />
+                            <TextBlock
+                                x:Name="SearchResultsTextBlock"
+                                MinWidth="40"
+                                Margin="4,0"
+                                VerticalAlignment="Center"
+                                FontSize="10"
+                                Foreground="{DynamicResource TextSecondaryBrush}" />
                         </StackPanel>
 
-                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
+                        <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
-                        <!-- Translator Part -->
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Перевод:" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="4,0"/>
-                            <Button Content="RU" Style="{StaticResource ModernButton}" Padding="4,2" FontSize="10" Height="24" Margin="2,0" Command="{Binding TranslateCommand}"/>
-                            <Button Content="EN" Style="{StaticResource ModernButton}" Padding="4,2" FontSize="10" Height="24" Margin="2,0" Command="{Binding TranslateToEnglishCommand}"/>
-                            
-                            <ComboBox x:Name="LanguageComboBox" Width="110" Height="24" FontSize="10" Margin="4,0"
-                                      ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}" DisplayMemberPath="Name"/>
-                            
-                            <Button Style="{StaticResource IconButton}" ToolTip="Перевести на выбранный" Command="{Binding TranslateToSelectedLanguageCommand}">
-                                <materialIcons:MaterialIcon Kind="Translate" Width="14" Height="14"/>
+                        <!--  Translator Part  -->
+                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                            <TextBlock
+                                Margin="4,0"
+                                VerticalAlignment="Center"
+                                FontSize="11"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Text="Перевод:" />
+                            <Button
+                                Height="24"
+                                Margin="2,0"
+                                Padding="4,2"
+                                Command="{Binding TranslateCommand}"
+                                Content="RU"
+                                FontSize="10"
+                                Style="{StaticResource ModernButton}" />
+                            <Button
+                                Height="24"
+                                Margin="2,0"
+                                Padding="4,2"
+                                Command="{Binding TranslateToEnglishCommand}"
+                                Content="EN"
+                                FontSize="10"
+                                Style="{StaticResource ModernButton}" />
+
+                            <ComboBox
+                                x:Name="LanguageComboBox"
+                                Width="110"
+                                Height="24"
+                                Margin="4,0"
+                                DisplayMemberPath="Name"
+                                FontSize="10"
+                                ItemsSource="{Binding Languages}"
+                                SelectedItem="{Binding SelectedLanguage}" />
+
+                            <Button
+                                Command="{Binding TranslateToSelectedLanguageCommand}"
+                                Style="{StaticResource IconButton}"
+                                ToolTip="Перевести на выбранный">
+                                <materialIcons:MaterialIcon
+                                    Width="14"
+                                    Height="14"
+                                    Kind="Translate" />
                             </Button>
-                            <Button Style="{StaticResource IconButton}" ToolTip="Сбросить перевод" Command="{Binding ClearCommand}">
-                                <materialIcons:MaterialIcon Kind="CloseCircleOutline" Width="14" Height="14" Foreground="{DynamicResource DangerBrush}"/>
+                            <Button
+                                Command="{Binding ClearCommand}"
+                                Style="{StaticResource IconButton}"
+                                ToolTip="Сбросить перевод">
+                                <materialIcons:MaterialIcon
+                                    Width="14"
+                                    Height="14"
+                                    Foreground="{DynamicResource DangerBrush}"
+                                    Kind="CloseCircleOutline" />
                             </Button>
-                            
-                            <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" FontSize="10" Margin="8,0"/>
+
+                            <TextBlock
+                                Margin="8,0"
+                                VerticalAlignment="Center"
+                                FontSize="10"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Text="{Binding Status}" />
                         </StackPanel>
                     </WrapPanel>
                 </Border>
 
-                <!-- Description Area -->
-                <WebBrowser x:Name="DescriptionBrowser" Grid.Row="2" Margin="0,0,0,8" Visibility="Collapsed"/>
-                <GridSplitter x:Name="DescriptionSplitter" Grid.Row="3" Height="4" HorizontalAlignment="Stretch" Background="{DynamicResource BorderBrush}" Visibility="Collapsed" Margin="0,0,0,8"/>
+                <!--  Description Area  -->
+                <WebBrowser
+                    x:Name="DescriptionBrowser"
+                    Grid.Row="2"
+                    Margin="0,0,0,8"
+                    Visibility="Collapsed" />
+                <GridSplitter
+                    x:Name="DescriptionSplitter"
+                    Grid.Row="3"
+                    Height="4"
+                    Margin="0,0,0,8"
+                    HorizontalAlignment="Stretch"
+                    Background="{DynamicResource BorderBrush}"
+                    Visibility="Collapsed" />
 
-                <!-- Editor Tabs and Editor -->
+                <!--  Editor Tabs and Editor  -->
                 <Grid Grid.Row="4">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="0" />
+                        <RowDefinition Height="0" />
+                        <RowDefinition Height="0" />
                     </Grid.RowDefinitions>
-                    
-                    <TabControl x:Name="EditorTabs" Grid.Row="0" Background="Transparent" BorderThickness="0"
-                                ItemContainerStyle="{StaticResource EditorTabItemStyle}"
-                                DisplayMemberPath="Header"
-                                Foreground="Transparent"
-                                SelectionChanged="EditorTabs_SelectionChanged">
-                    </TabControl>
 
-                    <avalonEdit:TextEditor x:Name="CodeTextBox" Grid.Row="1"
-                                           Background="{DynamicResource WindowBackground}"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           BorderBrush="{DynamicResource BorderBrush}"
-                                           BorderThickness="1"
-                                           FontFamily="Consolas" FontSize="12"
-                                           ShowLineNumbers="True"
-                                           LineNumbersForeground="{DynamicResource TextSecondaryBrush}">
+                    <TabControl
+                        x:Name="EditorTabs"
+                        Grid.Row="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        DisplayMemberPath="Header"
+                        Foreground="Transparent"
+                        ItemContainerStyle="{StaticResource EditorTabItemStyle}"
+                        SelectionChanged="EditorTabs_SelectionChanged" />
+
+                    <avalonEdit:TextEditor
+                        x:Name="CodeTextBox"
+                        Grid.Row="1"
+                        Background="{DynamicResource WindowBackground}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        FontFamily="Consolas"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
+                        LineNumbersForeground="{DynamicResource TextSecondaryBrush}"
+                        ShowLineNumbers="True">
                         <avalonEdit:TextEditor.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="Копировать" Click="CopyMenuItem_Click">
-                                    <MenuItem.Icon><materialIcons:MaterialIcon Kind="ContentCopy"/></MenuItem.Icon>
+                                <MenuItem Click="CopyMenuItem_Click" Header="Копировать">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="ContentCopy" />
+                                    </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="Вставить" Click="PasteMenuItem_Click">
-                                    <MenuItem.Icon><materialIcons:MaterialIcon Kind="ContentPaste"/></MenuItem.Icon>
+                                <MenuItem Click="PasteMenuItem_Click" Header="Вставить">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="ContentPaste" />
+                                    </MenuItem.Icon>
                                 </MenuItem>
-                                <Separator/>
-                                <MenuItem Header="Форматировать" Click="FormatCSharpCode_Click">
-                                    <MenuItem.Icon><materialIcons:MaterialIcon Kind="CodeBraces"/></MenuItem.Icon>
+                                <Separator />
+                                <MenuItem Click="FormatCSharpCode_Click" Header="Форматировать">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="CodeBraces" />
+                                    </MenuItem.Icon>
                                 </MenuItem>
                             </ContextMenu>
                         </avalonEdit:TextEditor.ContextMenu>
                     </avalonEdit:TextEditor>
+
+                    <Grid
+                        x:Name="ErrorListHeader"
+                        Grid.Row="2"
+                        Background="{DynamicResource SidePanelBackground}"
+                        Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="10,2" Orientation="Horizontal">
+                            <materialIcons:MaterialIcon
+                                Width="16"
+                                Height="16"
+                                Margin="0,0,5,0"
+                                Foreground="{DynamicResource DangerBrush}"
+                                Kind="AlertCircle" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Text="Список ошибок" />
+                        </StackPanel>
+                        <Button
+                            x:Name="CloseErrorListButton"
+                            Grid.Column="1"
+                            Click="CloseErrorListButton_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Закрыть список">
+                            <materialIcons:MaterialIcon
+                                Width="14"
+                                Height="14"
+                                Kind="Close" />
+                        </Button>
+                    </Grid>
+
+                    <GridSplitter
+                        x:Name="ErrorListSplitter"
+                        Grid.Row="3"
+                        Height="4"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource BorderBrush}"
+                        Visibility="Collapsed" />
+
+                    <DataGrid
+                        x:Name="ErrorListGrid"
+                        Grid.Row="4"
+                        AutoGenerateColumns="False"
+                        Background="{DynamicResource SurfaceBackground}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="0,1,0,0"
+                        CanUserAddRows="False"
+                        HeadersVisibility="Column"
+                        IsReadOnly="True"
+                        SelectionMode="Single"
+                        Visibility="Collapsed"
+                        MouseDoubleClick="ErrorListGrid_MouseDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="30" Header="">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <materialIcons:MaterialIcon
+                                            Width="14"
+                                            Height="14"
+                                            HorizontalAlignment="Center"
+                                            Foreground="{DynamicResource DangerBrush}"
+                                            Kind="AlertCircle" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn
+                                Width="50"
+                                Binding="{Binding Line}"
+                                Header="Стр." />
+                            <DataGridTextColumn
+                                Width="50"
+                                Binding="{Binding Column}"
+                                Header="Кол." />
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Message}"
+                                Header="Описание ошибки">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="5,2" />
+                                        <Setter Property="TextWrapping" Value="Wrap" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
 
-                <!-- Bottom Bar: Tags and Description Toggle -->
+                <!--  Bottom Bar: Tags and Description Toggle  -->
                 <Grid Grid.Row="5" Margin="0,8,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    
+
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Теги:" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,8,0" FontSize="11"/>
-                        <TextBox x:Name="TagsTextBox" Style="{StaticResource ModernTextBox}" Width="400" Height="26"/>
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextSecondaryBrush}"
+                            Text="Теги:" />
+                        <TextBox
+                            x:Name="TagsTextBox"
+                            Width="400"
+                            Height="26"
+                            Style="{StaticResource ModernTextBox}" />
                     </StackPanel>
-                    
-                    <Button Grid.Column="1" x:Name="ToggleDescriptionButton" Content="Описание ▲" 
-                            Style="{StaticResource ModernButton}" Click="ToggleDescriptionButton_Click" Height="26" Padding="8,2"/>
+
+                    <Button
+                        x:Name="ToggleDescriptionButton"
+                        Grid.Column="1"
+                        Height="26"
+                        Padding="8,2"
+                        Click="ToggleDescriptionButton_Click"
+                        Content="Описание ▲"
+                        Style="{StaticResource ModernButton}" />
                 </Grid>
             </Grid>
 
-            <GridSplitter x:Name="HelpSplitter" Grid.Column="3" Width="4" HorizontalAlignment="Left" Background="{DynamicResource BorderBrush}" Visibility="Collapsed"/>
-            <Border x:Name="HelpPanel" Grid.Column="3" Background="{DynamicResource SidePanelBackground}" Visibility="Collapsed" BorderThickness="1,0,0,0" BorderBrush="{DynamicResource BorderBrush}">
+            <GridSplitter
+                x:Name="HelpSplitter"
+                Grid.Column="3"
+                Width="4"
+                HorizontalAlignment="Left"
+                Background="{DynamicResource BorderBrush}"
+                Visibility="Collapsed" />
+            <Border
+                x:Name="HelpPanel"
+                Grid.Column="3"
+                Background="{DynamicResource SidePanelBackground}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1,0,0,0"
+                Visibility="Collapsed">
                 <Grid Margin="12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -452,75 +1020,140 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel Grid.Row="0" Margin="0,0,0,16">
-                        <TextBlock Text="Горячие клавиши" Foreground="{DynamicResource WarningBrush}" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                        <TextBlock Text="Справочная информация по приложению" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"/>
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource WarningBrush}"
+                            Text="Горячие клавиши" />
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource TextSecondaryBrush}"
+                            Text="Справочная информация по приложению" />
                     </StackPanel>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
-                            <TextBlock Text="Редактор" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" Margin="0,8,0,4"/>
+                            <TextBlock
+                                Margin="0,8,0,4"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Text="Редактор" />
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="Key" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                    <TextBlock Text="F1" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Esc" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="F3" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Shift+F3" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Ctrl+S" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Ctrl+O" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Ctrl+Z" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Ctrl+Y" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Ctrl+G" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="F1" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Esc" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="F3" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Shift+F3" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Ctrl+S" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Ctrl+O" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Ctrl+Z" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Ctrl+Y" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Ctrl+G" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Показать/скрыть помощь" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Закрыть помощь" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Найти следующее" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Найти предыдущее" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Сохранить файл" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Открыть файл" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Отменить" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Повторить" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Перейти к строке" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Показать/скрыть помощь" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Закрыть помощь" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Найти следующее" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Найти предыдущее" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Сохранить файл" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Открыть файл" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Отменить" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Повторить" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Перейти к строке" />
                                 </StackPanel>
                             </Grid>
 
-                            <TextBlock Text="Закладки" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" Margin="0,8,0,4"/>
+                            <TextBlock
+                                Margin="0,8,0,4"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Text="Закладки" />
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="Key" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                    <TextBlock Text="Alt+F2" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Ctrl+Alt+↓" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Ctrl+Alt+↑" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="F3 (в списке)" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Alt+F2" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Ctrl+Alt+↓" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Ctrl+Alt+↑" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="F3 (в списке)" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Переключить закладку" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Следующая закладка" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Предыдущая закладка" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Список закладок" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Переключить закладку" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Следующая закладка" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Предыдущая закладка" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Список закладок" />
                                 </StackPanel>
                             </Grid>
 
-                            <TextBlock Text="Интерфейс" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" Margin="0,8,0,4"/>
+                            <TextBlock
+                                Margin="0,8,0,4"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Text="Интерфейс" />
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="Key" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                    <TextBlock Text="Ctrl+N" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Delete" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Ctrl+N" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Delete" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Новая запись" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="Удалить выбранное" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Новая запись" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Удалить выбранное" />
                                 </StackPanel>
                             </Grid>
                         </StackPanel>

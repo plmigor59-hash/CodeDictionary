@@ -1,6 +1,8 @@
+using CodeDictionary.Analysis;
 using CodeDictionary.Models;
 using CodeDictionary.Properties;
 using CodeDictionary.Services;
+using CodeDictionary.SyntaxChecking;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
@@ -20,6 +22,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
+using System.Windows.Threading;
 using System.Xml;
 
 
@@ -64,16 +67,28 @@ public partial class MainWindow : Window
     private bool _suppressSyntaxSelectionChange;
     private FoldingManager _foldingManager;
     private BraceFoldingStrategy _foldingStrategy;
+    private BslFoldingStrategy _bslFoldingStrategy;
     private BookmarkBackgroundRenderer _bookmarkRenderer;
     private BookmarkMargin _bookmarkMargin;
     private bool _updateDescription;
     private bool _isNewRecordDescription;
 
+    /// <summary>
+    /// /Syntax
+    private readonly IOneScriptAnalysisService _analyzer = new CodeAnalyzer();
+    private ToolTip? _hoverToolTip;
+    private CompletionWindow? _completionWindow;
+    private CancellationTokenSource _parseCts = new CancellationTokenSource();
+    private readonly DispatcherTimer _debounceTimer;
+    private SyntaxErrorColorizer? _colorizer;
+    private TextMarkerService? _markerService;
+    /// 
+    /// </summary>
+
 
 
     private readonly RoslynCompletionService _roslynCompletionService;
-    private CompletionWindow? _completionWindow;
-
+  
     private HashSet<string> _expandedCategories = new();
 
     private void SaveExpansionState()
@@ -268,10 +283,20 @@ public partial class MainWindow : Window
         CodeTextBox.TextArea.TextView.LineTransformers.Add(new CustomColorTransformer(() => _textSegments));
         _foldingManager = FoldingManager.Install(CodeTextBox.TextArea);
         _foldingStrategy = new BraceFoldingStrategy();
+        _bslFoldingStrategy = new BslFoldingStrategy();
 
         InitializeEditorTabs();
 
+        // Инициализация компонентов для 1С (SyntaxChecking)
+        _debounceTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(500)
+        };
+        _debounceTimer.Tick += DebounceTimer_Tick;
 
+
+        CodeTextBox.TextArea.TextView.MouseHover += OnTextViewMouseHover;
+        CodeTextBox.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
 
         // Инициализируем список шрифтов и настроек подсветки
         InitializeFontSettings();
@@ -525,9 +550,17 @@ public partial class MainWindow : Window
 
     private void UpdateFoldings()
     {
-        if (_foldingStrategy != null && _foldingManager != null && CodeTextBox.Document != null)
+        if (_foldingManager != null && CodeTextBox.Document != null)
         {
-            _foldingStrategy.UpdateFoldings(_foldingManager, CodeTextBox.Document);
+            var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+            if (syntax != null && (syntax.Contains("1C") || syntax.Contains("BSL")))
+            {
+                _bslFoldingStrategy?.UpdateFoldings(_foldingManager, CodeTextBox.Document);
+            }
+            else if (_foldingStrategy != null)
+            {
+                _foldingStrategy.UpdateFoldings(_foldingManager, CodeTextBox.Document);
+            }
         }
     }
 
@@ -588,6 +621,12 @@ public partial class MainWindow : Window
         SyncActiveEntryTabFromForm();
         UpdateSegmentsAfterTextChange();
         UpdateFoldings();
+
+        if (Analysis1CToggle.IsChecked == true)
+        {
+            _debounceTimer.Stop();
+            _debounceTimer.Start();
+        }
     }
 
     private void EntryField_TextChanged(object? sender, TextChangedEventArgs e)
@@ -739,6 +778,9 @@ public partial class MainWindow : Window
                 // Add new renderer
                 _bookmarkRenderer = new BookmarkBackgroundRenderer(CodeTextBox.TextArea.TextView, () => tab.Bookmarks.ToList());
                 CodeTextBox.TextArea.TextView.BackgroundRenderers.Add(_bookmarkRenderer);
+
+                // Update syntax checking services for the new document
+                InitializeSyntaxServices();
             }
 
             CodeTextBox.TextArea.TextView.Redraw();
@@ -3890,5 +3932,227 @@ public partial class MainWindow : Window
         {
             return;
         }
+    }
+
+    private async void DebounceTimer_Tick(object? sender, EventArgs e)
+    {
+        _debounceTimer.Stop();
+
+        var sourceCode = CodeTextBox.Text;
+        if (string.IsNullOrWhiteSpace(sourceCode)) return;
+
+        try
+        {
+            // Запускаем анализ в фоне
+            var result = await _analyzer.AnalyzeAsync(sourceCode);
+
+            // Обновляем UI
+            UpdateUiWithResult(result);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Ошибка анализа: {ex.Message}");
+        }
+    }
+
+    private void UpdateUiWithResult(AnalysisResult result)
+    {
+        _colorizer?.UpdateErrors(result.Errors.ToList());
+        _markerService?.UpdateMarkers(result.Errors);
+        CodeTextBox.TextArea.TextView.Redraw();
+
+        // Обновляем таблицу ошибок
+        bool hasErrors = result.Errors != null && result.Errors.Count > 0;
+        bool shouldShow = Analysis1CToggle.IsChecked == true && hasErrors;
+
+        // Если панель была закрыта вручную, мы её не открываем автоматически 
+        // до следующего сеанса анализа или изменения состояния (опционально)
+        // Но здесь мы просто следуем логике: если есть ошибки и анализ включен - показываем.
+        
+        ErrorListGrid.ItemsSource = shouldShow ? result.Errors : null;
+        
+        // Если ошибок нет - всегда скрываем
+        if (!shouldShow)
+        {
+            SetErrorPanelVisibility(Visibility.Collapsed);
+        }
+        else if (ErrorListGrid.Visibility != Visibility.Visible)
+        {
+            // Если ошибки появились и анализ включен - показываем
+            SetErrorPanelVisibility(Visibility.Visible);
+        }
+    }
+
+    private void SetErrorPanelVisibility(Visibility visibility)
+    {
+        ErrorListGrid.Visibility = visibility;
+        ErrorListHeader.Visibility = visibility;
+        ErrorListSplitter.Visibility = visibility;
+
+        var parentGrid = ErrorListGrid.Parent as Grid;
+        if (parentGrid != null && parentGrid.RowDefinitions.Count >= 5)
+        {
+            bool isVisible = visibility == Visibility.Visible;
+            parentGrid.RowDefinitions[2].Height = isVisible ? new GridLength(28) : new GridLength(0);
+            parentGrid.RowDefinitions[3].Height = isVisible ? new GridLength(4) : new GridLength(0);
+            parentGrid.RowDefinitions[4].Height = isVisible ? new GridLength(100, GridUnitType.Pixel) : new GridLength(0);
+        }
+    }
+
+    private void CloseErrorListButton_Click(object sender, RoutedEventArgs e)
+    {
+        SetErrorPanelVisibility(Visibility.Collapsed);
+    }
+
+    private void ErrorListGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (ErrorListGrid.SelectedItem is BslSyntaxError error)
+        {
+            try
+            {
+                // AvalonEdit uses 1-based indexing for lines and columns
+                int line = error.Line;
+                int column = error.Column;
+
+                if (line < 1) line = 1;
+                if (line > CodeTextBox.Document.LineCount) line = CodeTextBox.Document.LineCount;
+
+                var lineSegment = CodeTextBox.Document.GetLineByNumber(line);
+                if (column < 1) column = 1;
+                if (column > lineSegment.Length + 1) column = lineSegment.Length + 1;
+
+                CodeTextBox.ScrollTo(line, column);
+                CodeTextBox.CaretOffset = CodeTextBox.Document.GetOffset(line, column);
+                CodeTextBox.Focus();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Ошибка перехода к строке {error.Line}: {ex.Message}");
+            }
+        }
+    }
+
+    private void OnTextViewMouseHover(object? sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (Analysis1CToggle.IsChecked != true) return;
+
+        var pos = CodeTextBox.GetPositionFromPoint(e.GetPosition(CodeTextBox));
+        if (pos == null) return;
+
+        int line = pos.Value.Line;
+        int column = pos.Value.Column;
+
+        var errors = _colorizer?.GetErrorsAtLine(line);
+        if (errors == null || errors.Count == 0) return;
+
+        // Ищем ошибку, попадающую под курсор
+        var error = errors.FirstOrDefault(err => column >= err.Column && column <= err.Column + Math.Max(1, err.Length));
+
+        if (error != null)
+        {
+            if (_hoverToolTip == null)
+                _hoverToolTip = new ToolTip();
+
+            _hoverToolTip.Content = new TextBlock
+            {
+                Text = error.Message,
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 400
+            };
+            _hoverToolTip.PlacementTarget = CodeTextBox;
+            _hoverToolTip.IsOpen = true;
+            e.Handled = true;
+        }
+    }
+
+    private void OnTextViewMouseHoverStopped(object? sender, EventArgs e)
+    {
+        if (_hoverToolTip == null) return;
+        _hoverToolTip.IsOpen = false;
+        _hoverToolTip = null;
+    }
+
+    private void Analysis1CToggle_Click(object sender, RoutedEventArgs e)
+    {
+        if (Analysis1CToggle.IsChecked == true)
+        {
+            _debounceTimer.Start();
+            // Сразу запускаем проверку
+            DebounceTimer_Tick(null, EventArgs.Empty);
+        }
+        else
+        {
+            _debounceTimer.Stop();
+
+            // Очистка ошибок при выключении
+            var emptyResult = new AnalysisResult(new List<BslSyntaxError>(), new List<SymbolInfo>());
+            UpdateUiWithResult(emptyResult);
+        }
+    }
+
+    private void Format1CCode_Click(object sender, RoutedEventArgs e)
+    {
+        var text = CodeTextBox.Text;
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+        var newLines = new List<string>();
+        int indent = 0;
+
+        var blockStart = new[] { "Процедура", "Функция", "Если", "Для", "Пока", "Попытка", "Цикл", "Тогда" };
+        var blockEnd = new[] { "КонецПроцедуры", "КонецФункции", "КонецЕсли", "КонецЦикла", "КонецПопытки", "Исключение" };
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+            {
+                newLines.Add("");
+                continue;
+            }
+
+            // Уменьшаем отступ, если строка начинается с ключевого слова конца блока
+            var upperLine = trimmed.ToUpper();
+            if (blockEnd.Any(b => upperLine.StartsWith(b.ToUpper())))
+            {
+                indent = Math.Max(0, indent - 1);
+            }
+
+            newLines.Add(new string(' ', indent * 4) + trimmed);
+
+            // Увеличиваем отступ, если строка начинается с ключевого слова начала блока
+            if (blockStart.Any(b => upperLine.StartsWith(b.ToUpper())))
+            {
+                // Для "Тогда" и "Цикл" обычно отступ увеличивается после них, но они часто в той же строке что и Если/Для
+                // Но если они на отдельной строке, то тоже увеличиваем.
+                // В простейшем случае:
+                indent++;
+            }
+        }
+
+        CodeTextBox.Text = string.Join(Environment.NewLine, newLines);
+        _snackbar.Show(CodeTextBox, "Код 1С отформатирован", NotificationType.Success, 1.5);
+    }
+
+    private void InitializeSyntaxServices()
+    {
+        // Remove old services if they exist
+        if (_colorizer != null)
+        {
+            CodeTextBox.TextArea.TextView.LineTransformers.Remove(_colorizer);
+        }
+        if (_markerService != null)
+        {
+            // TextMarkerService probably has a way to disconnect or we just stop using it
+            // It was added to BackgroundRenderers in AddToTextView
+            CodeTextBox.TextArea.TextView.BackgroundRenderers.Remove(_markerService);
+        }
+
+        // Initialize new services for the current document
+        _colorizer = new SyntaxErrorColorizer(CodeTextBox.Document);
+        CodeTextBox.TextArea.TextView.LineTransformers.Add(_colorizer);
+
+        _markerService = new TextMarkerService(CodeTextBox.Document);
+        _markerService.AddToTextView(CodeTextBox.TextArea.TextView);
     }
 }

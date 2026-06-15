@@ -9,11 +9,11 @@ using CodeDictionary.Analysis;
 
 namespace CodeDictionary.SyntaxChecking
 {
-    public class TextMarkerService : IBackgroundRenderer, ITextViewConnect
+    public class TextMarkerService : IBackgroundRenderer
     {
         private readonly TextDocument _document;
         private readonly List<BslSyntaxError> _markers = new();
-        private readonly List<TextView> _textViews = new();
+        private TextView _textView;
 
         public TextMarkerService(TextDocument document)
         {
@@ -28,9 +28,9 @@ namespace CodeDictionary.SyntaxChecking
                 _markers.AddRange(errors);
             }
 
-            foreach (var textView in _textViews)
+            if (_textView != null && _textView.VisualLinesValid)
             {
-                textView.InvalidateLayer(KnownLayer.Selection);
+                _textView.InvalidateLayer(KnownLayer.Selection);
             }
         }
 
@@ -66,14 +66,16 @@ namespace CodeDictionary.SyntaxChecking
 
         private void DrawSquiggle(TextView textView, DrawingContext drawingContext, VisualLine line, BslSyntaxError marker)
         {
-            // Get offset range
-            int lineStart = _document.GetLineByNumber(marker.Line).Offset;
+            if (marker.Line < 1 || marker.Line > _document.LineCount)
+                return;
+
+            var documentLine = _document.GetLineByNumber(marker.Line);
+            int lineStart = documentLine.Offset;
             int startOffset = lineStart + Math.Max(0, marker.Column - 1);
             int endOffset = startOffset + Math.Max(1, marker.Length);
 
-            // Clamp to line bounds
-            startOffset = Math.Max(lineStart, Math.Min(startOffset, lineStart + line.FirstDocumentLine.TotalLength));
-            endOffset = Math.Max(lineStart, Math.Min(endOffset, lineStart + line.FirstDocumentLine.TotalLength));
+            startOffset = Math.Max(lineStart, Math.Min(startOffset, lineStart + documentLine.TotalLength));
+            endOffset = Math.Max(lineStart, Math.Min(endOffset, lineStart + documentLine.TotalLength));
 
             if (startOffset >= endOffset) return;
 
@@ -81,11 +83,8 @@ namespace CodeDictionary.SyntaxChecking
             {
                 Point startPoint = rect.BottomLeft;
                 Point endPoint = rect.BottomRight;
-
-                // Move up a bit from the very bottom
                 startPoint.Y -= 1;
                 endPoint.Y -= 1;
-
                 DrawWavyLine(drawingContext, startPoint, endPoint);
             }
         }
@@ -102,10 +101,8 @@ namespace CodeDictionary.SyntaxChecking
             using (var ctx = geometry.Open())
             {
                 ctx.BeginFigure(start, false, false);
-
                 double x = start.X;
                 bool up = true;
-
                 while (x + waveWidth < end.X)
                 {
                     x += waveWidth;
@@ -113,20 +110,18 @@ namespace CodeDictionary.SyntaxChecking
                     ctx.LineTo(new Point(x, y), true, false);
                     up = !up;
                 }
-                
                 ctx.LineTo(end, true, false);
             }
-
             geometry.Freeze();
             drawingContext.DrawGeometry(null, pen, geometry);
         }
 
         public void AddToTextView(TextView textView)
         {
-            if (textView != null && !_textViews.Contains(textView))
+            if (textView != null && !textView.BackgroundRenderers.Contains(this))
             {
-                _textViews.Add(textView);
                 textView.BackgroundRenderers.Add(this);
+                _textView = textView;
             }
         }
 
@@ -134,8 +129,9 @@ namespace CodeDictionary.SyntaxChecking
         {
             if (textView != null)
             {
-                _textViews.Remove(textView);
                 textView.BackgroundRenderers.Remove(this);
+                if (_textView == textView)
+                    _textView = null;
             }
         }
     }

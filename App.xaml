@@ -1,8 +1,9 @@
-﻿<Application x:Class="CodeDictionary.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:converters="clr-namespace:CodeDictionary.Converters"
-             StartupUri="MainWindow.xaml">
+﻿<Application
+    x:Class="CodeDictionary.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:CodeDictionary.Converters"
+    StartupUri="MainWindow.xaml">
 
     <Application.Resources>
         <ResourceDictionary>
@@ -10,13 +11,13 @@
                 <ResourceDictionary Source="Themes/Dark.xaml" />
                 <ResourceDictionary Source="Themes/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            
-            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
-            <converters:BoolToStatusConverter x:Key="BoolToStatusConverter"/>
+
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            <converters:BoolToStatusConverter x:Key="BoolToStatusConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
 
-  
+
 
 
