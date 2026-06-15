@@ -5,14 +5,17 @@
 	<Color name="Number" foreground="#079217" />
 	<Color name="Preprocessor" foreground="#8F4714" />
     <Color name="Preprocedure" foreground="#E50BCF" />
-	<Color name="Keywords" foreground="#D45959" fontWeight="bold" />
-	<Color name="KeywordsEn" foreground="#D45959" fontWeight="bold" />
+	<Color name="Keywords" foreground="#C586C0" fontWeight="bold" />
+	<Color name="KeywordsEn" foreground="#C586C0" fontWeight="bold" />
 	<Color name="OperatorKeywords" foreground="#E58E0B" />
 	<Color name="OperatorKeywordsEn" foreground="#E58E0B" />
 	<Color name="TrueFalse" foreground="#E58E0B" />
 	<Color name="Punctuation" foreground="#079217" />
 	<Color name="DefaultText" foreground="#A2C4E7" />
+	<Color name="BuiltIn" foreground="#4EC9B0" />
+	
 
+	
 	<RuleSet ignoreCase="true">
 		<Span color="Comment">
 			<Begin>//</Begin>
@@ -26,6 +29,34 @@
 		<Span color="Preprocessor">
 			<Begin>\#</Begin>
 		</Span>
+
+	<Keywords color="BuiltIn">
+	<Word>Сообщить</Word>
+    <Word>Предупреждение</Word>
+    <Word>Вопрос</Word>
+    <Word>Записать</Word>
+    <Word>Прочитать</Word>
+    <Word>ОткрытьФайл</Word>
+    <Word>ЗакрытьФайл</Word>
+    <Word>СоздатьОбъект</Word>
+    <Word>ПолучитьОбъект</Word>
+    <Word>НайтиПоНаименованию</Word>
+    <Word>НайтиПоКоду</Word>
+    <Word>ПустаяСсылка</Word>
+    <Word>ЗначениеЗаполнено</Word>
+    <Word>Тип</Word>
+	<Word>ТипЗнч</Word>
+    <Word>Метаданные</Word>
+    <Word>Конфигурация</Word>
+    <Word>Справочники</Word>
+    <Word>Документы</Word>
+    <Word>РегистрыСведений</Word>
+    <Word>ПланыСчетов</Word>
+    <Word>ПланыВидовХарактеристик</Word>
+    <Word>ПланыОбмена</Word>
+	<Word>Константы</Word>
+   	</Keywords>
+
 
     <Keywords color="Preprocedure">
    

@@ -3,7 +3,6 @@ using CodeDictionary.Models;
 using CodeDictionary.Properties;
 using CodeDictionary.Services;
 using CodeDictionary.SyntaxChecking;
-using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
@@ -208,14 +207,14 @@ public partial class MainWindow : Window
 
 
     private void OnTextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
-     {
-         // Добавьте эту строку для отладки
-         System.Diagnostics.Debug.WriteLine($"OnTextEntered: {e.Text}");
-    
-         if (e.Text.Length > 0 && (char.IsLetter(e.Text[0]) || e.Text[0] == '_' || e.Text[0] == '.'))
-         {
+    {
+        // Добавьте эту строку для отладки
+        System.Diagnostics.Debug.WriteLine($"OnTextEntered: {e.Text}");
+
+        if (e.Text.Length > 0 && (char.IsLetter(e.Text[0]) || e.Text[0] == '_' || e.Text[0] == '.'))
+        {
             ShowCompletion1C(e.Text, false);
-         }
+        }
     }
 
 
@@ -256,16 +255,16 @@ public partial class MainWindow : Window
             if (_completionWindow == null)
             {
                 _completionWindow = new CompletionWindow(CodeTextBox.TextArea);
-                
+
                 // Применяем цвета темы при создании окна
                 var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
                 var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
                 var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
-                
+
                 _completionWindow.Background = background;
                 _completionWindow.Foreground = foreground;
                 _completionWindow.BorderBrush = border;
-                
+
                 if (_completionWindow.CompletionList != null)
                 {
                     _completionWindow.CompletionList.Background = background;
@@ -274,7 +273,7 @@ public partial class MainWindow : Window
 
                 _completionWindow.Closed += delegate { _completionWindow = null; };
             }
-            
+
             var data = _completionWindow.CompletionList.CompletionData;
 
             // Очищаем существующие данные, так как мы будем добавлять новые
@@ -455,7 +454,7 @@ public partial class MainWindow : Window
         LoadCustomHighlighting();
 
         CodeTextBox.TextArea.TextView.LineTransformers.Add(new CustomColorTransformer(() => _textSegments));
-        
+
 
         _foldingManager = FoldingManager.Install(CodeTextBox.TextArea);
         _foldingStrategy = new BraceFoldingStrategy();
@@ -469,14 +468,14 @@ public partial class MainWindow : Window
             Interval = TimeSpan.FromMilliseconds(500)
         };
         _debounceTimer.Tick += DebounceTimer_Tick;
-        
+
         // Инициализация компонента для поиска (Debouncing)
         _searchDebounceTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(300)
         };
         _searchDebounceTimer.Tick += SearchDebounceTimer_Tick;
-        
+
 
         CodeTextBox.TextArea.TextView.MouseHover += OnTextViewMouseHover;
         CodeTextBox.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
@@ -507,7 +506,7 @@ public partial class MainWindow : Window
         CodeTextBox.TextArea.TextEntering += CodeTextBox_TextEntering;
         CodeTextBox.TextArea.TextEntered += OnTextEntered; // Subscribe to TextEntered
         CodeTextBox.TextArea.KeyDown += CodeTextBox_KeyDown;
-      
+
 
         // Bookmark margin handler
         _bookmarkMargin = new BookmarkMargin(
