@@ -1824,7 +1824,7 @@ public partial class MainWindow : Window
     private void InitializeFontSettings()
     {
         // Популярные моноширинные шрифты для кода
-        var monospaceFonts = new[] { "Consolas", "Courier New", "Lucida Console", "Cascadia Code", "Fira Code", "JetBrains Mono" };
+        var monospaceFonts = new[] { "Cascadia Mono", "Consolas", "Courier New", "Lucida Console", "Cascadia Code", "Fira Code", "JetBrains Mono" };
         foreach (var font in monospaceFonts)
         {
             FontFamilyComboBox.Items.Add(font);
@@ -1837,7 +1837,7 @@ public partial class MainWindow : Window
         {
             FontSizeComboBox.Items.Add(size);
         }
-        FontSizeComboBox.SelectedItem = 15;
+        FontSizeComboBox.SelectedItem = 14;
 
         WordWrapCheckBox.IsChecked = false;
 
