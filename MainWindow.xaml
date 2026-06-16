@@ -852,7 +852,7 @@
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1"
                         FontFamily="Consolas"
-                        FontSize="14"
+                        FontSize="16"
                         Foreground="{DynamicResource TextPrimaryBrush}"
                         HorizontalScrollBarVisibility="Auto"
                         LineNumbersForeground="{DynamicResource TextSecondaryBrush}"

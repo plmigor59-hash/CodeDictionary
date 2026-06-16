@@ -547,7 +547,7 @@ public partial class MainWindow : Window
 
         CodeTextBox.TextArea.TextView.MouseHover += OnTextViewMouseHover;
         CodeTextBox.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
-
+        
         // Инициализируем список шрифтов и настроек подсветки
         InitializeFontSettings();
 
@@ -1034,6 +1034,8 @@ public partial class MainWindow : Window
                 // Update syntax checking services for the new document
                 InitializeSyntaxServices();
             }
+
+            
 
             CodeTextBox.TextArea.TextView.Redraw();
             _currentFilePath = tab.FilePath;
@@ -1830,12 +1832,12 @@ public partial class MainWindow : Window
         FontFamilyComboBox.SelectedIndex = 0;
 
         // Размеры шрифта
-        var fontSizes = new[] { 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24 };
+        var fontSizes = new[] { 8, 9, 10, 11, 12, 13, 14,15, 16, 18, 20, 22, 24 };
         foreach (var size in fontSizes)
         {
             FontSizeComboBox.Items.Add(size);
         }
-        FontSizeComboBox.SelectedItem = 12;
+        FontSizeComboBox.SelectedItem = 15;
 
         WordWrapCheckBox.IsChecked = false;
 
