@@ -121,6 +121,29 @@ public partial class MainWindow : Window
                 Dispatcher.BeginInvoke(new Action(() => ShowCompletion()));
             }
         }
+        else if (e.Text == "(" || e.Text == ",")
+        {
+            var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+            if (syntax != null && syntax.Contains("C#"))
+            {
+                Dispatcher.BeginInvoke(new Action(async () => await ShowSignatureHelp()));
+            }
+        }
+    }
+
+    private async Task ShowSignatureHelp()
+    {
+        var position = CodeTextBox.CaretOffset;
+        _roslynCompletionService.UpdateCode(CodeTextBox.Text);
+        var signatureInfo = await _roslynCompletionService.GetSignatureInfoAsync(position);
+
+        if (signatureInfo != null)
+        {
+            if (_hoverToolTip == null) _hoverToolTip = new ToolTip();
+            _hoverToolTip.Content = signatureInfo.FullSignature;
+            _hoverToolTip.PlacementTarget = CodeTextBox;
+            _hoverToolTip.IsOpen = true;
+        }
     }
 
     private void CodeTextBox_KeyDown(object sender, KeyEventArgs e)
@@ -312,7 +335,9 @@ public partial class MainWindow : Window
     {
         var code = CodeTextBox.Text;
         var position = CodeTextBox.CaretOffset;
-        var items = await _roslynCompletionService.GetCompletionItemsAsync(code, position);
+        
+        _roslynCompletionService.UpdateCode(code);
+        var items = await _roslynCompletionService.GetCompletionItemsAsync(position);
 
         if (items.Any())
         {
@@ -336,7 +361,7 @@ public partial class MainWindow : Window
 
             foreach (var item in items)
             {
-                _completionWindow?.CompletionList?.CompletionData.Add(new RoslynCompletionData(item, _roslynCompletionService, code));
+                _completionWindow?.CompletionList?.CompletionData.Add(new RoslynCompletionData(item, _roslynCompletionService));
             }
             _completionWindow?.Closed += (s, e) => _completionWindow = null;
             _completionWindow?.Show();
@@ -2067,7 +2092,7 @@ public partial class MainWindow : Window
         CodeTextBox.BorderBrush = border;
     }
 
-    private void FormatCSharpCode_Click(object sender, RoutedEventArgs e)
+    private async void FormatCSharpCode_Click(object sender, RoutedEventArgs e)
     {
         var selectedSyntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
         if (selectedSyntax == null || !selectedSyntax.Contains("C#"))
@@ -2078,22 +2103,14 @@ public partial class MainWindow : Window
 
         try
         {
-            var code = CodeTextBox.Text;
-            if (string.IsNullOrWhiteSpace(code))
+            _roslynCompletionService.UpdateCode(CodeTextBox.Text);
+            var formattedText = await _roslynCompletionService.FormatCodeAsync();
+            
+            if (!string.IsNullOrEmpty(formattedText))
             {
-                return;
-            }
-
-            var tree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(code);
-            var root = tree.GetRoot();
-            using (var workspace = new Microsoft.CodeAnalysis.AdhocWorkspace())
-            {
-                var formattedNode = Microsoft.CodeAnalysis.Formatting.Formatter.Format(root, workspace);
-                var formattedText = formattedNode.ToFullString();
                 CodeTextBox.Document.Replace(0, CodeTextBox.Document.TextLength, formattedText);
+                _snackbar.Show(CodeTextBox, "Код C# успешно отформатирован", NotificationType.Success, 1.5);
             }
-
-            _snackbar.Show(CodeTextBox, "Код C# успешно отформатирован", NotificationType.Success, 1.5);
         }
         catch (Exception ex)
         {

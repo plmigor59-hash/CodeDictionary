@@ -12,14 +12,12 @@ namespace CodeDictionary.Services
     {
         private readonly CompletionItem _item;
         private readonly RoslynCompletionService _service;
-        private readonly string _code;
         private string? _description;
 
-        public RoslynCompletionData(CompletionItem item, RoslynCompletionService service, string code)
+        public RoslynCompletionData(CompletionItem item, RoslynCompletionService service)
         {
             _item = item;
             _service = service;
-            _code = code;
         }
 
         public object Content
@@ -67,7 +65,7 @@ namespace CodeDictionary.Services
 
         private async Task LoadDescriptionAsync()
         {
-            _description = await _service.GetDescriptionAsync(_item, _code);
+            _description = await _service.GetDescriptionAsync(_item);
             // Уведомляем интерфейс об обновлении описания (если AvalonEdit это поддерживает)
             // В простом варианте может потребоваться принудительное обновление UI
         }
