@@ -132,7 +132,11 @@ namespace CodeDictionary.Services
 
             if (isMethod)
             {
-                textToInsert += "()";
+                textToInsert += "() ";
+            }
+            else
+            {
+                textToInsert += " ";
             }
 
             textArea.Document.Replace(span.Start, span.Length, textToInsert);

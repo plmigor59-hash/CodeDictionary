@@ -62,7 +62,7 @@ namespace CodeDictionary.SyntaxChecking
             while (end < document.TextLength && IsIdentifierChar(document.GetCharAt(end)))
                 end++;
 
-            textArea.Document.Replace(start, end - start, Text);
+            textArea.Document.Replace(start, end - start, Text + " ");
         }
 
         private static bool IsIdentifierChar(char c)
