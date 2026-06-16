@@ -1167,6 +1167,51 @@
                                     <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Удалить выбранное" />
                                 </StackPanel>
                             </Grid>
+
+                            <!--  Toolbar Section  -->
+                            <TextBlock
+                                Margin="0,8,0,4"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Text="Панель инструментов" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Key" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource WarningBrush}" Kind="FormatColorFill" />
+                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource DangerBrush}" Kind="FormatColorText" />
+                                    <TextBlock FontWeight="Bold" Margin="0,2" Foreground="{DynamicResource TextPrimaryBrush}" Text="B" HorizontalAlignment="Center" />
+                                    <TextBlock FontStyle="Italic" Margin="0,2" Foreground="{DynamicResource TextPrimaryBrush}" Text="I" HorizontalAlignment="Center" />
+                                    <TextBlock Margin="0,2" Foreground="{DynamicResource TextPrimaryBrush}" Text="U" TextDecorations="Underline" HorizontalAlignment="Center" />
+                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource DangerBrush}" Kind="FormatClear" />
+                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource WarningBrush}" Kind="FolderOpenOutline" />
+                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource SuccessBrush}" Kind="ContentSaveOutline" />
+                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource AccentBrush}" Kind="FormatIndentIncrease" />
+                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource DangerBrush}" Kind="TextSearch" />
+                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource AccentBrush}" Kind="DatabaseExportOutline" />
+                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource AccentBrush}" Kind="DatabaseImportOutline" />
+                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource WarningBrush}" Kind="FolderDownloadOutline" />
+                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource SuccessBrush}" Kind="FolderUploadOutline" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Цвет фона" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Цвет текста" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Жирный" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Курсив" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Подчеркнутый" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Очистить стиль" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Открыть файл" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Сохранить файл" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Форматировать код" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Синтаксический анализ" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Экспорт базы" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Импорт базы" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Импорт из папки" />
+                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Экспорт категории" />
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
