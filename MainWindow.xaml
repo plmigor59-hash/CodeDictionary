@@ -887,10 +887,17 @@
                                         <materialIcons:MaterialIcon Kind="CodeBraces" />
                                     </MenuItem.Icon>
                                 </MenuItem>
+                                <Separator />
+                                <MenuItem Click="Format1CCode_Click" Header="Форматировать 1С">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="CodeBraces" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
                             </ContextMenu>
                         </avalonEdit:TextEditor.ContextMenu>
                     </avalonEdit:TextEditor>
 
+  
                     <Grid
                         x:Name="ErrorListHeader"
                         Grid.Row="2"
@@ -919,6 +926,7 @@
                             x:Name="CloseErrorListButton"
                             Grid.Column="1"
                             Click="CloseErrorListButton_Click"
+                            Foreground="{DynamicResource DictTextPrimary}"
                             Style="{StaticResource IconButton}"
                             ToolTip="Закрыть список">
                             <materialIcons:MaterialIcon
@@ -931,7 +939,8 @@
                     <StackPanel
                         x:Name="ErrorListSplitter"
                         Grid.Row="4"
-                        Height="4"
+                        Height="8"
+                        
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Background="{DynamicResource BorderBrush}"
@@ -939,7 +948,7 @@
 
                     <DataGrid
                         x:Name="ErrorListGrid"
-                        Grid.Row="4"
+                        Grid.Row="8"
                         AutoGenerateColumns="False"
                         Background="{DynamicResource SurfaceBackground}"
                         BorderBrush="{DynamicResource BorderBrush}"

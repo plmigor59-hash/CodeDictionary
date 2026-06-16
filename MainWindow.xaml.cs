@@ -21,6 +21,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using System.Windows.Threading;
 using System.Xml;
@@ -472,7 +473,7 @@ public partial class MainWindow : Window
         // Инициализация компонента для поиска (Debouncing)
         _searchDebounceTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(300)
+            Interval = TimeSpan.FromMilliseconds(400)
         };
         _searchDebounceTimer.Tick += SearchDebounceTimer_Tick;
 
@@ -4178,17 +4179,124 @@ public partial class MainWindow : Window
 
     private void SetErrorPanelVisibility(Visibility visibility)
     {
-        ErrorListGrid.Visibility = visibility;
-        ErrorListHeader.Visibility = visibility;
-        ErrorListSplitter.Visibility = visibility;
-
+        bool isVisible = visibility == Visibility.Visible;
         var parentGrid = ErrorListGrid.Parent as Grid;
-        if (parentGrid != null && parentGrid.RowDefinitions.Count >= 5)
+
+        if (parentGrid == null || parentGrid.RowDefinitions.Count < 5)
+            return;
+
+        if (isVisible)
         {
-            bool isVisible = visibility == Visibility.Visible;
-            parentGrid.RowDefinitions[2].Height = isVisible ? new GridLength(28) : new GridLength(0);
-            parentGrid.RowDefinitions[3].Height = isVisible ? new GridLength(4) : new GridLength(0);
-            parentGrid.RowDefinitions[4].Height = isVisible ? new GridLength(100, GridUnitType.Pixel) : new GridLength(0);
+            // Показываем элемент
+            ErrorListGrid.Visibility = Visibility.Visible;
+            ErrorListHeader.Visibility = Visibility.Visible;
+
+            // Настраиваем строки
+            parentGrid.RowDefinitions[2].Height = GridLength.Auto;
+            parentGrid.RowDefinitions[3].Height = new GridLength(4);
+
+            // Анимируем появление
+            AnimateHeight(parentGrid.RowDefinitions[4], 0, 140, TimeSpan.FromMilliseconds(300));
+        }
+        else
+        {
+            // Анимируем скрытие
+            double currentHeight = parentGrid.RowDefinitions[4].Height.Value;
+            if (currentHeight <= 0) currentHeight = 140;
+
+            AnimateHeight(parentGrid.RowDefinitions[4], currentHeight, 0, TimeSpan.FromMilliseconds(300), () =>
+            {
+                ErrorListGrid.Visibility = Visibility.Collapsed;
+                ErrorListHeader.Visibility = Visibility.Collapsed;
+                parentGrid.RowDefinitions[4].Height = new GridLength(0);
+            });
+        }
+    }
+
+    private void AnimateHeight(RowDefinition row, double from, double to, TimeSpan duration, Action onComplete = null)
+    {
+        var startTime = DateTime.Now;
+        var startHeight = from;
+        var endHeight = to;
+
+        // Используем CompositionTarget для синхронизации с частотой обновления экрана
+        EventHandler renderingHandler = null;
+        renderingHandler = (sender, e) =>
+        {
+            var elapsed = DateTime.Now - startTime;
+            var progress = Math.Min(1.0, elapsed.TotalMilliseconds / duration.TotalMilliseconds);
+
+            // Плавная функция EaseInOut
+            double easedProgress;
+            if (progress < 0.5)
+                easedProgress = 4 * progress * progress * progress;
+            else
+                easedProgress = 1 - Math.Pow(1 - progress, 3) / 2;
+
+            var currentHeight = startHeight + (endHeight - startHeight) * easedProgress;
+            row.Height = new GridLength(currentHeight);
+
+            if (progress >= 1.0)
+            {
+                row.Height = new GridLength(endHeight);
+                CompositionTarget.Rendering -= renderingHandler;
+                onComplete?.Invoke();
+            }
+        };
+
+        CompositionTarget.Rendering += renderingHandler;
+    }
+
+    // Вспомогательный класс для анимации
+    public class DoubleAnimator
+    {
+        private double _currentValue;
+        private Action<double> _updateAction;
+        private System.Windows.Threading.DispatcherTimer _timer;
+        private DateTime _startTime;
+        private double _startValue;
+        private double _endValue;
+        private TimeSpan _duration;
+
+        public DoubleAnimator(double initialValue, Action<double> updateAction)
+        {
+            _currentValue = initialValue;
+            _updateAction = updateAction;
+        }
+
+        public void BeginAnimation(double from, double to, TimeSpan duration)
+        {
+            _startValue = from;
+            _endValue = to;
+            _duration = duration;
+            _startTime = DateTime.Now;
+            _currentValue = from;
+
+            _timer = new System.Windows.Threading.DispatcherTimer();
+            _timer.Interval = TimeSpan.FromMilliseconds(10); // ~60 FPS
+            _timer.Tick += OnTick;
+            _timer.Start();
+        }
+
+        private void OnTick(object sender, EventArgs e)
+        {
+            var elapsed = DateTime.Now - _startTime;
+            var progress = Math.Min(1.0, elapsed.TotalMilliseconds / _duration.TotalMilliseconds);
+
+            // Используем CubicEase
+            progress = progress < 0.5
+                ? 4 * progress * progress * progress
+                : 1 - Math.Pow(-2 * progress + 2, 3) / 2;
+
+            _currentValue = _startValue + (_endValue - _startValue) * progress;
+            _updateAction(_currentValue);
+
+            if (progress >= 1.0)
+            {
+                _timer.Stop();
+                _timer.Tick -= OnTick;
+                _updateAction(_endValue);
+            }
         }
     }
 
