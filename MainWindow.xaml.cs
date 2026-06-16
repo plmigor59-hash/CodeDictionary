@@ -236,7 +236,15 @@ public partial class MainWindow : Window
 
         if (e.Text.Length > 0 && (char.IsLetter(e.Text[0]) || e.Text[0] == '_' || e.Text[0] == '.'))
         {
-            ShowCompletion1C(e.Text, false);
+            var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+            if (syntax != null && syntax.Contains("C#"))
+            {
+                ShowCompletion();
+            }
+            else
+            {
+                ShowCompletion1C(e.Text, false);
+            }
         }
     }
 
@@ -278,6 +286,7 @@ public partial class MainWindow : Window
             if (_completionWindow == null)
             {
                 _completionWindow = new CompletionWindow(CodeTextBox.TextArea);
+                _completionWindow.Width = 500; // Увеличиваем ширину окна
 
                 // Применяем цвета темы при создании окна
                 var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
@@ -341,30 +350,62 @@ public partial class MainWindow : Window
 
         if (items.Any())
         {
-            _completionWindow = new CompletionWindow(CodeTextBox.TextArea);
-
-            // Применяем цвета темы к окну автодополнения
-            var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
-            var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
-            var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
-
-            _completionWindow.Background = background;
-            _completionWindow.Foreground = foreground;
-            _completionWindow.BorderBrush = border;
-
-            // Установка цветов для самого списка внутри окна
-            if (_completionWindow.CompletionList != null)
+            if (_completionWindow == null)
             {
-                _completionWindow.CompletionList.Background = background;
-                _completionWindow.CompletionList.Foreground = foreground;
+                _completionWindow = new CompletionWindow(CodeTextBox.TextArea);
+                _completionWindow.Width = 500; // Увеличиваем ширину окна
+
+                // Применяем цвета темы к окну автодополнения
+                var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
+                var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
+                var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
+
+                _completionWindow.Background = background;
+                _completionWindow.Foreground = foreground;
+                _completionWindow.BorderBrush = border;
+
+                // Установка цветов для самого списка внутри окна
+                if (_completionWindow.CompletionList != null)
+                {
+                    _completionWindow.CompletionList.Background = background;
+                    _completionWindow.CompletionList.Foreground = foreground;
+                }
+
+                _completionWindow.Closed += (s, e) => _completionWindow = null;
             }
+
+            // Устанавливаем StartOffset для фильтрации
+            var firstItem = items.First();
+            int shift = _roslynCompletionService.OffsetShift;
+            _completionWindow.StartOffset = Math.Max(0, firstItem.Span.Start - shift);
+
+            var data = _completionWindow.CompletionList.CompletionData;
+            data.Clear();
 
             foreach (var item in items)
             {
-                _completionWindow?.CompletionList?.CompletionData.Add(new RoslynCompletionData(item, _roslynCompletionService));
+                data.Add(new RoslynCompletionData(item, _roslynCompletionService, position));
             }
-            _completionWindow?.Closed += (s, e) => _completionWindow = null;
-            _completionWindow?.Show();
+
+            if (!_completionWindow.IsVisible)
+            {
+                _completionWindow.Show();
+            }
+
+            // Выделяем текущее совпадение
+            int wordStart = firstItem.Span.Start - shift;
+            if (wordStart >= 0 && wordStart < CodeTextBox.Text.Length && position > wordStart)
+            {
+                string currentWord = CodeTextBox.Text.Substring(wordStart, position - wordStart);
+                if (!string.IsNullOrEmpty(currentWord))
+                {
+                    _completionWindow.CompletionList.SelectItem(currentWord);
+                }
+            }
+        }
+        else
+        {
+            _completionWindow?.Close();
         }
     }
 

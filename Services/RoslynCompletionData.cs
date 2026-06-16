@@ -12,12 +12,16 @@ namespace CodeDictionary.Services
     {
         private readonly CompletionItem _item;
         private readonly RoslynCompletionService _service;
+        private readonly int _position;
         private string? _description;
+        private string? _signature;
+        private System.Windows.Controls.TextBlock? _textBlock;
 
-        public RoslynCompletionData(CompletionItem item, RoslynCompletionService service)
+        public RoslynCompletionData(CompletionItem item, RoslynCompletionService service, int position)
         {
             _item = item;
             _service = service;
+            _position = position;
         }
 
         public object Content
@@ -37,37 +41,69 @@ namespace CodeDictionary.Services
                     Margin = new System.Windows.Thickness(0, 0, 5, 0),
                     VerticalAlignment = System.Windows.VerticalAlignment.Center
                 };
-                var text = new System.Windows.Controls.TextBlock
+
+                _textBlock = new System.Windows.Controls.TextBlock
                 {
-                    Text = _item.DisplayText,
+                    Text = _item.DisplayText + (_signature ?? ""),
                     Foreground = foreground,
                     VerticalAlignment = System.Windows.VerticalAlignment.Center
                 };
 
+                if (_signature == null && _item.Tags.Contains("Method"))
+                {
+                    _ = LoadSignatureAsync();
+                }
+
                 stack.Children.Add(icon);
-                stack.Children.Add(text);
+                stack.Children.Add(_textBlock);
                 return stack;
             }
         }
+
+        private async Task LoadSignatureAsync()
+        {
+            _signature = await _service.GetMethodSignatureAsync(_item, _position);
+            if (_textBlock != null)
+            {
+                _textBlock.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    _textBlock.Text = _item.DisplayText + _signature;
+                }));
+            }
+        }
+
+        private System.Windows.Controls.TextBlock? _descriptionTextBlock;
+
         public object Description
         {
             get
             {
-                if (_description == null)
+                if (_descriptionTextBlock == null)
                 {
-                    // Асинхронное получение описания
+                    var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
+                    _descriptionTextBlock = new System.Windows.Controls.TextBlock
+                    {
+                        Text = "Загрузка...",
+                        TextWrapping = TextWrapping.Wrap,
+                        MaxWidth = 400,
+                        Foreground = foreground
+                    };
                     _ = LoadDescriptionAsync();
-                    return "Загрузка...";
                 }
-                return _description;
+                return _descriptionTextBlock;
             }
         }
 
         private async Task LoadDescriptionAsync()
         {
             _description = await _service.GetDescriptionAsync(_item);
-            // Уведомляем интерфейс об обновлении описания (если AvalonEdit это поддерживает)
-            // В простом варианте может потребоваться принудительное обновление UI
+            if (_descriptionTextBlock != null)
+            {
+                _descriptionTextBlock.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    _descriptionTextBlock.Text = _description;
+                }));
+            }
         }
 
         public System.Windows.Media.ImageSource? Image => null; // Убираем вторую иконку
@@ -130,19 +166,22 @@ namespace CodeDictionary.Services
 
             if (isMethod)
             {
-                textToInsert += "() ";
-            }
-            else
-            {
-                textToInsert += " ";
+                textToInsert += "()";
             }
 
-            textArea.Document.Replace(span.Start, span.Length, textToInsert);
+            // Корректируем смещение span с учетом OffsetShift в сервисе
+            int start = Math.Max(0, span.Start - _service.OffsetShift);
+            textArea.Document.Replace(start, Math.Min(span.Length, textArea.Document.TextLength - start), textToInsert);
 
             if (isMethod)
             {
                 // Ставим курсор внутри скобок
-                textArea.Caret.Offset = span.Start + _item.DisplayText.Length + 1;
+                textArea.Caret.Offset = start + _item.DisplayText.Length + 1;
+            }
+            else
+            {
+                // Для не-методов ставим курсор в конец вставленного текста
+                textArea.Caret.Offset = start + textToInsert.Length;
             }
         }
     }
