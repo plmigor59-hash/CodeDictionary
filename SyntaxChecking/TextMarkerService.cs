@@ -9,7 +9,7 @@ namespace CodeDictionary.SyntaxChecking
     public class TextMarkerService : IBackgroundRenderer
     {
         private readonly TextDocument _document;
-        private readonly List<BslSyntaxError> _markers = new();
+        private readonly List<CodeSyntaxError> _markers = new();
         private TextView _textView;
 
         public TextMarkerService(TextDocument document)
@@ -17,7 +17,7 @@ namespace CodeDictionary.SyntaxChecking
             _document = document ?? throw new ArgumentNullException(nameof(document));
         }
 
-        public void UpdateMarkers(IEnumerable<BslSyntaxError> errors)
+        public void UpdateMarkers(IEnumerable<CodeSyntaxError> errors)
         {
             _markers.Clear();
             if (errors != null)
@@ -61,7 +61,7 @@ namespace CodeDictionary.SyntaxChecking
             }
         }
 
-        private void DrawSquiggle(TextView textView, DrawingContext drawingContext, VisualLine line, BslSyntaxError marker)
+        private void DrawSquiggle(TextView textView, DrawingContext drawingContext, VisualLine line, CodeSyntaxError marker)
         {
             if (marker.Line < 1 || marker.Line > _document.LineCount)
                 return;

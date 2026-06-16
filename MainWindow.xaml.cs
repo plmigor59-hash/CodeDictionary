@@ -75,7 +75,8 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// /Syntax
-    private readonly IOneScriptAnalysisService _analyzer = new CodeAnalyzer();
+    private readonly ICodeAnalysisService _bslAnalyzer = new BslCodeAnalyzer();
+    private readonly ICodeAnalysisService _csharpAnalyzer;
     private ToolTip? _hoverToolTip;
     private CompletionWindow? _completionWindow;
     private CancellationTokenSource _parseCts = new CancellationTokenSource();
@@ -255,7 +256,7 @@ public partial class MainWindow : Window
         var allData = new List<ICompletionData>();
 
         // Добавляем символы из анализатора
-        if (_analyzer is CodeAnalyzer coreAnalyzer)
+        if (_bslAnalyzer is BslCodeAnalyzer coreAnalyzer)
         {
             foreach (var symbol in coreAnalyzer.Symbols)
             {
@@ -516,6 +517,7 @@ public partial class MainWindow : Window
 
 
         _roslynCompletionService = new RoslynCompletionService();
+        _csharpAnalyzer = new CSharpCodeAnalyzer(_roslynCompletionService);
 
         LoadCustomHighlighting();
 
@@ -545,7 +547,6 @@ public partial class MainWindow : Window
 
         CodeTextBox.TextArea.TextView.MouseHover += OnTextViewMouseHover;
         CodeTextBox.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
-        CodeTextBox.TextArea.TextEntered += OnTextEntered;
 
         // Инициализируем список шрифтов и настроек подсветки
         InitializeFontSettings();
@@ -873,7 +874,7 @@ public partial class MainWindow : Window
         UpdateSegmentsAfterTextChange();
         UpdateFoldings();
 
-        if (Analysis1CToggle.IsChecked == true)
+        if (AnalyzeToggle.IsChecked == true)
         {
             _debounceTimer.Stop();
             _debounceTimer.Start();
@@ -2133,31 +2134,7 @@ public partial class MainWindow : Window
         CodeTextBox.BorderBrush = border;
     }
 
-    private async void FormatCSharpCode_Click(object sender, RoutedEventArgs e)
-    {
-        var selectedSyntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
-        if (selectedSyntax == null || !selectedSyntax.Contains("C#"))
-        {
-            _snackbar.Show(CodeTextBox, "Форматирование поддерживается только для C#", NotificationType.Warning, 2);
-            return;
-        }
 
-        try
-        {
-            _roslynCompletionService.UpdateCode(CodeTextBox.Text);
-            var formattedText = await _roslynCompletionService.FormatCodeAsync();
-            
-            if (!string.IsNullOrEmpty(formattedText))
-            {
-                CodeTextBox.Document.Replace(0, CodeTextBox.Document.TextLength, formattedText);
-                _snackbar.Show(CodeTextBox, "Код C# успешно отформатирован", NotificationType.Success, 1.5);
-            }
-        }
-        catch (Exception ex)
-        {
-            _snackbar.Show(CodeTextBox, $"Ошибка форматирования: {ex.Message}", NotificationType.Error, 3);
-        }
-    }
 
 
 
@@ -4185,6 +4162,78 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void FormatCode_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedSyntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+        if (selectedSyntax == null) return;
+
+        if (selectedSyntax.Contains("C#"))
+        {
+            try
+            {
+                _roslynCompletionService.UpdateCode(CodeTextBox.Text);
+                var formattedText = await _roslynCompletionService.FormatCodeAsync();
+                
+                if (!string.IsNullOrEmpty(formattedText))
+                {
+                    CodeTextBox.Document.Replace(0, CodeTextBox.Document.TextLength, formattedText);
+                    _snackbar.Show(CodeTextBox, "Код C# успешно отформатирован", NotificationType.Success, 1.5);
+                }
+            }
+            catch (Exception ex)
+            {
+                _snackbar.Show(CodeTextBox, $"Ошибка форматирования: {ex.Message}", NotificationType.Error, 3);
+            }
+        }
+        else if (selectedSyntax.Contains("1C"))
+        {
+            Format1CCode();
+        }
+        else
+        {
+            _snackbar.Show(CodeTextBox, "Форматирование для данного синтаксиса не поддерживается", NotificationType.Warning, 2);
+        }
+    }
+
+    private void Format1CCode()
+    {
+        var text = CodeTextBox.Text;
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+        var newLines = new List<string>();
+        int indent = 0;
+
+        var blockStart = new[] { "Процедура", "Функция", "Если", "Для", "Пока", "Попытка", "Цикл", "Тогда" };
+        var blockEnd = new[] { "КонецПроцедуры", "КонецФункции", "КонецЕсли", "КонецЦикла", "КонецПопытки", "Исключение" };
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+            {
+                newLines.Add("");
+                continue;
+            }
+
+            var upperLine = trimmed.ToUpper();
+            if (blockEnd.Any(b => upperLine.StartsWith(b.ToUpper())))
+            {
+                indent = Math.Max(0, indent - 1);
+            }
+
+            newLines.Add(new string(' ', indent * 4) + trimmed);
+
+            if (blockStart.Any(b => upperLine.StartsWith(b.ToUpper())))
+            {
+                indent++;
+            }
+        }
+
+        CodeTextBox.Text = string.Join(Environment.NewLine, newLines);
+        _snackbar.Show(CodeTextBox, "Код 1С отформатирован", NotificationType.Success, 1.5);
+    }
+
     private async void DebounceTimer_Tick(object? sender, EventArgs e)
     {
         _debounceTimer.Stop();
@@ -4192,12 +4241,18 @@ public partial class MainWindow : Window
         var sourceCode = CodeTextBox.Text;
         if (string.IsNullOrWhiteSpace(sourceCode)) return;
 
+        var selectedSyntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+        if (selectedSyntax == null) return;
+
+        ICodeAnalysisService? analyzer = null;
+        if (selectedSyntax.Contains("1C")) analyzer = _bslAnalyzer;
+        else if (selectedSyntax.Contains("C#")) analyzer = _csharpAnalyzer;
+
+        if (analyzer == null) return;
+
         try
         {
-            // Запускаем анализ в фоне
-            var result = await _analyzer.AnalyzeAsync(sourceCode);
-
-            // Обновляем UI
+            var result = await analyzer.AnalyzeAsync(sourceCode);
             UpdateUiWithResult(result);
         }
         catch (Exception ex)
@@ -4214,11 +4269,7 @@ public partial class MainWindow : Window
 
         // Обновляем таблицу ошибок
         bool hasErrors = result.Errors != null && result.Errors.Count > 0;
-        bool shouldShow = Analysis1CToggle.IsChecked == true && hasErrors;
-
-        // Если панель была закрыта вручную, мы её не открываем автоматически 
-        // до следующего сеанса анализа или изменения состояния (опционально)
-        // Но здесь мы просто следуем логике: если есть ошибки и анализ включен - показываем.
+        bool shouldShow = AnalyzeToggle.IsChecked == true && hasErrors;
 
         ErrorListGrid.ItemsSource = shouldShow ? result.Errors : null;
 
@@ -4364,7 +4415,7 @@ public partial class MainWindow : Window
 
     private void ErrorListGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (ErrorListGrid.SelectedItem is BslSyntaxError error)
+        if (ErrorListGrid.SelectedItem is CodeSyntaxError error)
         {
             try
             {
@@ -4392,7 +4443,7 @@ public partial class MainWindow : Window
 
     private void OnTextViewMouseHover(object? sender, System.Windows.Input.MouseEventArgs e)
     {
-        if (Analysis1CToggle.IsChecked != true) return;
+        if (AnalyzeToggle.IsChecked != true) return;
 
         var pos = CodeTextBox.GetPositionFromPoint(e.GetPosition(CodeTextBox));
         if (pos == null) return;
@@ -4430,9 +4481,9 @@ public partial class MainWindow : Window
         _hoverToolTip = null;
     }
 
-    private void Analysis1CToggle_Click(object sender, RoutedEventArgs e)
+    private void AnalyzeToggle_Click(object sender, RoutedEventArgs e)
     {
-        if (Analysis1CToggle.IsChecked == true)
+        if (AnalyzeToggle.IsChecked == true)
         {
             _debounceTimer.Start();
             // Сразу запускаем проверку
@@ -4443,53 +4494,9 @@ public partial class MainWindow : Window
             _debounceTimer.Stop();
 
             // Очистка ошибок при выключении
-            var emptyResult = new AnalysisResult(new List<BslSyntaxError>(), new List<SymbolInfo>());
+            var emptyResult = new AnalysisResult(new List<CodeSyntaxError>(), new List<CodeDictionary.Analysis.SymbolInfo>());
             UpdateUiWithResult(emptyResult);
         }
-    }
-
-    private void Format1CCode_Click(object sender, RoutedEventArgs e)
-    {
-        var text = CodeTextBox.Text;
-        if (string.IsNullOrWhiteSpace(text)) return;
-
-        var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-        var newLines = new List<string>();
-        int indent = 0;
-
-        var blockStart = new[] { "Процедура", "Функция", "Если", "Для", "Пока", "Попытка", "Цикл", "Тогда" };
-        var blockEnd = new[] { "КонецПроцедуры", "КонецФункции", "КонецЕсли", "КонецЦикла", "КонецПопытки", "Исключение" };
-
-        foreach (var line in lines)
-        {
-            var trimmed = line.Trim();
-            if (string.IsNullOrWhiteSpace(trimmed))
-            {
-                newLines.Add("");
-                continue;
-            }
-
-            // Уменьшаем отступ, если строка начинается с ключевого слова конца блока
-            var upperLine = trimmed.ToUpper();
-            if (blockEnd.Any(b => upperLine.StartsWith(b.ToUpper())))
-            {
-                indent = Math.Max(0, indent - 1);
-            }
-
-            newLines.Add(new string(' ', indent * 4) + trimmed);
-
-            // Увеличиваем отступ, если строка начинается с ключевого слова начала блока
-            if (blockStart.Any(b => upperLine.StartsWith(b.ToUpper())))
-            {
-                // Для "Тогда" и "Цикл" обычно отступ увеличивается после них, но они часто в той же строке что и Если/Для
-                // Но если они на отдельной строке, то тоже увеличиваем.
-                // В простейшем случае:
-                indent++;
-            }
-        }
-
-        CodeTextBox.Text = string.Join(Environment.NewLine, newLines);
-        _snackbar.Show(CodeTextBox, "Код 1С отформатирован", NotificationType.Success, 1.5);
     }
 
     private void InitializeSyntaxServices()
@@ -4509,8 +4516,7 @@ public partial class MainWindow : Window
         // Initialize new services for the current document
         _colorizer = new SyntaxErrorColorizer(CodeTextBox.Document);
         CodeTextBox.TextArea.TextView.LineTransformers.Add(_colorizer);
-
-        _markerService = new TextMarkerService(CodeTextBox.Document);
-        _markerService.AddToTextView(CodeTextBox.TextArea.TextView);
-    }
+_markerService = new TextMarkerService(CodeTextBox.Document);
+_markerService.AddToTextView(CodeTextBox.TextArea.TextView);
+}
 }

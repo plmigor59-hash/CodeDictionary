@@ -11,13 +11,13 @@ namespace CodeDictionary.SyntaxChecking
     /// </summary>
     public class SyntaxErrorColorizer : DocumentColorizingTransformer
     {
-        private readonly Dictionary<int, List<BslSyntaxError>> _errorsByLine = new();
+        private readonly Dictionary<int, List<CodeSyntaxError>> _errorsByLine = new();
 
         public SyntaxErrorColorizer(TextDocument document)
         {
         }
 
-        public void UpdateErrors(List<BslSyntaxError> errors)
+        public void UpdateErrors(List<CodeSyntaxError> errors)
         {
             _errorsByLine.Clear();
 
@@ -26,17 +26,17 @@ namespace CodeDictionary.SyntaxChecking
             foreach (var error in errors)
             {
                 if (!_errorsByLine.ContainsKey(error.Line))
-                    _errorsByLine[error.Line] = new List<BslSyntaxError>();
+                    _errorsByLine[error.Line] = new List<CodeSyntaxError>();
 
                 _errorsByLine[error.Line].Add(error);
             }
         }
 
-        public List<BslSyntaxError> GetErrorsAtLine(int lineNumber)
+        public List<CodeSyntaxError> GetErrorsAtLine(int lineNumber)
         {
             if (_errorsByLine.TryGetValue(lineNumber, out var errors))
                 return errors;
-            return new List<BslSyntaxError>();
+            return new List<CodeSyntaxError>();
         }
 
         protected override void ColorizeLine(DocumentLine line)

@@ -1,6 +1,6 @@
 namespace CodeDictionary.Analysis
 {
-    public interface IOneScriptAnalysisService
+    public interface ICodeAnalysisService
     {
         Task<AnalysisResult> AnalyzeAsync(string code, CancellationToken cancellationToken = default);
     }

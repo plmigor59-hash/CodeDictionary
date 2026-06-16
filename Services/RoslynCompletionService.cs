@@ -23,7 +23,7 @@ namespace CodeDictionary.Services
         private readonly AdhocWorkspace _workspace;
         private readonly Project _project;
         private Document? _currentDocument;
-        private string _hiddenUsings = "using System;\nusing System.Collections.Generic;\nusing System.Linq;\nusing System.Text;\nusing System.Threading.Tasks;\n";
+        public string HiddenUsings { get; } = "using System;\nusing System.Collections.Generic;\nusing System.Linq;\nusing System.Text;\nusing System.Threading.Tasks;\n";
         
         public int OffsetShift { get; private set; } = 0;
 
@@ -81,8 +81,8 @@ namespace CodeDictionary.Services
             // Если в начале кода нет usings, добавляем их для улучшения подсказок
             if (!code.TrimStart().StartsWith("using "))
             {
-                OffsetShift = _hiddenUsings.Length;
-                code = _hiddenUsings + code;
+                OffsetShift = HiddenUsings.Length;
+                code = HiddenUsings + code;
             }
 
             _currentDocument = _currentDocument.WithText(SourceText.From(code));
@@ -192,12 +192,22 @@ namespace CodeDictionary.Services
             
             string result = formattedNode.ToFullString();
             // Убираем скрытые usings если они были добавлены
-            if (OffsetShift > 0 && result.StartsWith(_hiddenUsings))
+            if (OffsetShift > 0 && result.StartsWith(HiddenUsings))
             {
-                result = result.Substring(_hiddenUsings.Length);
+                result = result.Substring(HiddenUsings.Length);
             }
             
             return result;
+        }
+
+        public async Task<IEnumerable<Diagnostic>> GetDiagnosticsAsync()
+        {
+            if (_currentDocument == null) return Enumerable.Empty<Diagnostic>();
+
+            var semanticModel = await _currentDocument.GetSemanticModelAsync();
+            if (semanticModel == null) return Enumerable.Empty<Diagnostic>();
+
+            return semanticModel.GetDiagnostics();
         }
     }
 }

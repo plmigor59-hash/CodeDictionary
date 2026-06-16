@@ -17,7 +17,7 @@ namespace CodeDictionary.SyntaxChecking
     public class SymbolExtractor : BslSyntaxWalker
     {
         public List<SymbolInfo> Symbols { get; } = new();
-        public List<BslSyntaxError> Errors { get; } = new();
+        public List<CodeSyntaxError> Errors { get; } = new();
 
         private readonly HashSet<string> _declaredMethods = new(StringComparer.OrdinalIgnoreCase);
 
@@ -212,7 +212,7 @@ namespace CodeDictionary.SyntaxChecking
         // Добавление ошибки
         private void AddError(string message, CodeRange location, ErrorType errorType)
         {
-            Errors.Add(new BslSyntaxError
+            Errors.Add(new CodeSyntaxError
             {
                 Message = message,
                 Line = location.LineNumber,

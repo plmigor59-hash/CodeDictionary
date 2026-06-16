@@ -596,31 +596,20 @@
                                 Kind="ContentSaveOutline" />
                         </Button>
                         <Button
-                            Click="FormatCSharpCode_Click"
+                            Click="FormatCode_Click"
                             Style="{StaticResource IconButton}"
-                            ToolTip="Форматировать C#">
+                            ToolTip="Форматировать код">
                             <materialIcons:MaterialIcon
                                 Width="18"
                                 Height="18"
                                 Foreground="{DynamicResource AccentBrush}"
-                                Kind="CodeBraces" />
-                        </Button>
-                        <Button
-                            x:Name="Format1CCodeButton"
-                            Click="Format1CCode_Click"
-                            Style="{StaticResource IconButton}"
-                            ToolTip="Форматировать 1С">
-                            <materialIcons:MaterialIcon
-                                Width="18"
-                                Height="18"
-                                Foreground="Orange"
                                 Kind="FormatIndentIncrease" />
                         </Button>
                         <ToggleButton
-                            x:Name="Analysis1CToggle"
-                            Click="Analysis1CToggle_Click"
+                            x:Name="AnalyzeToggle"
+                            Click="AnalyzeToggle_Click"
                             Style="{StaticResource IconToggleButton}"
-                            ToolTip="Синтаксический анализ 1С">
+                            ToolTip="Синтаксический анализ">
                             <materialIcons:MaterialIcon
                                 Width="18"
                                 Height="18"
@@ -882,13 +871,7 @@
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <Separator />
-                                <MenuItem Click="FormatCSharpCode_Click" Header="Форматировать">
-                                    <MenuItem.Icon>
-                                        <materialIcons:MaterialIcon Kind="CodeBraces" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <Separator />
-                                <MenuItem Click="Format1CCode_Click" Header="Форматировать 1С">
+                                <MenuItem Click="FormatCode_Click" Header="Форматировать">
                                     <MenuItem.Icon>
                                         <materialIcons:MaterialIcon Kind="CodeBraces" />
                                     </MenuItem.Icon>

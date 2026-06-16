@@ -7,13 +7,13 @@ using OneScript.Sources;
 
 namespace CodeDictionary.SyntaxChecking
 {
-    public class CodeAnalyzer : IOneScriptAnalysisService
+    public class BslCodeAnalyzer : ICodeAnalysisService
     {
         private readonly object _lock = new();
-        private readonly List<BslSyntaxError> _errors = [];
+        private readonly List<CodeSyntaxError> _errors = [];
         private readonly List<SymbolInfo> _symbols = [];
 
-        public IReadOnlyList<BslSyntaxError> Errors => _errors;
+        public IReadOnlyList<CodeSyntaxError> Errors => _errors;
         public IReadOnlyList<SymbolInfo> Symbols => _symbols;
         public bool HasErrors => _errors.Any();
 
@@ -26,7 +26,7 @@ namespace CodeDictionary.SyntaxChecking
         {
             if (string.IsNullOrWhiteSpace(code))
             {
-                return new AnalysisResult(Enumerable.Empty<BslSyntaxError>(), Enumerable.Empty<SymbolInfo>());
+                return new AnalysisResult(Enumerable.Empty<CodeSyntaxError>(), Enumerable.Empty<SymbolInfo>());
             }
 
             // Предварительная обработка: удаляем строки, начинающиеся с #
@@ -34,7 +34,7 @@ namespace CodeDictionary.SyntaxChecking
             var filteredLines = lines.Select(line => line.TrimStart().StartsWith("#") ? "" : line);
             var sanitizedCode = string.Join(Environment.NewLine, filteredLines);
 
-            var newErrors = new List<BslSyntaxError>();
+            var newErrors = new List<CodeSyntaxError>();
             var newSymbols = new List<SymbolInfo>();
 
             try
@@ -52,7 +52,7 @@ namespace CodeDictionary.SyntaxChecking
 
                 lexer.UnexpectedCharacterFound += (s, args) =>
                 {
-                    newErrors.Add(new BslSyntaxError
+                    newErrors.Add(new CodeSyntaxError
                     {
                         Line = args.Iterator.CurrentLine,
                         Column = args.Iterator.CurrentColumn,
@@ -75,7 +75,7 @@ namespace CodeDictionary.SyntaxChecking
                     int column = error.Position.ColumnNumber;
                     int length = GetIdentifierLength(code, line, column);
 
-                    newErrors.Add(new BslSyntaxError
+                    newErrors.Add(new CodeSyntaxError
                     {
                         Line = line,
                         Column = column,
@@ -105,7 +105,7 @@ namespace CodeDictionary.SyntaxChecking
             }
             catch (Exception ex)
             {
-                newErrors.Add(new BslSyntaxError
+                newErrors.Add(new CodeSyntaxError
                 {
                     Line = 1,
                     Column = 1,

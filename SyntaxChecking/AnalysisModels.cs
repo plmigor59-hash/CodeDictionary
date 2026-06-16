@@ -1,6 +1,6 @@
 namespace CodeDictionary.Analysis
 {
-    public sealed class BslSyntaxError
+    public sealed class CodeSyntaxError
     {
         public int Line { get; set; }
         public int Column { get; set; }
@@ -22,12 +22,12 @@ namespace CodeDictionary.Analysis
 
     public sealed class AnalysisResult
     {
-        public IReadOnlyList<BslSyntaxError> Errors { get; }
+        public IReadOnlyList<CodeSyntaxError> Errors { get; }
         public IReadOnlyList<SymbolInfo> Symbols { get; }
 
-        public AnalysisResult(IEnumerable<BslSyntaxError> errors, IEnumerable<SymbolInfo> symbols)
+        public AnalysisResult(IEnumerable<CodeSyntaxError> errors, IEnumerable<SymbolInfo> symbols)
         {
-            Errors = errors?.ToList() ?? new List<BslSyntaxError>();
+            Errors = errors?.ToList() ?? new List<CodeSyntaxError>();
             Symbols = symbols?.ToList() ?? new List<SymbolInfo>();
         }
 
