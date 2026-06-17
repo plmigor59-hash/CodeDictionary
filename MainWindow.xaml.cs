@@ -14,9 +14,11 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Text.RegularExpressions;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -70,6 +72,7 @@ public partial class MainWindow : Window
     private bool _updateDescription;
     private bool _isNewRecordDescription;
     private bool _isDescriptionEditMode;
+    private int _navigationSequence;
     private bool _descriptionWebView2Ready;
 
     /// <summary>
@@ -81,6 +84,7 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _debounceTimer;
     private readonly DispatcherTimer _searchDebounceTimer; // Added timer
     private readonly DispatcherTimer _completionDebounceTimer;
+    private readonly DispatcherTimer _htmlPositionDebounceTimer;
     private CancellationTokenSource? _completionCts;
     private SyntaxErrorColorizer? _colorizer;
     private TextMarkerService? _markerService;
@@ -326,6 +330,80 @@ public partial class MainWindow : Window
         ShowCompletion();
     }
 
+    private void Caret_PositionChanged(object? sender, EventArgs e)
+    {
+        _htmlPositionDebounceTimer.Stop();
+        _htmlPositionDebounceTimer.Start();
+    }
+
+    private async void HtmlPositionDebounceTimer_Tick(object? sender, EventArgs e)
+    {
+        _htmlPositionDebounceTimer.Stop();
+
+        if (!_descriptionWebView2Ready || DescriptionPanel.Visibility != Visibility.Visible)
+            return;
+
+        var activeTab = GetActiveEditorTab();
+        if (activeTab?.Entry == null || !activeTab.Entry.Extension.Contains(".html"))
+            return;
+
+        int line = CodeTextBox.TextArea.Caret.Line;
+        var doc = CodeTextBox.Document;
+        if (doc == null || line > doc.LineCount) return;
+
+        var lineSegment = doc.GetLineByNumber(line);
+        string lineText = doc.GetText(lineSegment.Offset, lineSegment.Length);
+        string visibleText = Regex.Replace(lineText, @"<[^>]*>", "").Trim();
+        if (string.IsNullOrWhiteSpace(visibleText) || visibleText.Length < 2) return;
+
+        string escapedText = visibleText
+            .Replace("\\", "\\\\")
+            .Replace("'", "\\'")
+            .Replace("\"", "\\\"")
+            .Replace("\r", "\\r")
+            .Replace("\n", "\\n");
+
+        string js = $@"
+(function(){{
+    var old = document.getElementById('__pos_marker');
+    if (old) old.remove();
+    var text = '{escapedText}';
+    if (!text) return;
+    var content = document.getElementById('__content');
+    if (!content) return;
+    var walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, null, false);
+    var n;
+    while (n = walker.nextNode()) {{
+        var idx = n.textContent.indexOf(text);
+        if (idx >= 0) {{
+            var r = document.createRange();
+            r.setStart(n, idx);
+            r.setEnd(n, idx + text.length);
+            var rects = r.getClientRects();
+            if (rects.length > 0) {{
+                var rect = rects[0];
+                var m = document.createElement('div');
+                m.id = '__pos_marker';
+                m.style.cssText = 'position:fixed;pointer-events:none;background:rgba(255,255,0,0.35);border:2px solid #FFD700;border-radius:2px;z-index:9998;';
+                m.style.left = rect.left + 'px';
+                m.style.top = rect.top + 'px';
+                m.style.width = rect.width + 'px';
+                m.style.height = rect.height + 'px';
+                document.body.appendChild(m);
+                m.scrollIntoView({{behavior:'smooth', block:'center'}});
+            }}
+            return;
+        }}
+    }}
+}})();
+";
+        try
+        {
+            await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
+        }
+        catch { }
+    }
+
     private async void ShowCompletion()
     {
         _completionCts?.Cancel();
@@ -545,6 +623,12 @@ public partial class MainWindow : Window
         };
         _completionDebounceTimer.Tick += CompletionDebounceTimer_Tick;
 
+        _htmlPositionDebounceTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(300)
+        };
+        _htmlPositionDebounceTimer.Tick += HtmlPositionDebounceTimer_Tick;
+
 
         CodeTextBox.TextArea.TextView.MouseHover += OnTextViewMouseHover;
         CodeTextBox.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
@@ -574,6 +658,7 @@ public partial class MainWindow : Window
         CodeTextBox.TextArea.TextEntering += CodeTextBox_TextEntering;
         CodeTextBox.TextArea.TextEntered += OnTextEntered; // Subscribe to TextEntered
         CodeTextBox.TextArea.KeyDown += CodeTextBox_KeyDown;
+        CodeTextBox.TextArea.Caret.PositionChanged += Caret_PositionChanged;
 
 
         // Bookmark margin handler
@@ -1050,6 +1135,9 @@ public partial class MainWindow : Window
 
             if (tab.Entry != null)
             {
+                _isDescriptionEditMode = false;
+                EditDescriptionButton.Content = "✏️ Ред.";
+                SaveDescriptionButton.Visibility = Visibility.Collapsed;
                 TitleTextBox.Text = tab.Entry.Title;
                 SetDescriptionHtml(tab.Entry.Description);
                 CategoryComboBox.Text = _categoryService.NormalizeCategoryPath(tab.Entry.Category);
@@ -2086,6 +2174,8 @@ public partial class MainWindow : Window
         string js = $@"
 document.body.style.backgroundColor='{bgColor}';
 document.body.style.color='{textColor}';
+var c=document.getElementById('__content');
+if(c){{c.style.backgroundColor='{bgColor}';c.style.color='{textColor}';}}
 var tb=document.getElementById('__fmt_toolbar');
 if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBorderColor}';}}";
         _ = DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
@@ -2378,6 +2468,9 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         _updateDescription = entry.Extension.Contains(".html");
         try
         {
+            _isDescriptionEditMode = false;
+            EditDescriptionButton.Content = "✏️ Ред.";
+            SaveDescriptionButton.Visibility = Visibility.Collapsed;
             TitleTextBox.Text = entry.Title;
             SetDescriptionHtml(entry.Description);
             CategoryComboBox.Text = _categoryService.NormalizeCategoryPath(entry.Category);
@@ -3053,10 +3146,20 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         try
         {
             await DescriptionBrowser.EnsureCoreWebView2Async();
+            DescriptionBrowser.CoreWebView2.WebMessageReceived -= OnWebMessageReceived;
             DescriptionBrowser.CoreWebView2.WebMessageReceived += OnWebMessageReceived;
             _descriptionWebView2Ready = true;
         }
         catch { }
+    }
+
+    private async System.Threading.Tasks.Task EnsureWebView2ReadyAsync()
+    {
+        if (_descriptionWebView2Ready) return;
+        await DescriptionBrowser.EnsureCoreWebView2Async();
+        DescriptionBrowser.CoreWebView2.WebMessageReceived -= OnWebMessageReceived;
+        DescriptionBrowser.CoreWebView2.WebMessageReceived += OnWebMessageReceived;
+        _descriptionWebView2Ready = true;
     }
 
     private async void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -3110,35 +3213,27 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     {
         try
         {
-            if (!_descriptionWebView2Ready)
-            {
-                await DescriptionBrowser.EnsureCoreWebView2Async();
-                _descriptionWebView2Ready = true;
-            }
+            await EnsureWebView2ReadyAsync();
+
+            int seq = ++_navigationSequence;
 
             string bgColor = _currentTheme == AppTheme.Dark ? "#1E1E1E" : "#FFFFFF";
             string textColor = _currentTheme == AppTheme.Dark ? "#EDF2F7" : "#1F1F1F";
-            string editScript = _isDescriptionEditMode
-                ? "document.body.contentEditable = true;"
-                : "document.body.contentEditable = false;";
 
             string fullHtml;
             if (string.IsNullOrWhiteSpace(html))
             {
-                fullHtml = $"<html><head><meta charset='utf-8'><style>body {{ background-color: {bgColor}; color: {textColor}; font-family: 'Segoe UI', sans-serif; font-size: 12px; margin: 5px; }}</style></head><body></body></html>";
+                fullHtml = $"<html><head><meta charset='utf-8'><style>body{{background:{bgColor};color:{textColor};font-family:'Segoe UI',sans-serif;font-size:12px;margin:0;padding:0;}}#__content{{min-height:150px;padding:5px;}}</style></head><body><div id='__content'></div></body></html>";
             }
             else
             {
-                string style = $"<style>body {{ background-color: {bgColor}; color: {textColor}; font-family: 'Segoe UI', sans-serif; font-size: 12px; margin: 5px; }}</style>";
-                fullHtml = $"<html><head><meta charset='utf-8'>{style}</head><body>{html}</body></html>";
+                string style = $"<style>body{{background:{bgColor};color:{textColor};font-family:'Segoe UI',sans-serif;font-size:12px;margin:0;padding:0;}}#__content{{min-height:150px;padding:5px;}}</style>";
+                fullHtml = $"<html><head><meta charset='utf-8'>{style}</head><body><div id='__content'>{html}</div></body></html>";
             }
 
+            DescriptionBrowser.CoreWebView2.NavigationCompleted -= OnDescriptionNavigationCompleted;
+            DescriptionBrowser.CoreWebView2.NavigationCompleted += OnDescriptionNavigationCompleted;
             DescriptionBrowser.NavigateToString(fullHtml);
-
-            if (_isDescriptionEditMode)
-            {
-                DescriptionBrowser.CoreWebView2.NavigationCompleted += OnDescriptionNavigationCompleted;
-            }
         }
         catch { }
     }
@@ -3147,12 +3242,16 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     {
         try
         {
+            int seq = _navigationSequence;
             DescriptionBrowser.CoreWebView2.NavigationCompleted -= OnDescriptionNavigationCompleted;
+            if (seq != _navigationSequence) return;
+
+            string js = GetFormatToolbarRemoveScript() + "var c=document.getElementById('__content');if(c)c.contentEditable=false;";
             if (_isDescriptionEditMode)
             {
-                string js = "document.body.contentEditable = true; " + GetFormatToolbarInjectScript();
-                await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
+                js += "var c=document.getElementById('__content');if(c){c.contentEditable=true;}" + GetFormatToolbarInjectScript();
             }
+            await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
         }
         catch { }
     }
@@ -3166,8 +3265,8 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         if (_descriptionWebView2Ready)
         {
             string js = _isDescriptionEditMode
-                ? $"document.body.contentEditable = true; {GetFormatToolbarInjectScript()}"
-                : $"{GetFormatToolbarRemoveScript()} document.body.contentEditable = false;";
+                ? $@"var c=document.getElementById('__content');if(c){{c.contentEditable=true;}}{GetFormatToolbarInjectScript()}"
+                : $@"{GetFormatToolbarRemoveScript()}var c=document.getElementById('__content');if(c)c.contentEditable=false;";
             _ = DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
         }
         else
@@ -3222,7 +3321,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     addSep();
     addBtn('A','Цвет текста',function(){{window.chrome.webview.postMessage(JSON.stringify({{type:'color',target:'foreColor'}}))}});
     addBtn('▨','Цвет фона',function(){{window.chrome.webview.postMessage(JSON.stringify({{type:'color',target:'hiliteColor'}}))}});
-    document.body.insertBefore(tb, document.body.firstChild);
+    var content = document.getElementById('__content'); if(content) content.parentNode.insertBefore(tb, content);
 }})();
 ";
     }
@@ -3239,7 +3338,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         string? html = null;
         try
         {
-            string? result = await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+            string? result = await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync("document.getElementById('__content').innerHTML");
             if (!string.IsNullOrEmpty(result))
             {
                 html = System.Text.Json.JsonSerializer.Deserialize<string>(result);
