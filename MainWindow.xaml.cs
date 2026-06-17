@@ -2778,6 +2778,23 @@ public partial class MainWindow : Window
         DescriptionRow.Height = new GridLength(350);
         ToggleDescriptionButton.Content = " ▲ Свернуть ";
         _updateDescription = false;
+
+        // Загружаем актуальное описание из активного таба
+        var activeTab = GetActiveEditorTab();
+        if (activeTab != null)
+        {
+            string? html;
+            if (activeTab.Entry != null)
+                html = activeTab.Entry.Description;
+            else if (activeTab.IsFromFile && activeTab.FilePath != null &&
+                     Path.GetExtension(activeTab.FilePath).Equals(".html", StringComparison.OrdinalIgnoreCase))
+                html = activeTab.Document.Text;
+            else
+                html = null;
+
+            SetDescriptionHtml(html);
+        }
+
         InitializeWebView2();
     }
 
@@ -3065,24 +3082,17 @@ public partial class MainWindow : Window
     {
         if (!_descriptionWebView2Ready) return;
 
-        string? htmlJson = null;
+        string? html = null;
         try
         {
-            htmlJson = await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+            string? result = await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+            if (!string.IsNullOrEmpty(result))
+            {
+                html = System.Text.Json.JsonSerializer.Deserialize<string>(result);
+                html = html?.Trim();
+            }
         }
         catch { }
-
-        if (string.IsNullOrEmpty(htmlJson)) return;
-
-        string? html;
-        try
-        {
-            html = System.Text.Json.JsonSerializer.Deserialize<string>(htmlJson);
-        }
-        catch
-        {
-            html = htmlJson.Trim('"');
-        }
 
         if (string.IsNullOrEmpty(html)) return;
 
@@ -3099,6 +3109,10 @@ public partial class MainWindow : Window
         {
             activeTab.Document.Text = html;
         }
+
+        activeTab.IsDirty = true;
+
+        await _dataService.SaveDataAsync(_data);
 
         _isDescriptionEditMode = false;
         EditDescriptionButton.Content = "✏️ Ред.";
