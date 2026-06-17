@@ -8,17 +8,16 @@ using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using Microsoft.CodeAnalysis.Completion;
-using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
 using Microsoft.Web.WebView2.Core;
+using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Text.RegularExpressions;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -3746,6 +3745,60 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         }
     }
 
+    private async void ImportCategory_Click(object sender, RoutedEventArgs e)
+    {
+        var openFileDialog = new OpenFileDialog
+        {
+            Title = "Импорт категории",
+            Filter = "JSON (*.json)|*.json|XML (*.xml)|*.xml",
+            FilterIndex = 1,
+        };
+
+        if (openFileDialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var importedData = await _dataService.ImportDataAsync(openFileDialog.FileName);
+            if (importedData == null || (importedData.Entries.Count == 0 && importedData.Categories.Count == 0))
+            {
+                ShowAlert("Файл не содержит данных категории", isError: true);
+                return;
+            }
+
+            _categoryService.NormalizeImportedData(importedData);
+
+            var existingIds = new HashSet<Guid>(_data.Entries.Select(e => e.Id));
+            foreach (var entry in importedData.Entries)
+            {
+                if (!existingIds.Contains(entry.Id))
+                {
+                    _data.Entries.Add(entry);
+                }
+            }
+
+            foreach (var category in importedData.Categories)
+            {
+                _categoryService.EnsureCategoryPathExists(category, _data.Categories);
+            }
+
+            _categoryService.NormalizeImportedData(_data);
+            await _dataService.SaveDataAsync(_data);
+
+            _currentEntry = null;
+            _selectedCategoryPath = string.Empty;
+            ClearEditingForm();
+            RefreshEntriesList();
+            _snackbar.Show(CodeTextBox, $"Категория импортирована из '{Path.GetFileName(openFileDialog.FileName)}'", NotificationType.Success, 1.5);
+        }
+        catch (Exception ex)
+        {
+            ShowAlert($"Ошибка импорта категории: {ex.Message}", isError: true);
+        }
+    }
+
     private async void AddCategoryRoot_Click(object sender, RoutedEventArgs e)
     {
         await AddCategoryAsync(string.Empty);
@@ -4070,6 +4123,154 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         else
         {
             _snackbar.Show(CodeTextBox, "Форматирование для данного синтаксиса не поддерживается", NotificationType.Warning, 2);
+        }
+    }
+
+    private static readonly Dictionary<string, (string? Line, string? BlockStart, string? BlockEnd)> CommentRules = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { "C#", ("//", "/*", "*/") },
+        { "C++", ("//", "/*", "*/") },
+        { "Java", ("//", "/*", "*/") },
+        { "JavaScript", ("//", "/*", "*/") },
+        { "PHP", ("//", "/*", "*/") },
+        { "Python", ("#", null, null) },
+        { "1C", ("//", null, null) },
+        { "HTML", (null, "<!--", "-->") },
+        { "XML", (null, "<!--", "-->") },
+        { "CSS", (null, "/*", "*/") },
+        { "PowerShell", ("#", "<#", "#>") },
+        { "SQL", ("--", "/*", "*/") },
+        { "VB", ("'", null, null) },
+        { "ASP/XHTML", (null, "<!--", "-->") },
+    };
+
+    private static (string? Line, string? BlockStart, string? BlockEnd) GetCommentRule(string? syntax)
+    {
+        if (string.IsNullOrWhiteSpace(syntax)) return (null, null, null);
+
+        foreach (var kvp in CommentRules)
+        {
+            if (syntax.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase))
+                return kvp.Value;
+        }
+        return (null, null, null);
+    }
+
+    private void CommentSelection_Click(object sender, RoutedEventArgs e)
+    {
+        var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+        var rule = GetCommentRule(syntax);
+
+        if (rule.Line != null)
+        {
+            CommentWithLinePrefix(rule.Line);
+        }
+        else if (rule.BlockStart != null && rule.BlockEnd != null)
+        {
+            CommentWithBlock(rule.BlockStart, rule.BlockEnd);
+        }
+        else
+        {
+            _snackbar.Show(CodeTextBox, "Комментирование для данного синтаксиса не поддерживается", NotificationType.Warning, 2);
+        }
+    }
+
+    private void UncommentSelection_Click(object sender, RoutedEventArgs e)
+    {
+        var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+        var rule = GetCommentRule(syntax);
+
+        if (rule.Line != null)
+        {
+            UncommentWithLinePrefix(rule.Line);
+        }
+        else if (rule.BlockStart != null && rule.BlockEnd != null)
+        {
+            UncommentWithBlock(rule.BlockStart, rule.BlockEnd);
+        }
+        else
+        {
+            _snackbar.Show(CodeTextBox, "Раскомментирование для данного синтаксиса не поддерживается", NotificationType.Warning, 2);
+        }
+    }
+
+    private void CommentWithLinePrefix(string lineComment)
+    {
+        var doc = CodeTextBox.Document;
+        var start = CodeTextBox.SelectionStart;
+        var length = CodeTextBox.SelectionLength;
+        var text = CodeTextBox.Text;
+
+        int selStartLine = text[..start].Count(c => c == '\n');
+        int selEndLine = text[..(start + length)].Count(c => c == '\n');
+
+        var lines = new List<(int offset, string newText)>();
+
+        for (int line = selStartLine; line <= selEndLine; line++)
+        {
+            var lineOffset = doc.Lines[line].Offset;
+            var lineText = doc.GetText(lineOffset, doc.Lines[line].Length);
+            var trimmed = lineText.TrimStart();
+            if (string.IsNullOrEmpty(trimmed)) continue;
+            if (trimmed.StartsWith(lineComment, StringComparison.Ordinal)) continue;
+            lines.Add((lineOffset, lineComment));
+        }
+
+        for (int i = lines.Count - 1; i >= 0; i--)
+        {
+            doc.Insert(lines[i].offset, lines[i].newText);
+        }
+    }
+
+    private void UncommentWithLinePrefix(string lineComment)
+    {
+        var doc = CodeTextBox.Document;
+        var start = CodeTextBox.SelectionStart;
+        var length = CodeTextBox.SelectionLength;
+        var text = CodeTextBox.Text;
+
+        int selStartLine = text[..start].Count(c => c == '\n');
+        int selEndLine = text[..(start + length)].Count(c => c == '\n');
+
+        var lines = new List<(int offset, int removeLength)>();
+
+        for (int line = selStartLine; line <= selEndLine; line++)
+        {
+            var lineOffset = doc.Lines[line].Offset;
+            var lineText = doc.GetText(lineOffset, doc.Lines[line].Length);
+            var trimmed = lineText.TrimStart();
+            if (trimmed.StartsWith(lineComment, StringComparison.Ordinal))
+            {
+                var prefixLen = lineText.Length - lineText.TrimStart().Length;
+                lines.Add((lineOffset + prefixLen, lineComment.Length));
+            }
+        }
+
+        for (int i = lines.Count - 1; i >= 0; i--)
+        {
+            doc.Remove(lines[i].offset, lines[i].removeLength);
+        }
+    }
+
+    private void CommentWithBlock(string blockStart, string blockEnd)
+    {
+        var doc = CodeTextBox.Document;
+        var selStart = CodeTextBox.SelectionStart;
+        var selLength = CodeTextBox.SelectionLength;
+        doc.Insert(selStart + selLength, blockEnd);
+        doc.Insert(selStart, blockStart);
+    }
+
+    private void UncommentWithBlock(string blockStart, string blockEnd)
+    {
+        var doc = CodeTextBox.Document;
+        var selStart = CodeTextBox.SelectionStart;
+        var selLength = CodeTextBox.SelectionLength;
+        var text = doc.GetText(selStart, selLength);
+
+        if (text.StartsWith(blockStart, StringComparison.Ordinal) && text.EndsWith(blockEnd, StringComparison.Ordinal))
+        {
+            doc.Replace(selStart, selLength, text[blockStart.Length..^blockEnd.Length]);
         }
     }
 

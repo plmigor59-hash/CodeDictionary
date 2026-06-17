@@ -6,8 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CodeDictionary"
     xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
-    xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
     Title="Справочник кода"
     Width="800"
     Height="400"
@@ -70,9 +70,9 @@
                                     Height="16"
                                     Margin="4,0,0,0"
                                     Click="CloseTabButton_Click"
-                                    Foreground="{DynamicResource DictTextPrimary}"
                                     Content="✕"
                                     FontSize="10"
+                                    Foreground="{DynamicResource DictTextPrimary}"
                                     Style="{StaticResource IconButton}"
                                     Visibility="{Binding IsClosable, Converter={StaticResource BoolToStatusConverter}}" />
                             </StackPanel>
@@ -192,7 +192,6 @@
                 <StackPanel
                     Grid.Row="0"
                     Margin="8"
-                  
                     Background="{DynamicResource SidePanelBackground}">
                     <Grid Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
@@ -597,6 +596,9 @@
                                 Foreground="{DynamicResource SuccessBrush}"
                                 Kind="ContentSaveOutline" />
                         </Button>
+
+                        <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
                         <Button
                             Click="FormatCode_Click"
                             Style="{StaticResource IconButton}"
@@ -641,16 +643,9 @@
                                 Foreground="{DynamicResource AccentBrush}"
                                 Kind="DatabaseImportOutline" />
                         </Button>
-                        <Button
-                            Click="ImportFolder_Click"
-                            Style="{StaticResource IconButton}"
-                            ToolTip="Импорт из папки (bsl/html)">
-                            <materialIcons:MaterialIcon
-                                Width="18"
-                                Height="18"
-                                Foreground="{DynamicResource WarningBrush}"
-                                Kind="FolderDownloadOutline" />
-                        </Button>
+
+
+                      
                         <Button
                             Click="ExportSelectedCategory_Click"
                             Style="{StaticResource IconButton}"
@@ -661,8 +656,29 @@
                                 Foreground="{DynamicResource SuccessBrush}"
                                 Kind="FolderUploadOutline" />
                         </Button>
+                        <Button
+                            Click="ImportCategory_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Импорт категории (JSON/XML)">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource WarningBrush}"
+                                Kind="FolderDownloadOutline" />
+                        </Button>
 
                         <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
+                        <Button
+                            Click="ImportFolder_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Импорт из папки (bsl/html)">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource WarningBrush}"
+                                Kind="FileImportOutline" />
+                        </Button>
 
                         <ComboBox
                             x:Name="SyntaxHighlightingComboBox"
@@ -730,10 +746,9 @@
                                 x:Name="SearchResultsTextBlock"
                                 MinWidth="40"
                                 Margin="4,0"
-                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 VerticalAlignment="Center"
                                 FontSize="10"
-                                 />
+                                Foreground="{DynamicResource TextPrimaryBrush}" />
                             <CheckBox
                                 x:Name="WordWrapCheckBox"
                                 VerticalAlignment="Center"
@@ -813,26 +828,42 @@
                 </Border>
 
                 <!--  Description Area  -->
-                <Grid Grid.Row="2" Margin="0,0,0,8" x:Name="DescriptionPanel" Visibility="Collapsed">
+                <Grid
+                    x:Name="DescriptionPanel"
+                    Grid.Row="2"
+                    Margin="0,0,0,8"
+                    Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,2">
-                        <Button x:Name="EditDescriptionButton" Height="22" Padding="6,0" FontSize="11"
-                                Click="EditDescriptionButton_Click"
-                                  Foreground="{DynamicResource DictTextPrimary}"
-                                Style="{StaticResource ModernButton}"
-                                Content="✏️ Ред." />
-                        <Button x:Name="SaveDescriptionButton" Height="22" Padding="6,0" FontSize="11" Margin="4,0,0,0"
-                                Click="SaveDescriptionButton_Click" Visibility="Collapsed"
-                                Foreground="{DynamicResource AccentHoverBrush}"
-                                Style="{StaticResource ModernButton}"
-                                Content="💾 Сохр." />
+                    <StackPanel
+                        Grid.Row="0"
+                        Margin="0,0,0,2"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                        <Button
+                            x:Name="EditDescriptionButton"
+                            Height="22"
+                            Padding="6,0"
+                            Click="EditDescriptionButton_Click"
+                            Content="✏️ Ред."
+                            FontSize="11"
+                            Foreground="{DynamicResource DictTextPrimary}"
+                            Style="{StaticResource ModernButton}" />
+                        <Button
+                            x:Name="SaveDescriptionButton"
+                            Height="22"
+                            Margin="4,0,0,0"
+                            Padding="6,0"
+                            Click="SaveDescriptionButton_Click"
+                            Content="💾 Сохр."
+                            FontSize="11"
+                            Foreground="{DynamicResource AccentHoverBrush}"
+                            Style="{StaticResource ModernButton}"
+                            Visibility="Collapsed" />
                     </StackPanel>
-                    <wv2:WebView2
-                        x:Name="DescriptionBrowser"
-                        Grid.Row="1" />
+                    <wv2:WebView2 x:Name="DescriptionBrowser" Grid.Row="1" />
                 </Grid>
                 <GridSplitter
                     x:Name="DescriptionSplitter"
@@ -894,11 +925,22 @@
                                         <materialIcons:MaterialIcon Kind="CodeBraces" />
                                     </MenuItem.Icon>
                                 </MenuItem>
+                                <Separator />
+                                <MenuItem Click="CommentSelection_Click" Header="Комментировать">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="CommentOutline" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Click="UncommentSelection_Click" Header="Раскомментировать">
+                                    <MenuItem.Icon>
+                                        <materialIcons:MaterialIcon Kind="CommentRemoveOutline" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
                             </ContextMenu>
                         </avalonEdit:TextEditor.ContextMenu>
                     </avalonEdit:TextEditor>
 
-  
+
                     <Grid
                         x:Name="ErrorListHeader"
                         Grid.Row="2"
@@ -941,7 +983,6 @@
                         x:Name="ErrorListSplitter"
                         Grid.Row="4"
                         Height="8"
-                        
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Background="{DynamicResource BorderBrush}"
@@ -1198,36 +1239,173 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource WarningBrush}" Kind="FormatColorFill" />
-                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource DangerBrush}" Kind="FormatColorText" />
-                                    <TextBlock FontWeight="Bold" Margin="0,2" Foreground="{DynamicResource TextPrimaryBrush}" Text="B" HorizontalAlignment="Center" />
-                                    <TextBlock FontStyle="Italic" Margin="0,2" Foreground="{DynamicResource TextPrimaryBrush}" Text="I" HorizontalAlignment="Center" />
-                                    <TextBlock Margin="0,2" Foreground="{DynamicResource TextPrimaryBrush}" Text="U" TextDecorations="Underline" HorizontalAlignment="Center" />
-                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource DangerBrush}" Kind="FormatClear" />
-                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource WarningBrush}" Kind="FolderOpenOutline" />
-                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource SuccessBrush}" Kind="ContentSaveOutline" />
-                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource AccentBrush}" Kind="FormatIndentIncrease" />
-                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource DangerBrush}" Kind="TextSearch" />
-                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource AccentBrush}" Kind="DatabaseExportOutline" />
-                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource AccentBrush}" Kind="DatabaseImportOutline" />
-                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource WarningBrush}" Kind="FolderDownloadOutline" />
-                                    <materialIcons:MaterialIcon Width="16" Height="16" Margin="0,2" Foreground="{DynamicResource SuccessBrush}" Kind="FolderUploadOutline" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource WarningBrush}"
+                                        Kind="FormatColorFill" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource DangerBrush}"
+                                        Kind="FormatColorText" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        HorizontalAlignment="Center"
+                                        FontWeight="Bold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="B" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        HorizontalAlignment="Center"
+                                        FontStyle="Italic"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="I" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        HorizontalAlignment="Center"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="U"
+                                        TextDecorations="Underline" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource DangerBrush}"
+                                        Kind="FormatClear" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource WarningBrush}"
+                                        Kind="FolderOpenOutline" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource SuccessBrush}"
+                                        Kind="ContentSaveOutline" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource AccentBrush}"
+                                        Kind="FormatIndentIncrease" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource DangerBrush}"
+                                        Kind="TextSearch" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource AccentBrush}"
+                                        Kind="DatabaseExportOutline" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource AccentBrush}"
+                                        Kind="DatabaseImportOutline" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource WarningBrush}"
+                                        Kind="FolderDownloadOutline" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource SuccessBrush}"
+                                        Kind="FolderUploadOutline" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource WarningBrush}"
+                                        Kind="FileImportOutline" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Цвет фона" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Цвет текста" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Жирный" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Курсив" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Подчеркнутый" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Очистить стиль" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Открыть файл" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Сохранить файл" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Форматировать код" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Синтаксический анализ" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Экспорт базы" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Импорт базы" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Импорт из папки" />
-                                    <TextBlock Margin="0,2" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Text="Экспорт категории" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Цвет фона" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Цвет текста" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Жирный" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Курсив" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Подчеркнутый" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Очистить стиль" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Открыть файл" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Сохранить файл" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Форматировать код" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Синтаксический анализ" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Экспорт базы" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Импорт базы" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Импорт категории (JSON/XML)" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Экспорт категории (JSON/XML)" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Импорт из папки (bsl/html)" />
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
