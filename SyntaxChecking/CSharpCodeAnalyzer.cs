@@ -1,11 +1,6 @@
 using CodeDictionary.Analysis;
 using CodeDictionary.Services;
 using Microsoft.CodeAnalysis;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CodeDictionary.SyntaxChecking
 {
@@ -22,7 +17,7 @@ namespace CodeDictionary.SyntaxChecking
         {
             _roslynService.UpdateCode(code);
             var diagnostics = await _roslynService.GetDiagnosticsAsync();
-            
+
             var errors = diagnostics
                 .Where(d => d.Severity == DiagnosticSeverity.Error || d.Severity == DiagnosticSeverity.Warning)
                 .Select(d =>
@@ -47,7 +42,15 @@ namespace CodeDictionary.SyntaxChecking
         private int CountLines(string text)
         {
             if (string.IsNullOrEmpty(text)) return 0;
-            return text.Count(c => c == '\n');
+            int count = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\n' && (i == 0 || text[i - 1] != '\r'))
+                    count++;
+                else if (text[i] == '\r')
+                    count++;
+            }
+            return count;
         }
     }
 }

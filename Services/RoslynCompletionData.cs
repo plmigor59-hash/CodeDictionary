@@ -1,7 +1,7 @@
 using ICSharpCode.AvalonEdit.CodeCompletion;
-using Material.Icons;
-using Material.Icons.WPF;
+using ICSharpCode.AvalonEdit.Document;
 using Microsoft.CodeAnalysis.Completion;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -10,6 +10,26 @@ namespace CodeDictionary.Services
 {
     public class RoslynCompletionData : ICompletionData
     {
+        private static readonly ConditionalWeakTable<string, ImageSource> IconCache = new();
+        private static readonly Dictionary<string, string> TagToIconMap = new()
+        {
+            ["Method"] = "FunctionVariant",
+            ["Property"] = "CodeBraces",
+            ["Field"] = "DatabaseOutline",
+            ["Class"] = "CubeOutline",
+            ["Struct"] = "CubeOutline",
+            ["Interface"] = "CodeBraces",
+            ["Enum"] = "FormatListBullets",
+            ["Keyword"] = "CodeBrackets",
+            ["Local"] = "CodeBraces",
+            ["Parameter"] = "CodeBraces",
+            ["Namespace"] = "FolderOutline",
+            ["Event"] = "CodeBraces",
+            ["Delegate"] = "CodeBraces",
+            ["Operator"] = "CodeBraces",
+            ["ExtensionMethod"] = "CodeBraces",
+        };
+
         private readonly CompletionItem _item;
         private readonly RoslynCompletionService _service;
         private readonly int _position;
@@ -29,16 +49,15 @@ namespace CodeDictionary.Services
             get
             {
                 var stack = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
-
-                // Определяем цвета на основе темы
                 var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
 
+                var iconMargin = new System.Windows.Thickness(0, 0, 6, 0);
                 var icon = new System.Windows.Controls.Image
                 {
-                    Source = GetIconForTheme(foreground),
+                    Source = GetCachedIcon(foreground),
                     Width = 16,
                     Height = 16,
-                    Margin = new System.Windows.Thickness(0, 0, 5, 0),
+                    Margin = iconMargin,
                     VerticalAlignment = System.Windows.VerticalAlignment.Center
                 };
 
@@ -106,61 +125,56 @@ namespace CodeDictionary.Services
             }
         }
 
-        public System.Windows.Media.ImageSource? Image => null; // Убираем вторую иконку
+        public ImageSource? Image => null;
 
-        private ImageSource? GetIconForTheme(Brush foreground)
+        private ImageSource? GetCachedIcon(Brush foreground)
         {
-            string type = "Help";
-            if (_item.Tags.Contains("Method")) type = "Method";
-            else if (_item.Tags.Contains("Property")) type = "Property";
-            else if (_item.Tags.Contains("Field")) type = "Field";
-            else if (_item.Tags.Contains("Class")) type = "Class";
+            string tag = _item.Tags.FirstOrDefault(t => TagToIconMap.ContainsKey(t)) ?? "Help";
+            string cacheKey = $"{tag}:{foreground?.ToString() ?? "default"}";
 
-            string iconName = type switch
+            return IconCache.GetValue(cacheKey, _ =>
             {
-                "Method" => "FunctionVariant",
-                "Property" => "CodeBraces",
-                "Field" => "DatabaseOutline",
-                "Class" => "CubeOutline",
-                _ => "Help"
-            };
+                string iconName = TagToIconMap.GetValueOrDefault(tag, "Help");
+                if (!Enum.TryParse<Material.Icons.MaterialIconKind>(iconName, true, out var kind))
+                    return null;
 
-            if (!Enum.TryParse<MaterialIconKind>(iconName, true, out var kind))
-                return null;
+                var icon = new Material.Icons.WPF.MaterialIcon
+                {
+                    Kind = kind,
+                    Width = 16,
+                    Height = 16,
+                    Foreground = foreground
+                };
 
-            var materialIcon = new MaterialIcon
-            {
-                Kind = kind,
-                Width = 16,
-                Height = 16,
-                Foreground = foreground // Используем цвет темы
-            };
+                var border = new System.Windows.Controls.Border
+                {
+                    Child = icon,
+                    Width = 16,
+                    Height = 16,
+                    Background = Brushes.Transparent
+                };
 
-            var border = new System.Windows.Controls.Border
-            {
-                Child = materialIcon,
-                Width = 16,
-                Height = 16,
-                Background = Brushes.Transparent
-            };
+                var size = new System.Windows.Size(16, 16);
+                border.Measure(size);
+                border.Arrange(new System.Windows.Rect(size));
+                border.UpdateLayout();
 
-            var size = new System.Windows.Size(16, 16);
-            border.Measure(size);
-            border.Arrange(new System.Windows.Rect(size));
-            border.UpdateLayout();
-
-            var renderTarget = new RenderTargetBitmap(16, 16, 96, 96, PixelFormats.Pbgra32);
-            renderTarget.Render(border);
-            renderTarget.Freeze();
-
-            return renderTarget;
+                var renderTarget = new RenderTargetBitmap(16, 16, 96, 96, PixelFormats.Pbgra32);
+                renderTarget.Render(border);
+                renderTarget.Freeze();
+                return renderTarget;
+            });
         }
+
         public double Priority => 0;
         public string Text => _item.DisplayText;
 
-        public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
+        public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ISegment completionSegment, EventArgs insertionRequestEventArgs)
         {
-            var span = _item.Span;
+            var doc = textArea.Document;
+            int offset = Math.Max(0, Math.Min(completionSegment.Offset, doc.TextLength));
+            int length = Math.Max(0, Math.Min(completionSegment.Length, doc.TextLength - offset));
+
             string textToInsert = _item.DisplayText;
             bool isMethod = _item.Tags.Contains("Method");
 
@@ -169,20 +183,13 @@ namespace CodeDictionary.Services
                 textToInsert += "()";
             }
 
-            // Корректируем смещение span с учетом OffsetShift в сервисе
-            int start = Math.Max(0, span.Start - _service.OffsetShift);
-            textArea.Document.Replace(start, Math.Min(span.Length, textArea.Document.TextLength - start), textToInsert);
+            doc.Replace(offset, length, textToInsert);
 
-            if (isMethod)
-            {
-                // Ставим курсор внутри скобок
-                textArea.Caret.Offset = start + _item.DisplayText.Length + 1;
-            }
-            else
-            {
-                // Для не-методов ставим курсор в конец вставленного текста
-                textArea.Caret.Offset = start + textToInsert.Length;
-            }
+            int newCaretOffset = isMethod
+                ? offset + _item.DisplayText.Length + 1
+                : offset + textToInsert.Length;
+
+            textArea.Caret.Offset = Math.Max(0, Math.Min(newCaretOffset, doc.TextLength));
         }
     }
 }

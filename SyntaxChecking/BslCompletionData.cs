@@ -7,7 +7,7 @@ using System.Windows.Media;
 namespace CodeDictionary.SyntaxChecking
 {
 
-    
+
     public class BslCompletionData : ICompletionData
     {
         public BslCompletionData(string text, string description, string type)

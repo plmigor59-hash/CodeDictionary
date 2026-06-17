@@ -40,7 +40,7 @@
     <Window.Resources>
         <!--  Specialized local styles only  -->
         <Style x:Key="EditorTabItemStyle" TargetType="TabItem">
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DictAccent}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0,0,0,2" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -69,6 +69,7 @@
                                     Height="16"
                                     Margin="4,0,0,0"
                                     Click="CloseTabButton_Click"
+                                    Foreground="{DynamicResource DictTextPrimary}"
                                     Content="✕"
                                     FontSize="10"
                                     Style="{StaticResource IconButton}"

@@ -4,18 +4,15 @@ using CodeDictionary.Properties;
 using CodeDictionary.Services;
 using CodeDictionary.SyntaxChecking;
 using ICSharpCode.AvalonEdit.CodeCompletion;
-using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using Microsoft.CodeAnalysis.Completion;
 using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -81,6 +78,8 @@ public partial class MainWindow : Window
     private CompletionWindow? _completionWindow;
     private readonly DispatcherTimer _debounceTimer;
     private readonly DispatcherTimer _searchDebounceTimer; // Added timer
+    private readonly DispatcherTimer _completionDebounceTimer;
+    private CancellationTokenSource? _completionCts;
     private SyntaxErrorColorizer? _colorizer;
     private TextMarkerService? _markerService;
     /// 
@@ -113,9 +112,8 @@ public partial class MainWindow : Window
             var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
             if (syntax != null && syntax.Contains("C#"))
             {
-                // Задержка необходима, чтобы символ '.' был добавлен в документ
-                // перед тем, как Roslyn проанализирует контекст
-                Dispatcher.BeginInvoke(new Action(() => ShowCompletion()));
+                _completionDebounceTimer.Stop();
+                _completionDebounceTimer.Start();
             }
         }
         else if (e.Text == "(" || e.Text == ",")
@@ -132,7 +130,7 @@ public partial class MainWindow : Window
     {
         var position = CodeTextBox.CaretOffset;
         _roslynCompletionService.UpdateCode(CodeTextBox.Text);
-        var signatureInfo = await _roslynCompletionService.GetSignatureInfoAsync(position);
+        var signatureInfo = await _roslynCompletionService.GetSignatureInfoAsync(position, _completionCts?.Token ?? default);
 
         if (signatureInfo != null)
         {
@@ -147,6 +145,7 @@ public partial class MainWindow : Window
     {
         if (e.Key == Key.Space && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
         {
+            _completionDebounceTimer.Stop();
             var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
             if (syntax != null && syntax.Contains("C#"))
             {
@@ -159,8 +158,6 @@ public partial class MainWindow : Window
                 e.Handled = true;
                 ShowCompletion1C(string.Empty, true);
             }
-
-
         }
     }
 
@@ -228,15 +225,13 @@ public partial class MainWindow : Window
 
     private void OnTextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
     {
-        // Добавьте эту строку для отладки
-        System.Diagnostics.Debug.WriteLine($"OnTextEntered: {e.Text}");
-
         if (e.Text.Length > 0 && (char.IsLetter(e.Text[0]) || e.Text[0] == '_' || e.Text[0] == '.'))
         {
             var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
             if (syntax != null && syntax.Contains("C#"))
             {
-                ShowCompletion();
+                _completionDebounceTimer.Stop();
+                _completionDebounceTimer.Start();
             }
             else
             {
@@ -280,46 +275,36 @@ public partial class MainWindow : Window
 
         if (filteredList.Any())
         {
-            if (_completionWindow == null)
+            _completionWindow?.Close();
+            _completionWindow = new CompletionWindow(CodeTextBox.TextArea)
             {
-                _completionWindow = new CompletionWindow(CodeTextBox.TextArea);
-                _completionWindow.Width = 500; // Увеличиваем ширину окна
+                Width = 500
+            };
 
-                // Применяем цвета темы при создании окна
-                var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
-                var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
-                var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
+            var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
+            var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
+            var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
 
-                _completionWindow.Background = background;
-                _completionWindow.Foreground = foreground;
-                _completionWindow.BorderBrush = border;
+            _completionWindow.Background = background;
+            _completionWindow.Foreground = foreground;
+            _completionWindow.BorderBrush = border;
 
-                if (_completionWindow.CompletionList != null)
-                {
-                    _completionWindow.CompletionList.Background = background;
-                    _completionWindow.CompletionList.Foreground = foreground;
-                }
-
-                _completionWindow.Closed += delegate { _completionWindow = null; };
+            if (_completionWindow.CompletionList != null)
+            {
+                _completionWindow.CompletionList.Background = background;
+                _completionWindow.CompletionList.Foreground = foreground;
             }
 
+            _completionWindow.Closed += delegate { _completionWindow = null; };
+
             var data = _completionWindow.CompletionList.CompletionData;
-
-            // Очищаем существующие данные, так как мы будем добавлять новые
-            data.Clear();
-
             foreach (var item in filteredList.OrderBy(d => d.Text))
             {
                 data.Add(item);
             }
 
-            if (_completionWindow.Visibility != Visibility.Visible)
-            {
-                _completionWindow.Show();
-            }
+            _completionWindow.Show();
 
-            // В AvalonEdit CompletionList сам подсветит лучшее совпадение при вводе, 
-            // но для надежности укажем текущий префикс
             if (!controlSpace && !string.IsNullOrEmpty(enteredText))
             {
                 _completionWindow.CompletionList.SelectItem(enteredText);
@@ -327,83 +312,142 @@ public partial class MainWindow : Window
         }
         else
         {
-            // Если совпадений нет, закрываем окно
-            if (_completionWindow != null)
-            {
-                _completionWindow.Close();
-                _completionWindow = null;
-            }
+            _completionWindow?.Close();
+            _completionWindow = null;
         }
     }
 
 
+    private void CompletionDebounceTimer_Tick(object? sender, EventArgs e)
+    {
+        _completionDebounceTimer.Stop();
+        ShowCompletion();
+    }
+
     private async void ShowCompletion()
     {
+        _completionCts?.Cancel();
+        _completionCts = new CancellationTokenSource();
+        var token = _completionCts.Token;
+
         var code = CodeTextBox.Text;
         var position = CodeTextBox.CaretOffset;
-        
+
+        // Проверяем, не находимся ли мы внутри строки или комментария
+        if (IsCursorInsideStringOrComment(code, position))
+            return;
+
         _roslynCompletionService.UpdateCode(code);
-        var items = await _roslynCompletionService.GetCompletionItemsAsync(position);
 
-        if (items.Any())
+        if (token.IsCancellationRequested) return;
+
+        IEnumerable<CompletionItem> items;
+        try
         {
-            if (_completionWindow == null)
+            items = await _roslynCompletionService.GetCompletionItemsAsync(position, token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (token.IsCancellationRequested || !items.Any())
+        {
+            if (!items.Any()) _completionWindow?.Close();
+            return;
+        }
+
+        // Вычисляем начало слова для StartOffset (без точки — точка это разделитель member access)
+        int wordStart = position;
+        while (wordStart > 0 && (char.IsLetterOrDigit(code[wordStart - 1]) || code[wordStart - 1] == '_'))
+            wordStart--;
+
+        // Всегда пересоздаём окно, чтобы StartOffset гарантированно применился
+        _completionWindow?.Close();
+        _completionWindow = new CompletionWindow(CodeTextBox.TextArea)
+        {
+            StartOffset = wordStart,
+            Width = 500
+        };
+
+        var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
+        var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
+        var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
+
+        _completionWindow.Background = background;
+        _completionWindow.Foreground = foreground;
+        _completionWindow.BorderBrush = border;
+
+        if (_completionWindow.CompletionList != null)
+        {
+            _completionWindow.CompletionList.Background = background;
+            _completionWindow.CompletionList.Foreground = foreground;
+        }
+
+        _completionWindow.Closed += (s, e) => _completionWindow = null;
+
+        var data = _completionWindow.CompletionList.CompletionData;
+        foreach (var item in items)
+        {
+            data.Add(new RoslynCompletionData(item, _roslynCompletionService, position));
+        }
+
+        _completionWindow.Show();
+    }
+
+    private bool IsCursorInsideStringOrComment(string code, int offset)
+    {
+        if (string.IsNullOrEmpty(code) || offset <= 0 || offset > code.Length)
+            return false;
+
+        int adjustedOffset = Math.Min(offset - 1, code.Length - 1);
+
+        bool inSingleComment = false;
+        bool inMultiComment = false;
+        bool inString = false;
+        char stringChar = '"';
+
+        for (int i = 0; i <= adjustedOffset; i++)
+        {
+            char c = code[i];
+
+            if (inSingleComment)
             {
-                _completionWindow = new CompletionWindow(CodeTextBox.TextArea);
-                _completionWindow.Width = 500; // Увеличиваем ширину окна
+                if (c == '\n') inSingleComment = false;
+                continue;
+            }
 
-                // Применяем цвета темы к окну автодополнения
-                var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
-                var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
-                var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
-
-                _completionWindow.Background = background;
-                _completionWindow.Foreground = foreground;
-                _completionWindow.BorderBrush = border;
-
-                // Установка цветов для самого списка внутри окна
-                if (_completionWindow.CompletionList != null)
+            if (inMultiComment)
+            {
+                if (c == '*' && i + 1 < code.Length && code[i + 1] == '/')
                 {
-                    _completionWindow.CompletionList.Background = background;
-                    _completionWindow.CompletionList.Foreground = foreground;
+                    inMultiComment = false;
+                    i++;
                 }
-
-                _completionWindow.Closed += (s, e) => _completionWindow = null;
+                continue;
             }
 
-            // Устанавливаем StartOffset для фильтрации
-            var firstItem = items.First();
-            int shift = _roslynCompletionService.OffsetShift;
-            _completionWindow.StartOffset = Math.Max(0, firstItem.Span.Start - shift);
-
-            var data = _completionWindow.CompletionList.CompletionData;
-            data.Clear();
-
-            foreach (var item in items)
+            if (inString)
             {
-                data.Add(new RoslynCompletionData(item, _roslynCompletionService, position));
+                if (c == '\\') { i++; continue; }
+                if (c == stringChar) inString = false;
+                continue;
             }
 
-            if (!_completionWindow.IsVisible)
+            if (c == '/' && i + 1 < code.Length)
             {
-                _completionWindow.Show();
+                if (code[i + 1] == '/') { inSingleComment = true; i++; continue; }
+                if (code[i + 1] == '*') { inMultiComment = true; i++; continue; }
             }
 
-            // Выделяем текущее совпадение
-            int wordStart = firstItem.Span.Start - shift;
-            if (wordStart >= 0 && wordStart < CodeTextBox.Text.Length && position > wordStart)
+            if (c == '"' || c == '\'')
             {
-                string currentWord = CodeTextBox.Text.Substring(wordStart, position - wordStart);
-                if (!string.IsNullOrEmpty(currentWord))
-                {
-                    _completionWindow.CompletionList.SelectItem(currentWord);
-                }
+                inString = true;
+                stringChar = c;
             }
         }
-        else
-        {
-            _completionWindow?.Close();
-        }
+
+        return inSingleComment || inMultiComment || inString;
     }
 
     private object? GetNeighborData(object item)
@@ -481,10 +525,16 @@ public partial class MainWindow : Window
         };
         _searchDebounceTimer.Tick += SearchDebounceTimer_Tick;
 
+        _completionDebounceTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(200)
+        };
+        _completionDebounceTimer.Tick += CompletionDebounceTimer_Tick;
+
 
         CodeTextBox.TextArea.TextView.MouseHover += OnTextViewMouseHover;
         CodeTextBox.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
-        
+
         // Инициализируем список шрифтов и настроек подсветки
         InitializeFontSettings();
 
@@ -972,7 +1022,7 @@ public partial class MainWindow : Window
                 InitializeSyntaxServices();
             }
 
-            
+
 
             CodeTextBox.TextArea.TextView.Redraw();
             _currentFilePath = tab.FilePath;
@@ -1712,7 +1762,7 @@ public partial class MainWindow : Window
         FontFamilyComboBox.SelectedIndex = 0;
 
         // Размеры шрифта
-        var fontSizes = new[] { 8, 9, 10, 11, 12, 13, 14,15, 16, 18, 20, 22, 24 };
+        var fontSizes = new[] { 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24 };
         foreach (var size in fontSizes)
         {
             FontSizeComboBox.Items.Add(size);
@@ -2630,6 +2680,21 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
+        // Проверяем несохранённые изменения
+        var dirtyTabs = _editorTabs.Where(t => t.IsDirty).ToList();
+        if (dirtyTabs.Any())
+        {
+            string message = dirtyTabs.Count == 1
+                ? $"Вкладка \"{dirtyTabs[0].DisplayName}\" содержит несохранённые изменения. Закрыть без сохранения?"
+                : $"{dirtyTabs.Count} вкладок содержат несохранённые изменения. Закрыть без сохранения?";
+
+            if (!CustomMessageBox.ShowQuestion(message, "Несохранённые изменения"))
+            {
+                e.Cancel = true;
+                return;
+            }
+        }
+
         // Сохраняем текущее состояние
         _appState.SelectedCategory = !string.IsNullOrWhiteSpace(_selectedCategoryPath)
             ? _selectedCategoryPath
@@ -3489,7 +3554,7 @@ public partial class MainWindow : Window
             {
                 _roslynCompletionService.UpdateCode(CodeTextBox.Text);
                 var formattedText = await _roslynCompletionService.FormatCodeAsync();
-                
+
                 if (!string.IsNullOrEmpty(formattedText))
                 {
                     CodeTextBox.Document.Replace(0, CodeTextBox.Document.TextLength, formattedText);
@@ -3781,7 +3846,7 @@ public partial class MainWindow : Window
         // Initialize new services for the current document
         _colorizer = new SyntaxErrorColorizer(CodeTextBox.Document);
         CodeTextBox.TextArea.TextView.LineTransformers.Add(_colorizer);
-_markerService = new TextMarkerService(CodeTextBox.Document);
-_markerService.AddToTextView(CodeTextBox.TextArea.TextView);
-}
+        _markerService = new TextMarkerService(CodeTextBox.Document);
+        _markerService.AddToTextView(CodeTextBox.TextArea.TextView);
+    }
 }
