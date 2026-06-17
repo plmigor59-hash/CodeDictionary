@@ -9,6 +9,7 @@ using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
+using Microsoft.Web.WebView2.Core;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -2071,6 +2072,23 @@ public partial class MainWindow : Window
         var selected = SyntaxHighlightingComboBox.SelectedItem.ToString();
         SelectSyntax(selected!);
 
+        UpdateWebViewTheme();
+
+    }
+
+    private void UpdateWebViewTheme()
+    {
+        if (!_descriptionWebView2Ready) return;
+        string bgColor = _currentTheme == AppTheme.Dark ? "#1E1E1E" : "#FFFFFF";
+        string textColor = _currentTheme == AppTheme.Dark ? "#EDF2F7" : "#1F1F1F";
+        string tbBgColor = _currentTheme == AppTheme.Dark ? "#2D2D2D" : "#F0F0F0";
+        string tbBorderColor = _currentTheme == AppTheme.Dark ? "#555" : "#CCC";
+        string js = $@"
+document.body.style.backgroundColor='{bgColor}';
+document.body.style.color='{textColor}';
+var tb=document.getElementById('__fmt_toolbar');
+if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBorderColor}';}}";
+        _ = DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
     }
 
     private void UpdateCodeEditorColors(string? selectedSyntax = null)
@@ -3035,7 +3053,55 @@ public partial class MainWindow : Window
         try
         {
             await DescriptionBrowser.EnsureCoreWebView2Async();
+            DescriptionBrowser.CoreWebView2.WebMessageReceived += OnWebMessageReceived;
             _descriptionWebView2Ready = true;
+        }
+        catch { }
+    }
+
+    private async void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
+    {
+        try
+        {
+            string json = e.TryGetWebMessageAsString();
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            string type = root.GetProperty("type").GetString() ?? "";
+
+            if (type == "color")
+            {
+                string target = root.GetProperty("target").GetString() ?? "foreColor";
+                using var cd = new System.Windows.Forms.ColorDialog();
+                if (cd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    string hex = $"#{cd.Color.R:X2}{cd.Color.G:X2}{cd.Color.B:X2}";
+                    string js = $"document.execCommand('{target}',false,'{hex}')";
+                    await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
+                }
+            }
+            else if (type == "pic")
+            {
+                var ofd = new OpenFileDialog
+                {
+                    Filter = "Изображения (*.png;*.jpg;*.jpeg;*.gif;*.svg;*.webp;*.bmp)|*.png;*.jpg;*.jpeg;*.gif;*.svg;*.webp;*.bmp|Все файлы (*.*)|*.*",
+                    Title = "Выберите изображение"
+                };
+                if (ofd.ShowDialog() == true)
+                {
+                    byte[] bytes = await System.IO.File.ReadAllBytesAsync(ofd.FileName);
+                    string ext = Path.GetExtension(ofd.FileName).TrimStart('.').ToLower();
+                    ext = ext switch
+                    {
+                        "jpg" => "jpeg",
+                        "svg" => "svg+xml",
+                        _ => ext
+                    };
+                    string b64 = Convert.ToBase64String(bytes);
+                    string dataUri = $"data:image/{ext};base64,{b64}";
+                    string js = $"document.execCommand('insertImage',false,'{dataUri.Replace("'", "\\'")}')";
+                    await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
+                }
+            }
         }
         catch { }
     }
@@ -3071,10 +3137,21 @@ public partial class MainWindow : Window
 
             if (_isDescriptionEditMode)
             {
-                DescriptionBrowser.CoreWebView2.DOMContentLoaded += (s, e) =>
-                {
-                    DescriptionBrowser.CoreWebView2.ExecuteScriptAsync("document.body.contentEditable = true;");
-                };
+                DescriptionBrowser.CoreWebView2.NavigationCompleted += OnDescriptionNavigationCompleted;
+            }
+        }
+        catch { }
+    }
+
+    private async void OnDescriptionNavigationCompleted(object? sender, object? e)
+    {
+        try
+        {
+            DescriptionBrowser.CoreWebView2.NavigationCompleted -= OnDescriptionNavigationCompleted;
+            if (_isDescriptionEditMode)
+            {
+                string js = "document.body.contentEditable = true; " + GetFormatToolbarInjectScript();
+                await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
             }
         }
         catch { }
@@ -3088,15 +3165,71 @@ public partial class MainWindow : Window
 
         if (_descriptionWebView2Ready)
         {
-            string cmd = _isDescriptionEditMode
-                ? "document.body.contentEditable = true;"
-                : "document.body.contentEditable = false;";
-            _ = DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(cmd);
+            string js = _isDescriptionEditMode
+                ? $"document.body.contentEditable = true; {GetFormatToolbarInjectScript()}"
+                : $"{GetFormatToolbarRemoveScript()} document.body.contentEditable = false;";
+            _ = DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
         }
         else
         {
             SetDescriptionHtml(GetCurrentEntryDescription());
         }
+    }
+
+    private string GetFormatToolbarInjectScript()
+    {
+        bool isDark = _currentTheme == AppTheme.Dark;
+        string tbBg = isDark ? "#2D2D2D" : "#F0F0F0";
+        string tbBorder = isDark ? "#555" : "#CCC";
+        string btnBg = isDark ? "#3C3C3C" : "#FFF";
+        string btnBorder = isDark ? "#666" : "#BBB";
+        string btnText = isDark ? "#EDF2F7" : "#1F1F1F";
+        string sepBg = isDark ? "#555" : "#CCC";
+
+        return $@"
+(function(){{
+    if (document.getElementById('__fmt_toolbar')) return;
+    var tb = document.createElement('div');
+    tb.id = '__fmt_toolbar';
+    tb.style.cssText = 'position:sticky;top:0;z-index:9999;background:{tbBg};border-bottom:1px solid {tbBorder};padding:3px 5px;font-family:Segoe UI,sans-serif;font-size:13px;display:flex;flex-wrap:wrap;gap:2px;align-items:center;user-select:none;';
+    var bstyle = 'padding:2px 6px;border:1px solid {btnBorder};border-radius:2px;background:{btnBg};cursor:pointer;font-size:12px;line-height:1.2;color:{btnText};margin:0;';
+    function addBtn(text, title, fn) {{
+        var btn = document.createElement('button');
+        btn.textContent = text;
+        btn.title = title;
+        btn.style.cssText = bstyle;
+        btn.addEventListener('click', fn);
+        tb.appendChild(btn);
+    }}
+    function addSep() {{
+        var s = document.createElement('span');
+        s.style.cssText = 'width:1px;height:18px;background:{sepBg};margin:0 2px;display:inline-block;';
+        tb.appendChild(s);
+    }}
+    addBtn('B','Жирный',function(){{document.execCommand('bold');this.blur()}});
+    addBtn('I','Курсив',function(){{document.execCommand('italic');this.blur()}});
+    addBtn('U','Подчёркнутый',function(){{document.execCommand('underline');this.blur()}});
+    addSep();
+    addBtn('H1','Заголовок 1',function(){{document.execCommand('formatBlock',false,'<h1>')}});
+    addBtn('H2','Заголовок 2',function(){{document.execCommand('formatBlock',false,'<h2>')}});
+    addBtn('H3','Заголовок 3',function(){{document.execCommand('formatBlock',false,'<h3>')}});
+    addSep();
+    addBtn('•','Маркированный список',function(){{document.execCommand('insertUnorderedList');this.blur()}});
+    addBtn('1.','Нумерованный список',function(){{document.execCommand('insertOrderedList');this.blur()}});
+    addSep();
+    addBtn('🔗','Ссылка',function(){{var u=prompt('URL:','https://');if(u)document.execCommand('createLink',false,u);this.blur()}});
+    addBtn('🖼','Изображение',function(){{window.chrome.webview.postMessage(JSON.stringify({{type:'pic'}}))}});
+    addSep();
+    addBtn('A','Цвет текста',function(){{window.chrome.webview.postMessage(JSON.stringify({{type:'color',target:'foreColor'}}))}});
+    addBtn('▨','Цвет фона',function(){{window.chrome.webview.postMessage(JSON.stringify({{type:'color',target:'hiliteColor'}}))}});
+    document.body.insertBefore(tb, document.body.firstChild);
+}})();
+";
+    }
+
+    private static string GetFormatToolbarRemoveScript()
+    {
+        return @"var el=document.getElementById('__fmt_toolbar');if(el)el.remove();";
     }
 
     private async void SaveDescriptionButton_Click(object sender, RoutedEventArgs e)
