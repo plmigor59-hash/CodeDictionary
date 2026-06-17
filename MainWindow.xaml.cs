@@ -35,6 +35,9 @@ public partial class MainWindow : Window
     private const string CategorySeparator = "/";
     private const string UncategorizedCategoryName = "Без категории";
     private readonly DataService _dataService;
+    private readonly CategoryService _categoryService;
+    private readonly FormattingService _formattingService;
+    private readonly EntryService _entryService;
     private readonly MainViewModel _viewModel;
     private CodeDictionaryData _data;
     private List<CodeEntry> _filteredEntries;
@@ -95,11 +98,8 @@ public partial class MainWindow : Window
 
     private void SaveExpansionState()
     {
-        _expandedCategories.Clear();
-        if (EntriesTreeView.ItemsSource is IEnumerable<CategoryNode> nodes)
-        {
-            SaveExpansionStateRecursive(nodes);
-        }
+        _categoryService.SaveExpansionState(_expandedCategories,
+            EntriesTreeView.ItemsSource as IEnumerable<CategoryNode> ?? Enumerable.Empty<CategoryNode>());
     }
 
     private void CodeTextBox_TextEntering(object sender, TextCompositionEventArgs e)
@@ -410,71 +410,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private void SaveExpansionStateRecursive(IEnumerable<CategoryNode> nodes)
-    {
-        foreach (var node in nodes)
-        {
-            if (node.IsExpanded)
-            {
-                _expandedCategories.Add(node.FullPath);
-                SaveExpansionStateRecursive(node.Children);
-            }
-        }
-    }
-
-    private void ApplyExpansionState(IEnumerable<CategoryNode> nodes)
-    {
-        foreach (var node in nodes)
-        {
-            if (_expandedCategories.Contains(node.FullPath))
-            {
-                node.IsExpanded = true;
-            }
-            ApplyExpansionState(node.Children);
-        }
-    }
-
     private object? GetNeighborData(object item)
     {
-        if (item == null) return null;
-
-        IEnumerable<CategoryNode> roots = EntriesTreeView.ItemsSource as IEnumerable<CategoryNode> ?? new List<CategoryNode>();
-
-        // Helper to find parent and index
-        (object? parent, int index, IList<object>? siblings) FindInNodes(IEnumerable<object> nodes, object target)
-        {
-            var list = nodes.ToList();
-            for (int i = 0; i < list.Count; i++)
-            {
-                if (list[i] == target) return (null, i, list);
-
-                if (list[i] is CategoryNode cat)
-                {
-                    var result = FindInNodes(cat.Items, target);
-                    if (result.siblings != null)
-                    {
-                        return (result.parent ?? cat, result.index, result.siblings);
-                    }
-                }
-            }
-            return (null, -1, null);
-        }
-
-        var (parent, index, siblings) = FindInNodes(roots, item);
-        if (siblings == null) return null;
-
-        object? neighbor = null;
-        if (siblings.Count > 1)
-        {
-            if (index + 1 < siblings.Count) neighbor = siblings[index + 1];
-            else if (index - 1 >= 0) neighbor = siblings[index - 1];
-        }
-
-        if (neighbor == null) neighbor = parent;
-
-        if (neighbor is CodeEntryViewModel evm) return evm.Entry;
-        if (neighbor is CategoryNode cn) return cn.FullPath;
-        return neighbor;
+        var roots = EntriesTreeView.ItemsSource as IEnumerable<CategoryNode> ?? Enumerable.Empty<CategoryNode>();
+        return _categoryService.GetNeighborData(roots, item);
     }
 
 
@@ -499,6 +438,9 @@ public partial class MainWindow : Window
         // Загружаем кастомную тему подсветки для тёмного и светлого режимов
 
         _dataService = new DataService();
+        _categoryService = new CategoryService();
+        _formattingService = new FormattingService();
+        _entryService = new EntryService(_categoryService, _formattingService);
         _appState = _dataService.LoadState();
 
         InitializeComponent();
@@ -903,7 +845,7 @@ public partial class MainWindow : Window
         entry.Title = TitleTextBox.Text;
         // Описание теперь только отображается через WebBrowser и не редактируется напрямую в UI
         entry.Code = CodeTextBox.Text;
-        entry.Category = NormalizeCategoryPath(CategoryComboBox.Text);
+        entry.Category = _categoryService.NormalizeCategoryPath(CategoryComboBox.Text);
         entry.Tags = TagsTextBox.Text
             .Split(',')
             .Select(tag => tag.Trim())
@@ -1049,10 +991,10 @@ public partial class MainWindow : Window
             {
                 TitleTextBox.Text = tab.Entry.Title;
                 SetDescriptionHtml(tab.Entry.Description);
-                CategoryComboBox.Text = NormalizeCategoryPath(tab.Entry.Category);
+                CategoryComboBox.Text = _categoryService.NormalizeCategoryPath(tab.Entry.Category);
                 TagsTextBox.Text = string.Join(", ", tab.Entry.Tags);
                 _currentEntry = tab.Entry;
-                _selectedCategoryPath = NormalizeCategoryPath(tab.Entry.Category);
+                _selectedCategoryPath = _categoryService.NormalizeCategoryPath(tab.Entry.Category);
                 ToggleDescription_Close();
             }
             else
@@ -1225,61 +1167,20 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Получаем границы выделения
         var start = selection.Segments.First().StartOffset;
         var end = selection.Segments.Last().EndOffset;
         var length = end - start;
 
-        // Проверяем, не перекрывается ли с существующими стилями
-        var existingSegment = _textSegments.FirstOrDefault(s => s.StartOffset == start && s.Length == length);
+        _formattingService.ApplyStyleToSelection(_textSegments, start, length,
+            backgroundColor, foregroundColor, bold, italic, underline, fontFamily, fontSize);
 
-        if (existingSegment != null)
-        {
-            // Обновляем существующий стиль
-            if (backgroundColor != null) existingSegment.BackgroundColor = backgroundColor;
-            if (foregroundColor != null) existingSegment.ForegroundColor = foregroundColor;
-            if (bold.HasValue) existingSegment.IsBold = bold.Value;
-            if (italic.HasValue) existingSegment.IsItalic = italic.Value;
-            if (underline.HasValue) existingSegment.IsUnderline = underline.Value;
-            if (fontFamily != null) existingSegment.FontFamily = fontFamily;
-            if (fontSize.HasValue) existingSegment.FontSize = fontSize.Value;
-        }
-        else
-        {
-
-
-
-            // Создаём новый стиль
-            var newSegment = new TextSegmentStyle
-            {
-                StartOffset = start,
-                Length = length,
-                BackgroundColor = backgroundColor,  // может быть null, строкой с цветом, или "transparent"
-                ForegroundColor = foregroundColor,  // может быть null или строкой с цветом
-                IsBold = bold ?? false,
-                IsItalic = italic ?? false,
-                IsUnderline = underline ?? false,
-                FontFamily = fontFamily,  // может быть null или названием шрифта
-                FontSize = fontSize       // может быть null или размером шрифта
-            };
-            _textSegments.Add(newSegment);
-        }
-
-        // Обновляем визуальное отображение
         CodeTextBox.TextArea.TextView.Redraw();
     }
 
 
-    // 🔄 Обновить сегменты после изменения текста
     private void UpdateSegmentsAfterTextChange()
     {
-        var currentLength = CodeTextBox.Document.TextLength;
-
-        // Удаляем стили, которые вышли за пределы документа
-        _textSegments.RemoveAll(s => s.StartOffset + s.Length > currentLength);
-
-        // Можно добавить логику смещения позиций при вставке/удалении
-        // (для простоты пока просто перерисовываем)
+        _formattingService.UpdateSegmentsAfterTextChange(_textSegments, CodeTextBox.Document.TextLength);
         CodeTextBox.TextArea.TextView.Redraw();
     }
 
@@ -1324,7 +1225,6 @@ public partial class MainWindow : Window
     }
 
 
-    // ❌ Очистить стили с выделенного текста
     private void ClearStyleFromSelection()
     {
         var selection = CodeTextBox.TextArea.Selection;
@@ -1333,9 +1233,7 @@ public partial class MainWindow : Window
         var start = selection.Segments.First().StartOffset;
         var end = selection.Segments.Last().EndOffset;
 
-        // Удаляем все стили, попадающие в выделение
-        _textSegments.RemoveAll(s => s.StartOffset >= start && s.StartOffset + s.Length <= end);
-
+        _formattingService.ClearStyleFromSelection(_textSegments, start, end);
         CodeTextBox.TextArea.TextView.Redraw();
     }
 
@@ -1787,7 +1685,7 @@ public partial class MainWindow : Window
         ToggleDescriptionButton.Content = " ▼ Развернуть ";
 
         RefreshEntriesList();
-        _selectedCategoryPath = NormalizeCategoryPath(_appState.SelectedCategory);
+        _selectedCategoryPath = _categoryService.NormalizeCategoryPath(_appState.SelectedCategory);
         if (!string.IsNullOrWhiteSpace(_selectedCategoryPath))
         {
             CategoryComboBox.Text = _selectedCategoryPath;
@@ -2144,7 +2042,7 @@ public partial class MainWindow : Window
     {
         if (CategoryComboBox != null)
         {
-            CategoryComboBox.ItemsSource = GetKnownCategoryPaths();
+            CategoryComboBox.ItemsSource = _categoryService.GetKnownCategoryPaths(_data.Entries, _data.Categories);
         }
     }
 
@@ -2172,11 +2070,11 @@ public partial class MainWindow : Window
             .ToList();
 
         RefreshCategoryFilter();
-        var tree = BuildCategoryTree(_filteredEntries);
+        var tree = _categoryService.BuildCategoryTree(_filteredEntries, _data.Categories);
 
         if (string.IsNullOrWhiteSpace(searchText) || searchText == "поиск...")
         {
-            ApplyExpansionState(tree);
+            _categoryService.ApplyExpansionState(_expandedCategories, tree);
         }
 
         EntriesTreeView.ItemsSource = tree;
@@ -2185,7 +2083,7 @@ public partial class MainWindow : Window
         {
             foreach (var node in tree)
             {
-                ExpandIfHasEntries(node);
+                _categoryService.ExpandIfHasEntries(node);
             }
         }
 
@@ -2193,19 +2091,19 @@ public partial class MainWindow : Window
         {
             if (itemToSelect is CodeEntry entry)
             {
-                var viewEntry = FindEntryViewModel(tree, entry.Id);
+                var viewEntry = _categoryService.FindEntryViewModel(tree, entry.Id);
                 if (viewEntry != null)
                 {
-                    ExpandAncestors(tree, NormalizeCategoryPath(entry.Category));
+                    _categoryService.ExpandAncestors(tree, _categoryService.NormalizeCategoryPath(entry.Category));
                     viewEntry.IsSelected = true;
                 }
             }
             else if (itemToSelect is string categoryPath)
             {
-                var targetNode = FindCategoryNode(tree, categoryPath);
+                var targetNode = _categoryService.FindCategoryNode(tree, categoryPath);
                 if (targetNode != null)
                 {
-                    ExpandAncestors(tree, categoryPath);
+                    _categoryService.ExpandAncestors(tree, categoryPath);
                     targetNode.IsSelected = true;
                 }
             }
@@ -2237,7 +2135,7 @@ public partial class MainWindow : Window
 
         if (e.NewValue is CodeEntryViewModel viewEntry)
         {
-            var categoryPath = NormalizeCategoryPath(viewEntry.Entry.Category);
+            var categoryPath = _categoryService.NormalizeCategoryPath(viewEntry.Entry.Category);
             _selectedCategoryPath = categoryPath;
             CategoryComboBox.Text = categoryPath;
         }
@@ -2323,7 +2221,7 @@ public partial class MainWindow : Window
 
         if (draggedItem is CategoryNode sourceCategory)
         {
-            var destinationName = GetCategorySegmentName(sourceCategory.FullPath);
+            var destinationName = _categoryService.GetCategorySegmentName(sourceCategory.FullPath);
             await MoveCategoryAsync(sourceCategory.FullPath, destinationPath, destinationName);
             return;
         }
@@ -2362,7 +2260,7 @@ public partial class MainWindow : Window
         }
         else if (targetItem is CodeEntryViewModel targetEntry)
         {
-            destinationPath = NormalizeCategoryPath(targetEntry.Entry.Category);
+            destinationPath = _categoryService.NormalizeCategoryPath(targetEntry.Entry.Category);
         }
         else
         {
@@ -2371,14 +2269,14 @@ public partial class MainWindow : Window
 
         if (draggedItem is CategoryNode draggedCategory)
         {
-            var draggedPath = NormalizeCategoryPath(draggedCategory.FullPath);
+            var draggedPath = _categoryService.NormalizeCategoryPath(draggedCategory.FullPath);
             if (string.IsNullOrWhiteSpace(draggedPath))
             {
                 return false;
             }
 
             if (!string.IsNullOrWhiteSpace(destinationPath) &&
-                IsPathWithin(destinationPath, draggedPath))
+                _categoryService.IsPathWithin(destinationPath, draggedPath))
             {
                 return false;
             }
@@ -2410,10 +2308,10 @@ public partial class MainWindow : Window
         {
             TitleTextBox.Text = entry.Title;
             SetDescriptionHtml(entry.Description);
-            CategoryComboBox.Text = NormalizeCategoryPath(entry.Category);
+            CategoryComboBox.Text = _categoryService.NormalizeCategoryPath(entry.Category);
             TagsTextBox.Text = string.Join(", ", entry.Tags);
 
-            _selectedCategoryPath = NormalizeCategoryPath(entry.Category);
+            _selectedCategoryPath = _categoryService.NormalizeCategoryPath(entry.Category);
             RefreshCategoryFilter();
 
             if (!string.IsNullOrEmpty(entry.Code))
@@ -2463,7 +2361,7 @@ public partial class MainWindow : Window
     private void AddEntry_Click(object sender, RoutedEventArgs e)
     {
         _isNewRecordDescription = true;
-        var currentCategory = NormalizeCategoryPath(CategoryComboBox.Text);
+        var currentCategory = _categoryService.NormalizeCategoryPath(CategoryComboBox.Text);
         var newEntry = new CodeEntry
         {
             Category = currentCategory
@@ -2497,146 +2395,26 @@ public partial class MainWindow : Window
         }
     }
 
-    private void NormalizeImportedData()
-    {
-        foreach (var entry in _data.Entries)
-        {
-            entry.Category = NormalizeCategoryPath(entry.Category);
-        }
-
-        var normalizedCategories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var category in _data.Categories)
-        {
-            var normalizedCategory = NormalizeCategoryPath(category);
-            if (string.IsNullOrWhiteSpace(normalizedCategory))
-            {
-                continue;
-            }
-
-            foreach (var ancestor in EnumerateCategoryAncestors(normalizedCategory))
-            {
-                normalizedCategories.Add(ancestor);
-            }
-        }
-
-        foreach (var entry in _data.Entries)
-        {
-            if (!string.IsNullOrWhiteSpace(entry.Category))
-            {
-                foreach (var ancestor in EnumerateCategoryAncestors(entry.Category))
-                {
-                    normalizedCategories.Add(ancestor);
-                }
-            }
-        }
-
-        _data.Categories = normalizedCategories
-            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
-
-
     private void SaveSegmentsToEntry()
     {
-        if (_currentEntry == null)
-            return;
-
-        // Создаем контейнер с данными
-        var container = new FormattingContainer
+        if (_currentEntry != null)
         {
-            Segments = _textSegments,
-            Version = 1,
-            SavedAt = DateTime.Now
-        };
-
-        // Настройки сериализации
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true,  // Красивый формат JSON
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // Поддержка Unicode
-            DefaultIgnoreCondition = JsonIgnoreCondition.Never // Сохраняем все значения, включая null
-        };
-
-        // Сериализуем и сохраняем
-        _currentEntry.FormattingData = JsonSerializer.Serialize(container, options);
+            _formattingService.SaveSegmentsToEntry(_currentEntry, _textSegments);
+        }
     }
 
-    // 📖 ЗАГРУЗКА СЕГМЕНТОВ ИЗ JSON
     private void LoadSegmentsFromEntry()
     {
-        if (_currentEntry == null)
+        _formattingService.LoadSegmentsFromEntry(_currentEntry, _textSegments);
+        if (_currentEntry != null)
         {
-            _textSegments.Clear();
-            return;
-        }
-
-        // Если данных нет - очищаем сегменты
-        if (string.IsNullOrEmpty(_currentEntry.FormattingData))
-        {
-            _textSegments.Clear();
-            return;
-        }
-
-        try
-        {
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true  // Игнорируем регистр букв в JSON
-            };
-
-            // Десериализуем контейнер
-            var container = JsonSerializer.Deserialize<FormattingContainer>(
-                _currentEntry.FormattingData, options);
-
-            if (container != null && container.Segments != null)
-            {
-                // Очищаем и добавляем элементы, чтобы сохранить ссылку на список
-                _textSegments.Clear();
-                _textSegments.AddRange(container.Segments);
-
-                // Обновляем отображение в редакторе
-                CodeTextBox.TextArea.TextView.Redraw();
-            }
-            else
-            {
-                _textSegments.Clear();
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Ошибка загрузки форматирования: {ex.Message}");
-            _textSegments.Clear();
+            CodeTextBox.TextArea.TextView.Redraw();
         }
     }
 
-    // Применение форматирования к редактору (если нужно)
     private void LoadSegmentsIntoTab(EditorTabModel tab, CodeEntry entry)
     {
-        tab.Segments.Clear();
-
-        if (string.IsNullOrEmpty(entry.FormattingData))
-        {
-            return;
-        }
-
-        try
-        {
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-
-            var container = JsonSerializer.Deserialize<FormattingContainer>(entry.FormattingData, options);
-            if (container?.Segments != null)
-            {
-                tab.Segments.AddRange(container.Segments);
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Ошибка загрузки форматирования: {ex.Message}");
-            tab.Segments.Clear();
-        }
+        _formattingService.LoadSegmentsIntoTab(tab, entry);
     }
 
     private void ApplySegmentsToEditor()
@@ -2663,7 +2441,7 @@ public partial class MainWindow : Window
                 Extension = Path.GetExtension(filePath) ?? string.Empty,
                 Description = isHtml ? CodeTextBox.Text : "",
                 Code = isHtml ? "" : CodeTextBox.Text,
-                Category = NormalizeCategoryPath(CategoryComboBox.Text),
+                Category = _categoryService.NormalizeCategoryPath(CategoryComboBox.Text),
                 Tags = Array.Empty<string>().ToList(),
                 Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty
             };
@@ -2708,7 +2486,7 @@ public partial class MainWindow : Window
         entryToUpdate.Title = TitleTextBox.Text;
         // Описание теперь отображается через WebBrowser и не редактируется напрямую
         entryToUpdate.Code = CodeTextBox.Text;
-        entryToUpdate.Category = NormalizeCategoryPath(CategoryComboBox.Text);
+        entryToUpdate.Category = _categoryService.NormalizeCategoryPath(CategoryComboBox.Text);
         entryToUpdate.Tags = TagsTextBox.Text
             .Split(',')
             .Select(t => t.Trim())
@@ -2728,7 +2506,7 @@ public partial class MainWindow : Window
         _currentEntry = entryToUpdate;
         SaveSegmentsToEntry();
 
-        EnsureCategoryPathExists(entryToUpdate.Category);
+        _categoryService.EnsureCategoryPathExists(entryToUpdate.Category, _data.Categories);
 
         await _dataService.SaveDataAsync(_data);
         RefreshEntriesList(entryToUpdate);
@@ -2746,7 +2524,7 @@ public partial class MainWindow : Window
         var checkedEntries = new List<CodeEntryViewModel>();
         var checkedCategories = new List<CategoryNode>();
 
-        FindCheckedItems(EntriesTreeView.ItemsSource as IEnumerable<object>, checkedEntries, checkedCategories);
+        _categoryService.FindCheckedItems(EntriesTreeView.ItemsSource as IEnumerable<object>, checkedEntries, checkedCategories);
 
         if (checkedEntries.Count == 0 && checkedCategories.Count == 0)
         {
@@ -2767,20 +2545,20 @@ public partial class MainWindow : Window
 
             foreach (var categoryNode in checkedCategories)
             {
-                var categoryPath = NormalizeCategoryPath(categoryNode.FullPath);
+                var categoryPath = _categoryService.NormalizeCategoryPath(categoryNode.FullPath);
                 var entriesToDelete = _data.Entries
-                    .Where(entry => IsPathWithin(NormalizeCategoryPath(entry.Category), categoryPath))
+                    .Where(entry => _categoryService.IsPathWithin(_categoryService.NormalizeCategoryPath(entry.Category), categoryPath))
                     .ToList();
                 var categoriesToDelete = _data.Categories
-                    .Where(category => IsPathWithin(NormalizeCategoryPath(category), categoryPath))
+                    .Where(category => _categoryService.IsPathWithin(_categoryService.NormalizeCategoryPath(category), categoryPath))
                     .ToList();
 
                 var deletedEntryIds = entriesToDelete.Select(entry => entry.Id).ToHashSet();
                 var categoriesToDeleteSet = categoriesToDelete
-                    .Select(NormalizeCategoryPath)
+                    .Select(_categoryService.NormalizeCategoryPath)
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-                _data.Categories.RemoveAll(existing => categoriesToDeleteSet.Contains(NormalizeCategoryPath(existing)));
+                _data.Categories.RemoveAll(existing => categoriesToDeleteSet.Contains(_categoryService.NormalizeCategoryPath(existing)));
                 _data.Entries.RemoveAll(entry => deletedEntryIds.Contains(entry.Id));
 
                 foreach (var entryId in deletedEntryIds)
@@ -3160,7 +2938,7 @@ public partial class MainWindow : Window
     {
         if (EntriesTreeView.ItemsSource is IEnumerable<CategoryNode> categories)
         {
-            var viewEntry = FindEntryViewModel(categories, entryId);
+            var viewEntry = _categoryService.FindEntryViewModel(categories, entryId);
             if (viewEntry != null)
             {
                 _currentEntry = viewEntry.Entry;
@@ -3184,7 +2962,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var exportPath = EnsureExportExtension(saveFileDialog.FileName, saveFileDialog.FilterIndex);
+        var exportPath = CategoryService.EnsureExportExtension(saveFileDialog.FileName, saveFileDialog.FilterIndex);
         try
         {
             await _dataService.ExportDataAsync(_data, exportPath);
@@ -3249,7 +3027,7 @@ public partial class MainWindow : Window
         var bslFiles = allFiles.Where(f => f.EndsWith(".bsl", StringComparison.OrdinalIgnoreCase)).ToList();
 
         // Базовая категория для импорта - текущая выбранная
-        string baseCategory = NormalizeCategoryPath(_selectedCategoryPath);
+        string baseCategory = _categoryService.NormalizeCategoryPath(_selectedCategoryPath);
 
         foreach (var bslFile in bslFiles)
         {
@@ -3267,7 +3045,7 @@ public partial class MainWindow : Window
                     ? baseCategory
                     : $"{baseCategory}/{folderCategory}";
 
-            category = NormalizeCategoryPath(category);
+            category = _categoryService.NormalizeCategoryPath(category);
             if (string.IsNullOrEmpty(category)) category = UncategorizedCategoryName;
 
             string title = Path.GetFileNameWithoutExtension(bslFile);
@@ -3326,7 +3104,7 @@ public partial class MainWindow : Window
                     ? baseCategory
                     : $"{baseCategory}/{folderCategory}";
 
-            category = NormalizeCategoryPath(category);
+            category = _categoryService.NormalizeCategoryPath(category);
             if (string.IsNullOrEmpty(category)) category = UncategorizedCategoryName;
 
             string title = Path.GetFileNameWithoutExtension(htmlFile);
@@ -3346,7 +3124,7 @@ public partial class MainWindow : Window
             _data.Entries.Add(entry);
         }
 
-        NormalizeImportedData();
+        _categoryService.NormalizeImportedData(_data);
         await _dataService.SaveDataAsync(_data);
     }
 
@@ -3371,7 +3149,7 @@ public partial class MainWindow : Window
             {
                 var importedData = await _dataService.ImportDataAsync(openFileDialog.FileName);
                 _data = importedData ?? new CodeDictionaryData();
-                NormalizeImportedData();
+                _categoryService.NormalizeImportedData(_data);
                 await _dataService.SaveDataAsync(_data);
 
                 _currentEntry = null;
@@ -3406,7 +3184,7 @@ public partial class MainWindow : Window
     {
         var categoryPath = !string.IsNullOrWhiteSpace(_selectedCategoryPath)
             ? _selectedCategoryPath
-            : NormalizeCategoryPath(_currentEntry?.Category);
+            : _categoryService.NormalizeCategoryPath(_currentEntry?.Category);
 
         if (string.IsNullOrWhiteSpace(categoryPath))
         {
@@ -3430,7 +3208,7 @@ public partial class MainWindow : Window
 
     private async Task ExportCategoryAsync(string categoryPath)
     {
-        var normalizedCategoryPath = NormalizeCategoryPath(categoryPath);
+        var normalizedCategoryPath = _categoryService.NormalizeCategoryPath(categoryPath);
         if (string.IsNullOrWhiteSpace(normalizedCategoryPath))
         {
             return;
@@ -3442,7 +3220,7 @@ public partial class MainWindow : Window
             Filter = "JSON (*.json)|*.json|XML (*.xml)|*.xml",
             FilterIndex = 1,
             //InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            FileName = SanitizeFileName(GetCategorySegmentName(normalizedCategoryPath))
+            FileName = CategoryService.SanitizeFileName(_categoryService.GetCategorySegmentName(normalizedCategoryPath))
         };
 
         if (saveFileDialog.ShowDialog() != true)
@@ -3450,8 +3228,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        var exportPath = EnsureExportExtension(saveFileDialog.FileName, saveFileDialog.FilterIndex);
-        var exportData = BuildCategoryExportData(normalizedCategoryPath);
+        var exportPath = CategoryService.EnsureExportExtension(saveFileDialog.FileName, saveFileDialog.FilterIndex);
+        var exportData = _categoryService.BuildCategoryExportData(normalizedCategoryPath, _data);
 
         try
         {
@@ -3462,263 +3240,6 @@ public partial class MainWindow : Window
         {
             ShowAlert($"Ошибка экспорта категории: {ex.Message}", isError: true);
         }
-    }
-
-    private CodeDictionaryData BuildCategoryExportData(string categoryPath)
-    {
-        var normalizedCategoryPath = NormalizeCategoryPath(categoryPath);
-        var exportedEntries = _data.Entries
-            .Where(entry => IsPathWithin(NormalizeCategoryPath(entry.Category), normalizedCategoryPath))
-            .Select(CloneEntry)
-            .ToList();
-
-        var exportedCategories = _data.Categories
-            .Select(NormalizeCategoryPath)
-            .Where(path => IsPathWithin(path, normalizedCategoryPath))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        foreach (var entryCategory in exportedEntries.Select(entry => NormalizeCategoryPath(entry.Category)))
-        {
-            if (string.IsNullOrWhiteSpace(entryCategory))
-            {
-                continue;
-            }
-
-            foreach (var ancestor in EnumerateCategoryAncestors(entryCategory))
-            {
-                if (!exportedCategories.Any(path => string.Equals(path, ancestor, StringComparison.OrdinalIgnoreCase)))
-                {
-                    exportedCategories.Add(ancestor);
-                }
-            }
-        }
-
-        exportedCategories = exportedCategories
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        if (!exportedCategories.Any(path => string.Equals(path, normalizedCategoryPath, StringComparison.OrdinalIgnoreCase)))
-        {
-            exportedCategories.Insert(0, normalizedCategoryPath);
-        }
-
-        return new CodeDictionaryData
-        {
-            Entries = exportedEntries,
-            Categories = exportedCategories
-        };
-    }
-
-    private static CodeEntry CloneEntry(CodeEntry entry)
-    {
-        return new CodeEntry
-        {
-            Id = entry.Id,
-            Title = entry.Title,
-            Description = entry.Description,
-            Code = entry.Code,
-            Category = entry.Category,
-            Tags = entry.Tags.ToList(),
-            Syntax = entry.Syntax,
-            CreatedAt = entry.CreatedAt,
-            ModifiedAt = entry.ModifiedAt,
-            FormattingData = entry.FormattingData
-        };
-    }
-
-    private static string SanitizeFileName(string fileName)
-    {
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var sanitized = new string(fileName.Select(ch => invalidChars.Contains(ch) ? '_' : ch).ToArray());
-        return string.IsNullOrWhiteSpace(sanitized) ? "category" : sanitized;
-    }
-
-    private List<string> GetKnownCategoryPaths()
-    {
-        return _data.Categories
-            .Concat(_data.Entries.Select(entry => entry.Category))
-            .Select(NormalizeCategoryPath)
-            .Where(path => !string.IsNullOrWhiteSpace(path))
-            .SelectMany(EnumerateCategoryAncestors)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
-
-    private void EnsureCategoryPathExists(string? categoryPath)
-    {
-        var normalizedPath = NormalizeCategoryPath(categoryPath);
-        if (string.IsNullOrWhiteSpace(normalizedPath))
-        {
-            return;
-        }
-
-        foreach (var ancestor in EnumerateCategoryAncestors(normalizedPath))
-        {
-            if (!_data.Categories.Any(existing => string.Equals(NormalizeCategoryPath(existing), ancestor, StringComparison.OrdinalIgnoreCase)))
-            {
-                _data.Categories.Add(ancestor);
-            }
-        }
-    }
-
-    private List<CategoryNode> BuildCategoryTree(IEnumerable<CodeEntry> entries)
-    {
-        var nodeLookup = new Dictionary<string, CategoryNode>(StringComparer.OrdinalIgnoreCase);
-
-        CategoryNode GetOrCreateNode(string path)
-        {
-            var normalizedPath = NormalizeCategoryPath(path);
-            if (nodeLookup.TryGetValue(normalizedPath, out var existingNode))
-            {
-                return existingNode;
-            }
-
-            var node = new CategoryNode
-            {
-                Name = string.IsNullOrWhiteSpace(normalizedPath)
-                    ? UncategorizedCategoryName
-                    : GetCategorySegmentName(normalizedPath),
-                FullPath = normalizedPath
-            };
-
-            nodeLookup[normalizedPath] = node;
-
-            var parentPath = GetParentCategoryPath(normalizedPath);
-            if (!string.IsNullOrWhiteSpace(parentPath))
-            {
-                GetOrCreateNode(parentPath).Children.Add(node);
-            }
-
-            return node;
-        }
-
-        foreach (var categoryPath in GetKnownCategoryPaths())
-        {
-            foreach (var ancestor in EnumerateCategoryAncestors(categoryPath))
-            {
-                GetOrCreateNode(ancestor);
-            }
-        }
-
-        var uncategorizedNode = GetOrCreateNode(string.Empty);
-
-        foreach (var entry in entries)
-        {
-            var normalizedCategory = NormalizeCategoryPath(entry.Category);
-            var node = string.IsNullOrWhiteSpace(normalizedCategory)
-                ? uncategorizedNode
-                : GetOrCreateNode(normalizedCategory);
-
-            node.Entries.Add(new CodeEntryViewModel(entry));
-        }
-
-        var roots = nodeLookup.Values
-            .Where(node => string.IsNullOrWhiteSpace(GetParentCategoryPath(node.FullPath)))
-            .OrderBy(node => node.FullPath == string.Empty ? 1 : 0)
-            .ThenBy(node => node.Name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        SortCategoryNodes(roots);
-        return roots;
-    }
-
-    private void SortCategoryNodes(IEnumerable<CategoryNode> nodes)
-    {
-        foreach (var node in nodes)
-        {
-            node.Children.Sort((left, right) =>
-                string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
-            node.Entries.Sort((left, right) =>
-                string.Compare(left.Title, right.Title, StringComparison.OrdinalIgnoreCase));
-            SortCategoryNodes(node.Children);
-        }
-    }
-
-    private static IEnumerable<string> EnumerateCategoryAncestors(string categoryPath)
-    {
-        var normalized = NormalizeCategoryPath(categoryPath);
-        if (string.IsNullOrWhiteSpace(normalized))
-        {
-            yield break;
-        }
-
-        var segments = normalized.Split(CategorySeparator, StringSplitOptions.RemoveEmptyEntries);
-        var currentPath = string.Empty;
-        foreach (var segment in segments)
-        {
-            currentPath = string.IsNullOrWhiteSpace(currentPath)
-                ? segment
-                : $"{currentPath}{CategorySeparator}{segment}";
-            yield return currentPath;
-        }
-    }
-
-    private static string NormalizeCategoryPath(string? categoryPath)
-    {
-        if (string.IsNullOrWhiteSpace(categoryPath))
-        {
-            return string.Empty;
-        }
-
-        var segments = categoryPath
-            .Replace('\\', CategorySeparator[0])
-            .Split(CategorySeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(segment => !string.IsNullOrWhiteSpace(segment))
-            .ToArray();
-
-        return string.Join(CategorySeparator, segments);
-    }
-
-    private static string GetCategorySegmentName(string categoryPath)
-    {
-        var normalized = NormalizeCategoryPath(categoryPath);
-        if (string.IsNullOrWhiteSpace(normalized))
-        {
-            return UncategorizedCategoryName;
-        }
-
-        var lastSeparatorIndex = normalized.LastIndexOf(CategorySeparator, StringComparison.Ordinal);
-        return lastSeparatorIndex >= 0
-            ? normalized[(lastSeparatorIndex + 1)..]
-            : normalized;
-    }
-
-    private static string GetParentCategoryPath(string categoryPath)
-    {
-        var normalized = NormalizeCategoryPath(categoryPath);
-        if (string.IsNullOrWhiteSpace(normalized))
-        {
-            return string.Empty;
-        }
-
-        var lastSeparatorIndex = normalized.LastIndexOf(CategorySeparator, StringComparison.Ordinal);
-        return lastSeparatorIndex > 0
-            ? normalized[..lastSeparatorIndex]
-            : string.Empty;
-    }
-
-    private static CodeEntryViewModel? FindEntryViewModel(IEnumerable<CategoryNode> categories, Guid entryId)
-    {
-        foreach (var category in categories)
-        {
-            var directEntry = category.Entries.FirstOrDefault(entry => entry.Entry.Id == entryId);
-            if (directEntry != null)
-            {
-                return directEntry;
-            }
-
-            var nestedEntry = FindEntryViewModel(category.Children, entryId);
-            if (nestedEntry != null)
-            {
-                return nestedEntry;
-            }
-        }
-
-        return null;
     }
 
     private async void AddCategoryRoot_Click(object sender, RoutedEventArgs e)
@@ -3748,7 +3269,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var enteredName = NormalizeCategoryPath(dialog.CategoryName);
+        var enteredName = _categoryService.NormalizeCategoryPath(dialog.CategoryName);
         if (string.IsNullOrWhiteSpace(enteredName))
         {
             return;
@@ -3762,15 +3283,15 @@ public partial class MainWindow : Window
 
         var newCategoryPath = string.IsNullOrWhiteSpace(parentPath)
             ? enteredName
-            : $"{NormalizeCategoryPath(parentPath)}{CategorySeparator}{enteredName}";
+            : $"{_categoryService.NormalizeCategoryPath(parentPath)}{CategorySeparator}{enteredName}";
 
-        if (_data.Categories.Any(existing => string.Equals(NormalizeCategoryPath(existing), newCategoryPath, StringComparison.CurrentCultureIgnoreCase)))
+        if (_data.Categories.Any(existing => string.Equals(_categoryService.NormalizeCategoryPath(existing), newCategoryPath, StringComparison.CurrentCultureIgnoreCase)))
         {
             ShowAlert($"Категория '{newCategoryPath}' уже существует", isError: true);
             return;
         }
 
-        EnsureCategoryPathExists(newCategoryPath);
+        _categoryService.EnsureCategoryPathExists(newCategoryPath, _data.Categories);
 
         // Сортируем категории для сохранения порядка
         _data.Categories = _data.Categories
@@ -3793,59 +3314,14 @@ public partial class MainWindow : Window
     {
         if (EntriesTreeView.ItemsSource is IEnumerable<CategoryNode> categories)
         {
-            var targetNode = FindCategoryNode(categories, categoryPath);
+            var targetNode = _categoryService.FindCategoryNode(categories, categoryPath);
             if (targetNode != null)
             {
-                ExpandAncestors(categories, categoryPath);
+                _categoryService.ExpandAncestors(categories, categoryPath);
                 targetNode.IsSelected = true;
                 targetNode.IsExpanded = true;
             }
         }
-    }
-
-    private CategoryNode? FindCategoryNode(IEnumerable<CategoryNode> nodes, string path)
-    {
-        foreach (var node in nodes)
-        {
-            if (string.Equals(node.FullPath, path, StringComparison.CurrentCultureIgnoreCase))
-                return node;
-
-            var found = FindCategoryNode(node.Children, path);
-            if (found != null) return found;
-        }
-        return null;
-    }
-
-    private void ExpandAncestors(IEnumerable<CategoryNode> nodes, string path)
-    {
-        var ancestors = EnumerateCategoryAncestors(path).ToList();
-        foreach (var ancestor in ancestors)
-        {
-            var node = FindCategoryNode(nodes, ancestor);
-            if (node != null) node.IsExpanded = true;
-        }
-    }
-
-    private bool ExpandIfHasEntries(CategoryNode node)
-    {
-        bool hasMatchingEntries = node.Entries.Count > 0;
-        bool hasMatchingChildren = false;
-
-        foreach (var child in node.Children)
-        {
-            if (ExpandIfHasEntries(child))
-            {
-                hasMatchingChildren = true;
-            }
-        }
-
-        if (hasMatchingEntries || hasMatchingChildren)
-        {
-            node.IsExpanded = true;
-            return true;
-        }
-
-        return false;
     }
 
     private async void RenameCategory_Click(object sender, RoutedEventArgs e)
@@ -3860,7 +3336,7 @@ public partial class MainWindow : Window
 
     private async Task RenameCategoryAsync(CategoryNode categoryNode)
     {
-        var currentPath = NormalizeCategoryPath(categoryNode.FullPath);
+        var currentPath = _categoryService.NormalizeCategoryPath(categoryNode.FullPath);
         if (string.IsNullOrWhiteSpace(currentPath))
         {
             return;
@@ -3869,7 +3345,7 @@ public partial class MainWindow : Window
         var dialog = new CategoryInputDialog(
             "Переименовать категорию",
             $"Новое имя для '{currentPath}':",
-            GetCategorySegmentName(currentPath));
+            _categoryService.GetCategorySegmentName(currentPath));
         dialog.Owner = this;
 
         if (dialog.ShowDialog() != true)
@@ -3877,7 +3353,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var newName = NormalizeCategoryPath(dialog.CategoryName);
+        var newName = _categoryService.NormalizeCategoryPath(dialog.CategoryName);
         if (string.IsNullOrWhiteSpace(newName))
         {
             return;
@@ -3889,7 +3365,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var parentPath = GetParentCategoryPath(currentPath);
+        var parentPath = _categoryService.GetParentCategoryPath(currentPath);
         var newPath = string.IsNullOrWhiteSpace(parentPath)
             ? newName
             : $"{parentPath}{CategorySeparator}{newName}";
@@ -3900,9 +3376,9 @@ public partial class MainWindow : Window
 
     private async Task MoveCategoryAsync(string sourcePath, string destinationParentPath, string newName)
     {
-        var normalizedSourcePath = NormalizeCategoryPath(sourcePath);
-        var normalizedDestinationParentPath = NormalizeCategoryPath(destinationParentPath);
-        var normalizedNewName = NormalizeCategoryPath(newName);
+        var normalizedSourcePath = _categoryService.NormalizeCategoryPath(sourcePath);
+        var normalizedDestinationParentPath = _categoryService.NormalizeCategoryPath(destinationParentPath);
+        var normalizedNewName = _categoryService.NormalizeCategoryPath(newName);
 
         if (string.IsNullOrWhiteSpace(normalizedSourcePath) || string.IsNullOrWhiteSpace(normalizedNewName))
         {
@@ -3924,13 +3400,13 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (IsCategoryPathTakenByAnotherNode(normalizedSourcePath, newPath))
+        if (_categoryService.IsCategoryPathTakenByAnotherNode(normalizedSourcePath, newPath, _data.Categories))
         {
             ShowAlert($"Категория '{newPath}' уже существует", isError: true);
             return;
         }
 
-        RemapCategoryPath(normalizedSourcePath, newPath);
+        _categoryService.RemapCategoryPath(normalizedSourcePath, newPath, _data);
         await _dataService.SaveDataAsync(_data);
         RefreshEntriesList();
         RestoreSelectionAfterCategoryMove(normalizedSourcePath, newPath);
@@ -3938,9 +3414,9 @@ public partial class MainWindow : Window
 
     private async Task MoveEntryAsync(CodeEntryViewModel entryViewModel, string destinationCategoryPath)
     {
-        var normalizedDestination = NormalizeCategoryPath(destinationCategoryPath);
+        var normalizedDestination = _categoryService.NormalizeCategoryPath(destinationCategoryPath);
         var entry = entryViewModel.Entry;
-        var normalizedSource = NormalizeCategoryPath(entry.Category);
+        var normalizedSource = _categoryService.NormalizeCategoryPath(entry.Category);
 
         if (string.Equals(normalizedSource, normalizedDestination, StringComparison.OrdinalIgnoreCase))
         {
@@ -3948,115 +3424,11 @@ public partial class MainWindow : Window
         }
 
         entry.Category = normalizedDestination;
-        EnsureCategoryPathExists(normalizedDestination);
+        _categoryService.EnsureCategoryPathExists(normalizedDestination, _data.Categories);
         await _dataService.SaveDataAsync(_data);
         RefreshEntriesList();
         _currentEntry = entry;
         LoadEntryToForm(entry);
-    }
-
-    private static bool IsPathWithin(string path, string parentPath)
-    {
-        var normalizedPath = NormalizeCategoryPath(path);
-        var normalizedParentPath = NormalizeCategoryPath(parentPath);
-
-        if (string.IsNullOrWhiteSpace(normalizedParentPath))
-        {
-            return false;
-        }
-
-        return string.Equals(normalizedPath, normalizedParentPath, StringComparison.OrdinalIgnoreCase) ||
-               normalizedPath.StartsWith($"{normalizedParentPath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private bool IsCategoryPathTakenByAnotherNode(string sourcePath, string newPath)
-    {
-        return _data.Categories.Any(existing =>
-        {
-            var normalizedExisting = NormalizeCategoryPath(existing);
-            if (string.IsNullOrWhiteSpace(normalizedExisting))
-            {
-                return false;
-            }
-
-            if (IsPathWithin(normalizedExisting, sourcePath))
-            {
-                return false;
-            }
-
-            return string.Equals(normalizedExisting, newPath, StringComparison.OrdinalIgnoreCase);
-        });
-    }
-
-    private void RemapCategoryPath(string sourcePath, string newPath)
-    {
-        var updatedCategoryPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var existing in _data.Categories)
-        {
-            var normalizedExisting = NormalizeCategoryPath(existing);
-            if (IsPathWithin(normalizedExisting, sourcePath))
-            {
-                updatedCategoryPaths.Add(ReplaceCategoryPrefix(normalizedExisting, sourcePath, newPath));
-            }
-            else if (!string.IsNullOrWhiteSpace(normalizedExisting))
-            {
-                updatedCategoryPaths.Add(normalizedExisting);
-            }
-        }
-
-        foreach (var entry in _data.Entries)
-        {
-            var normalizedEntryCategory = NormalizeCategoryPath(entry.Category);
-            if (IsPathWithin(normalizedEntryCategory, sourcePath))
-            {
-                entry.Category = ReplaceCategoryPrefix(normalizedEntryCategory, sourcePath, newPath);
-            }
-        }
-
-        _data.Categories = updatedCategoryPaths
-            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        if (_currentEntry != null)
-        {
-            _currentEntry.Category = IsPathWithin(_currentEntry.Category, sourcePath)
-                ? ReplaceCategoryPrefix(_currentEntry.Category, sourcePath, newPath)
-                : NormalizeCategoryPath(_currentEntry.Category);
-        }
-
-        if (IsPathWithin(_selectedCategoryPath, sourcePath))
-        {
-            _selectedCategoryPath = ReplaceCategoryPrefix(_selectedCategoryPath, sourcePath, newPath);
-            CategoryComboBox.Text = _selectedCategoryPath;
-        }
-    }
-
-    private static string ReplaceCategoryPrefix(string path, string sourcePath, string newPath)
-    {
-        var normalizedPath = NormalizeCategoryPath(path);
-        var normalizedSource = NormalizeCategoryPath(sourcePath);
-        var normalizedNew = NormalizeCategoryPath(newPath);
-
-        if (string.IsNullOrWhiteSpace(normalizedSource))
-        {
-            return normalizedPath;
-        }
-
-        if (string.Equals(normalizedPath, normalizedSource, StringComparison.OrdinalIgnoreCase))
-        {
-            return normalizedNew;
-        }
-
-        var suffix = normalizedPath.Substring(normalizedSource.Length);
-        if (suffix.StartsWith(CategorySeparator, StringComparison.Ordinal))
-        {
-            suffix = suffix.Substring(CategorySeparator.Length);
-        }
-
-        return string.IsNullOrWhiteSpace(suffix)
-            ? normalizedNew
-            : $"{normalizedNew}{CategorySeparator}{suffix}";
     }
 
     private void RestoreSelectionAfterCategoryMove(string oldPath, string newPath)
@@ -4064,11 +3436,11 @@ public partial class MainWindow : Window
         if (string.Equals(_selectedCategoryPath, oldPath, StringComparison.OrdinalIgnoreCase) ||
             _selectedCategoryPath.StartsWith($"{oldPath}{CategorySeparator}", StringComparison.OrdinalIgnoreCase))
         {
-            _selectedCategoryPath = ReplaceCategoryPrefix(_selectedCategoryPath, oldPath, newPath);
+            _selectedCategoryPath = _categoryService.ReplaceCategoryPrefix(_selectedCategoryPath, oldPath, newPath);
             CategoryComboBox.Text = _selectedCategoryPath;
         }
 
-        if (_currentEntry != null && IsPathWithin(_currentEntry.Category, oldPath))
+        if (_currentEntry != null && _categoryService.IsPathWithin(_currentEntry.Category, oldPath))
         {
             LoadEntryToForm(_currentEntry);
         }
@@ -4086,7 +3458,7 @@ public partial class MainWindow : Window
 
     private async Task DeleteCategoryAsync(CategoryNode categoryNode)
     {
-        var categoryPath = NormalizeCategoryPath(categoryNode.FullPath);
+        var categoryPath = _categoryService.NormalizeCategoryPath(categoryNode.FullPath);
         if (string.IsNullOrWhiteSpace(categoryPath))
         {
             ShowAlert("Нельзя удалить корневой узел без категории", isError: true);
@@ -4094,11 +3466,11 @@ public partial class MainWindow : Window
         }
 
         var entriesToDelete = _data.Entries
-            .Where(entry => IsPathWithin(NormalizeCategoryPath(entry.Category), categoryPath))
+            .Where(entry => _categoryService.IsPathWithin(_categoryService.NormalizeCategoryPath(entry.Category), categoryPath))
             .ToList();
 
         var categoriesToDelete = _data.Categories
-            .Where(category => IsPathWithin(NormalizeCategoryPath(category), categoryPath))
+            .Where(category => _categoryService.IsPathWithin(_categoryService.NormalizeCategoryPath(category), categoryPath))
             .ToList();
 
 
@@ -4110,10 +3482,10 @@ public partial class MainWindow : Window
 
             var deletedEntryIds = entriesToDelete.Select(entry => entry.Id).ToHashSet();
             var categoriesToDeleteSet = categoriesToDelete
-                .Select(NormalizeCategoryPath)
+                .Select(p => _categoryService.NormalizeCategoryPath(p))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            _data.Categories.RemoveAll(existing => categoriesToDeleteSet.Contains(NormalizeCategoryPath(existing)));
+            _data.Categories.RemoveAll(existing => categoriesToDeleteSet.Contains(_categoryService.NormalizeCategoryPath(existing)));
             _data.Entries.RemoveAll(entry => deletedEntryIds.Contains(entry.Id));
 
             foreach (var entryId in deletedEntryIds)
@@ -4147,7 +3519,7 @@ public partial class MainWindow : Window
                 _currentEntry = null;
                 ClearEditingForm();
             }
-            else if (_currentEntry != null && IsPathWithin(_currentEntry.Category, categoryPath))
+            else if (_currentEntry != null && _categoryService.IsPathWithin(_currentEntry.Category, categoryPath))
             {
                 _currentEntry = null;
                 ClearEditingForm();
@@ -4323,7 +3695,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void AnimateHeight(RowDefinition row, double from, double to, TimeSpan duration, Action onComplete = null)
+    private void AnimateHeight(RowDefinition row, double from, double to, TimeSpan duration, Action? onComplete = null)
     {
         var startTime = DateTime.Now;
         var startHeight = from;

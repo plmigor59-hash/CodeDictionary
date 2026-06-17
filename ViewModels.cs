@@ -14,6 +14,8 @@ public class MainViewModel : INotifyPropertyChanged
     private string _status = string.Empty;
     private List<LanguageInfo> _languages = new();
     private LanguageInfo? _selectedLanguage;
+    private string _searchText = string.Empty;
+    private string _windowTitle = "Справочник кода";
 
     public MainViewModel()
     {
@@ -74,6 +76,18 @@ public class MainViewModel : INotifyPropertyChanged
         set { _selectedLanguage = value; OnPropertyChanged(); }
     }
 
+    public string SearchText
+    {
+        get => _searchText;
+        set { _searchText = value; OnPropertyChanged(); }
+    }
+
+    public string WindowTitle
+    {
+        get => _windowTitle;
+        set { _windowTitle = value; OnPropertyChanged(); }
+    }
+
     public ICommand TranslateCommand { get; }
     public ICommand TranslateToEnglishCommand { get; }
     public ICommand TranslateToSelectedLanguageCommand { get; }
@@ -117,13 +131,11 @@ public class MainViewModel : INotifyPropertyChanged
 
         try
         {
-            // Сохраняем оригинал перед первым переводом
             if (string.IsNullOrEmpty(OriginalText))
             {
                 OriginalText = SelectedText;
             }
 
-            // В фоновом режиме пытаемся определить язык перед переводом
             string sourceLangDisplay = "...";
             try
             {
@@ -133,7 +145,6 @@ public class MainViewModel : INotifyPropertyChanged
             }
             catch
             {
-                // Игнорируем ошибку автоопределения
             }
 
             var targetLangDisplay = Languages.FirstOrDefault(l => l.Code.Equals(targetLanguage, StringComparison.OrdinalIgnoreCase))?.Name ?? targetLanguage;
@@ -160,7 +171,6 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    // Этот метод будет вызываться из code-behind для замены текста в AvalonEdit
     public Action<string>? ReplaceSelectedText { get; set; }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -183,7 +193,6 @@ public class RelayCommand : ICommand
         _canExecute = canExecute;
     }
 
-    // ✅ Для синхронных команд (добавить этот конструктор)
     public RelayCommand(Action executeSync, Func<bool>? canExecute = null)
     {
         _executeSync = executeSync;
@@ -206,4 +215,3 @@ public class RelayCommand : ICommand
         remove { CommandManager.RequerySuggested -= value; }
     }
 }
-
