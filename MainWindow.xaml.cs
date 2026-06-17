@@ -1,4 +1,4 @@
-using CodeDictionary.Analysis;
+﻿using CodeDictionary.Analysis;
 using CodeDictionary.Models;
 using CodeDictionary.Properties;
 using CodeDictionary.Services;
@@ -903,6 +903,16 @@ public partial class MainWindow : Window
             .ToList();
         entry.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
 
+        // For HTML entries, sync editor content to Description and refresh browser
+        if (entry.Extension.Contains(".html"))
+        {
+            entry.Description = CodeTextBox.Text;
+            if (DescriptionPanel.Visibility == Visibility.Visible)
+            {
+                SetDescriptionHtml(CodeTextBox.Text);
+            }
+        }
+
         // Sync bookmarks
         entry.Bookmarks = activeTab.Bookmarks.ToList();
 
@@ -1045,7 +1055,14 @@ public partial class MainWindow : Window
                 TagsTextBox.Text = string.Join(", ", tab.Entry.Tags);
                 _currentEntry = tab.Entry;
                 _selectedCategoryPath = _categoryService.NormalizeCategoryPath(tab.Entry.Category);
-                ToggleDescription_Close();
+                if (!tab.Entry.Extension.Contains(".html"))
+                {
+                    ToggleDescription_Close();
+                }
+                else
+                {
+                    ToggleDescription_Open();
+                }
             }
             else
             {
@@ -2351,21 +2368,25 @@ public partial class MainWindow : Window
             _selectedCategoryPath = _categoryService.NormalizeCategoryPath(entry.Category);
             RefreshCategoryFilter();
 
-            if (!string.IsNullOrEmpty(entry.Code))
-
+            if (!string.IsNullOrEmpty(entry.Code) || _updateDescription)
             {
                 ToggleDescription_Close();
                 var entryTab = OpenEntryTab(entry);
                 ActivateEditorTab(entryTab);
                 _currentEntry = entryTab.Entry;
 
-                if (!string.IsNullOrEmpty(entry.Syntax) && SyntaxHighlightingComboBox != null)
+                if (_updateDescription && string.IsNullOrEmpty(entry.Code))
                 {
-
-                    SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
+                    entryTab.Document.Text = entry.Description;
+                    entryTab.SyntaxName = "HTML";
+                    SyntaxHighlightingComboBox.SelectedItem = "Стандартная HTML";
+                    ToggleDescription_Open();
                 }
 
-
+                if (!string.IsNullOrEmpty(entry.Syntax) && SyntaxHighlightingComboBox != null)
+                {
+                    SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
+                }
             }
             else
             {
@@ -3104,8 +3125,11 @@ public partial class MainWindow : Window
             activeTab.Entry.Description = html;
         }
 
-        if (activeTab.IsFromFile && activeTab.FilePath != null &&
+        bool isHtmlTab = (activeTab.IsFromFile && activeTab.FilePath != null &&
             Path.GetExtension(activeTab.FilePath).Equals(".html", StringComparison.OrdinalIgnoreCase))
+            || (activeTab.Entry != null && activeTab.Entry.Extension.Contains(".html"));
+
+        if (isHtmlTab)
         {
             activeTab.Document.Text = html;
         }
