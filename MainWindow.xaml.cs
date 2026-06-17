@@ -18,7 +18,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Navigation;
 using System.Windows.Threading;
 using System.Xml;
 
@@ -69,6 +68,8 @@ public partial class MainWindow : Window
     private BookmarkMargin _bookmarkMargin;
     private bool _updateDescription;
     private bool _isNewRecordDescription;
+    private bool _isDescriptionEditMode;
+    private bool _descriptionWebView2Ready;
 
     /// <summary>
     /// /Syntax
@@ -357,10 +358,22 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Вычисляем начало слова для StartOffset (без точки — точка это разделитель member access)
+        // Вычисляем начало слова и текущий префикс для фильтрации
         int wordStart = position;
         while (wordStart > 0 && (char.IsLetterOrDigit(code[wordStart - 1]) || code[wordStart - 1] == '_'))
             wordStart--;
+
+        string currentPrefix = code.Substring(wordStart, position - wordStart);
+        if (!string.IsNullOrEmpty(currentPrefix))
+        {
+            var filteredItems = items.Where(i => i.DisplayText.StartsWith(currentPrefix, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (!filteredItems.Any())
+            {
+                _completionWindow?.Close();
+                return;
+            }
+            items = filteredItems;
+        }
 
         // Всегда пересоздаём окно, чтобы StartOffset гарантированно применился
         _completionWindow?.Close();
@@ -778,14 +791,6 @@ public partial class MainWindow : Window
             }
         }
     }
-
-    private void DescriptionBrowser_Navigating(object sender, NavigatingCancelEventArgs e)
-    {
-        // Отменяем переход по любой ссылке
-        e.Cancel = true;
-    }
-
-
 
     private void UpdateFoldings()
     {
@@ -1711,7 +1716,7 @@ public partial class MainWindow : Window
         _appState = await _dataService.LoadStateAsync();
 
 
-        DescriptionBrowser.Visibility = Visibility.Collapsed;
+        DescriptionPanel.Visibility = Visibility.Collapsed;
         DescriptionSplitter.Visibility = Visibility.Collapsed;
         DescriptionRow.Height = new GridLength(0);
         ToggleDescriptionButton.Content = " ▼ Развернуть ";
@@ -2744,20 +2749,12 @@ public partial class MainWindow : Window
     {
         if (DescriptionRow.Height.Value > 0)
         {
-            DescriptionBrowser.Visibility = Visibility.Collapsed;
-            DescriptionSplitter.Visibility = Visibility.Collapsed;
-
-
-            DescriptionRow.Height = new GridLength(0);
-            ToggleDescriptionButton.Content = " ▼ Развернуть ";
+            ToggleDescription_Close();
         }
         else
         {
-            DescriptionBrowser.Visibility = Visibility.Visible;
-            DescriptionSplitter.Visibility = Visibility.Visible;
-
-            DescriptionRow.Height = new GridLength(150);
-            ToggleDescriptionButton.Content = " ▲ Свернуть ";
+            ToggleDescription_Open();
+            InitializeWebView2();
         }
     }
 
@@ -2765,7 +2762,8 @@ public partial class MainWindow : Window
 
     private void ToggleDescription_Close()
     {
-        DescriptionBrowser.Visibility = Visibility.Collapsed;
+        _descriptionWebView2Ready = false;
+        DescriptionPanel.Visibility = Visibility.Collapsed;
         DescriptionSplitter.Visibility = Visibility.Collapsed;
         DescriptionRow.Height = new GridLength(0);
         ToggleDescriptionButton.Content = " ▼ Развернуть ";
@@ -2775,11 +2773,12 @@ public partial class MainWindow : Window
 
     private void ToggleDescription_Open()
     {
-        DescriptionBrowser.Visibility = Visibility.Visible;
+        DescriptionPanel.Visibility = Visibility.Visible;
         DescriptionSplitter.Visibility = Visibility.Visible;
         DescriptionRow.Height = new GridLength(350);
         ToggleDescriptionButton.Content = " ▲ Свернуть ";
         _updateDescription = false;
+        InitializeWebView2();
     }
 
 
@@ -2992,27 +2991,105 @@ public partial class MainWindow : Window
         }
     }
 
-    private void SetDescriptionHtml(string? html)
+    private async void InitializeWebView2()
+    {
+        if (_descriptionWebView2Ready) return;
+        try
+        {
+            await DescriptionBrowser.EnsureCoreWebView2Async();
+            _descriptionWebView2Ready = true;
+        }
+        catch { }
+    }
+
+    private async void SetDescriptionHtml(string? html)
     {
         try
         {
+            if (!_descriptionWebView2Ready)
+            {
+                await DescriptionBrowser.EnsureCoreWebView2Async();
+                _descriptionWebView2Ready = true;
+            }
+
+            string bgColor = _currentTheme == AppTheme.Dark ? "#1E1E1E" : "#FFFFFF";
+            string textColor = _currentTheme == AppTheme.Dark ? "#EDF2F7" : "#1F1F1F";
+            string editScript = _isDescriptionEditMode
+                ? "document.body.contentEditable = true;"
+                : "document.body.contentEditable = false;";
+
+            string fullHtml;
             if (string.IsNullOrWhiteSpace(html))
             {
-                DescriptionBrowser.NavigateToString("<html><head><meta charset='utf-8'></head><body style='background-color:#1E1E1E;'></body></html>");
+                fullHtml = $"<html><head><meta charset='utf-8'><style>body {{ background-color: {bgColor}; color: {textColor}; font-family: 'Segoe UI', sans-serif; font-size: 12px; margin: 5px; }}</style></head><body></body></html>";
             }
             else
             {
-                string bgColor = _currentTheme == AppTheme.Dark ? "#1E1E1E" : "#FFFFFF";
-                string textColor = _currentTheme == AppTheme.Dark ? "#EDF2F7" : "#1F1F1F";
-                string style = $"<style>body {{ background-color: {bgColor}; color: {textColor}; font-family: 'Segoe UI', sans-serif; font-size: 12px; margin: 5px; }} a {{ pointer-events: none; cursor: default; color: inherit; text-decoration: none; }}</style>";
+                string style = $"<style>body {{ background-color: {bgColor}; color: {textColor}; font-family: 'Segoe UI', sans-serif; font-size: 12px; margin: 5px; }}</style>";
+                fullHtml = $"<html><head><meta charset='utf-8'>{style}</head><body>{html}</body></html>";
+            }
 
-                // JavaScript to ensure links are disabled
-                string script = "<script>window.onload = function() { var links = document.getElementsByTagName('a'); for (var i = 0; i < links.length; i++) { links[i].onclick = function(e) { e.preventDefault(); return false; }; } };</script>";
+            DescriptionBrowser.NavigateToString(fullHtml);
 
-                DescriptionBrowser.NavigateToString($"<html><head><meta charset='utf-8'>{style}{script}</head><body>{html}</body></html>");
+            if (_isDescriptionEditMode)
+            {
+                DescriptionBrowser.CoreWebView2.DOMContentLoaded += (s, e) =>
+                {
+                    DescriptionBrowser.CoreWebView2.ExecuteScriptAsync("document.body.contentEditable = true;");
+                };
             }
         }
-        catch { /* Ignore browser errors */ }
+        catch { }
+    }
+
+    private void EditDescriptionButton_Click(object sender, RoutedEventArgs e)
+    {
+        _isDescriptionEditMode = !_isDescriptionEditMode;
+        EditDescriptionButton.Content = _isDescriptionEditMode ? "✏️ Просмотр" : "✏️ Ред.";
+        SaveDescriptionButton.Visibility = _isDescriptionEditMode ? Visibility.Visible : Visibility.Collapsed;
+
+        if (_descriptionWebView2Ready)
+        {
+            string cmd = _isDescriptionEditMode
+                ? "document.body.contentEditable = true;"
+                : "document.body.contentEditable = false;";
+            _ = DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(cmd);
+        }
+        else
+        {
+            SetDescriptionHtml(GetCurrentEntryDescription());
+        }
+    }
+
+    private async void SaveDescriptionButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_descriptionWebView2Ready) return;
+
+        string? html = null;
+        try
+        {
+            html = await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
+            html = html?.Trim('"');
+        }
+        catch { }
+
+        if (html != null)
+        {
+            var entry = GetActiveEditorTab()?.Entry;
+            if (entry != null)
+            {
+                entry.Description = html;
+                _isDescriptionEditMode = false;
+                EditDescriptionButton.Content = "✏️ Ред.";
+                SaveDescriptionButton.Visibility = Visibility.Collapsed;
+                _snackbar.Show(CodeTextBox, "Описание сохранено", NotificationType.Success, 1.5);
+            }
+        }
+    }
+
+    private string? GetCurrentEntryDescription()
+    {
+        return GetActiveEditorTab()?.Entry?.Description;
     }
 
     private async void ImportFolder_Click(object sender, RoutedEventArgs e)
