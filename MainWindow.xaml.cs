@@ -85,6 +85,8 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _searchDebounceTimer; // Added timer
     private readonly DispatcherTimer _completionDebounceTimer;
     private readonly DispatcherTimer _htmlPositionDebounceTimer;
+    private readonly DispatcherTimer _browserSelectionDebounceTimer;
+    private string _lastBrowserSelectedText = "";
     private CancellationTokenSource? _completionCts;
     private SyntaxErrorColorizer? _colorizer;
     private TextMarkerService? _markerService;
@@ -404,6 +406,105 @@ public partial class MainWindow : Window
         catch { }
     }
 
+    private async void BrowserSelectionDebounceTimer_Tick(object? sender, EventArgs e)
+    {
+        _browserSelectionDebounceTimer.Stop();
+        SyncBrowserSelectionToEditor(_lastBrowserSelectedText);
+    }
+
+    private void SyncBrowserSelectionToEditor(string selectedText)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(selectedText))
+            {
+                if (CodeTextBox.SelectionLength > 0)
+                    CodeTextBox.SelectionLength = 0;
+                return;
+            }
+
+            var activeTab = GetActiveEditorTab();
+            if (activeTab?.Entry == null) return;
+
+            string docText = CodeTextBox.Text;
+            if (string.IsNullOrEmpty(docText)) return;
+
+            string searchText = selectedText.Trim();
+            if (searchText.Length < 2) return;
+
+            string sourceToSearch = docText;
+            bool isHtml = activeTab.Entry.Extension.Contains(".html");
+
+            // Для HTML-записей удаляем теги для поиска по видимому тексту
+            if (isHtml)
+                sourceToSearch = Regex.Replace(docText, @"<[^>]*>", "");
+
+            // Находим текст без учёта регистра
+            int strippedStart = sourceToSearch.IndexOf(searchText, StringComparison.OrdinalIgnoreCase);
+            if (strippedStart < 0) return;
+
+            int selStart, selLen;
+
+            if (isHtml)
+            {
+                // Отображаем позицию из stripped-текста обратно в оригинальный HTML
+                var (origStart, origEnd) = MapStrippedRangeToOriginal(docText, strippedStart, strippedStart + searchText.Length);
+                selStart = origStart;
+                selLen = origEnd - origStart;
+            }
+            else
+            {
+                selStart = strippedStart;
+                selLen = searchText.Length;
+            }
+
+            CodeTextBox.Select(selStart, selLen);
+            CodeTextBox.ScrollToLine(CodeTextBox.Document.GetLineByOffset(selStart).LineNumber);
+        }
+        catch { }
+    }
+
+    private static (int, int) MapStrippedRangeToOriginal(string originalText, int strippedStart, int strippedEnd)
+    {
+        int strippedPos = 0;
+        int origStart = 0;
+        int origEnd = 0;
+        bool startFound = false;
+
+        for (int i = 0; i < originalText.Length; i++)
+        {
+            if (originalText[i] == '<')
+            {
+                int closeTag = originalText.IndexOf('>', i);
+                if (closeTag >= 0)
+                    i = closeTag;
+                continue;
+            }
+
+            if (!startFound && strippedPos == strippedStart)
+            {
+                origStart = i;
+                startFound = true;
+            }
+
+            if (startFound && strippedPos == strippedEnd)
+            {
+                origEnd = i;
+                break;
+            }
+
+            strippedPos++;
+        }
+
+        if (!startFound)
+            origStart = strippedStart;
+
+        if (origEnd <= origStart)
+            origEnd = Math.Min(origStart + (strippedEnd - strippedStart), originalText.Length);
+
+        return (origStart, origEnd);
+    }
+
     private async void ShowCompletion()
     {
         _completionCts?.Cancel();
@@ -629,6 +730,11 @@ public partial class MainWindow : Window
         };
         _htmlPositionDebounceTimer.Tick += HtmlPositionDebounceTimer_Tick;
 
+        _browserSelectionDebounceTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(200)
+        };
+        _browserSelectionDebounceTimer.Tick += BrowserSelectionDebounceTimer_Tick;
 
         CodeTextBox.TextArea.TextView.MouseHover += OnTextViewMouseHover;
         CodeTextBox.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
@@ -3205,6 +3311,12 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                     await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
                 }
             }
+            else if (type == "selection")
+            {
+                _lastBrowserSelectedText = root.GetProperty("text").GetString() ?? "";
+                _browserSelectionDebounceTimer.Stop();
+                _browserSelectionDebounceTimer.Start();
+            }
         }
         catch { }
     }
@@ -3252,6 +3364,22 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                 js += "var c=document.getElementById('__content');if(c){c.contentEditable=true;}" + GetFormatToolbarInjectScript();
             }
             await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
+
+            // Внедряем слушатель выделения текста в браузере для синхронизации с редактором
+            string selJs = @"
+(function(){
+    if (window.__browserSelectionListener) return;
+    window.__browserSelectionListener = true;
+    document.addEventListener('selectionchange', function(){
+        clearTimeout(window.__bselTimer);
+        window.__bselTimer = setTimeout(function(){
+            var s = window.getSelection().toString();
+            window.chrome.webview.postMessage(JSON.stringify({type:'selection', text:s}));
+        }, 150);
+    });
+})();
+";
+            await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(selJs);
         }
         catch { }
     }
