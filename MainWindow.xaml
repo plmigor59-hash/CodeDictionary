@@ -821,10 +821,12 @@
                     <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,2">
                         <Button x:Name="EditDescriptionButton" Height="22" Padding="6,0" FontSize="11"
                                 Click="EditDescriptionButton_Click"
+                                  Foreground="{DynamicResource DictTextPrimary}"
                                 Style="{StaticResource ModernButton}"
                                 Content="✏️ Ред." />
                         <Button x:Name="SaveDescriptionButton" Height="22" Padding="6,0" FontSize="11" Margin="4,0,0,0"
                                 Click="SaveDescriptionButton_Click" Visibility="Collapsed"
+                                Foreground="{DynamicResource AccentHoverBrush}"
                                 Style="{StaticResource ModernButton}"
                                 Content="💾 Сохр." />
                     </StackPanel>
