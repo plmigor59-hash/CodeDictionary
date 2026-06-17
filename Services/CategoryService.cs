@@ -536,9 +536,4 @@ public class CategoryService
             .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
-
-    public List<string> GetCategoryPathsForComboBox(List<string> categories, List<CodeEntry> entries)
-    {
-        return GetKnownCategoryPaths(entries, categories);
-    }
 }

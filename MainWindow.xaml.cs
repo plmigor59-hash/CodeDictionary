@@ -37,7 +37,6 @@ public partial class MainWindow : Window
     private readonly DataService _dataService;
     private readonly CategoryService _categoryService;
     private readonly FormattingService _formattingService;
-    private readonly EntryService _entryService;
     private readonly MainViewModel _viewModel;
     private CodeDictionaryData _data;
     private List<CodeEntry> _filteredEntries;
@@ -49,9 +48,7 @@ public partial class MainWindow : Window
     private AppTheme _currentTheme;
     private AppState _appState;
     private IHighlightingDefinition? _darkCSharpHighlighting;
-    private IHighlightingDefinition? _lightCSharpHighlighting;
     private IHighlightingDefinition? _darkCppHighlighting;
-    private IHighlightingDefinition? _lightCppHighlighting;
     private IHighlightingDefinition? _standart1CHigh;
     private IHighlightingDefinition? _dark1CHigh;
     private IHighlightingDefinition? _darkXMLHigh;
@@ -82,7 +79,6 @@ public partial class MainWindow : Window
     private readonly ICodeAnalysisService _csharpAnalyzer;
     private ToolTip? _hoverToolTip;
     private CompletionWindow? _completionWindow;
-    private CancellationTokenSource _parseCts = new CancellationTokenSource();
     private readonly DispatcherTimer _debounceTimer;
     private readonly DispatcherTimer _searchDebounceTimer; // Added timer
     private SyntaxErrorColorizer? _colorizer;
@@ -440,7 +436,6 @@ public partial class MainWindow : Window
         _dataService = new DataService();
         _categoryService = new CategoryService();
         _formattingService = new FormattingService();
-        _entryService = new EntryService(_categoryService, _formattingService);
         _appState = _dataService.LoadState();
 
         InitializeComponent();
@@ -1554,12 +1549,6 @@ public partial class MainWindow : Window
         }
         catch { _lightPythonHigh = null; }
 
-        // Если не удалось загрузить кастомную светлую тему, используем стандартную
-        if (_lightCSharpHighlighting == null)
-        {
-            _lightCSharpHighlighting = HighlightingManager.Instance.GetDefinition("1C");
-        }
-
         try
         {
             var darkCppPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Xshd", "DarkCpp.xshd");
@@ -1574,13 +1563,6 @@ public partial class MainWindow : Window
         catch
         {
             _darkCppHighlighting = null;
-        }
-
-
-
-        if (_lightCppHighlighting == null)
-        {
-            _lightCppHighlighting = HighlightingManager.Instance.GetDefinition("C++");
         }
     }
 
@@ -2417,13 +2399,6 @@ public partial class MainWindow : Window
         _formattingService.LoadSegmentsIntoTab(tab, entry);
     }
 
-    private void ApplySegmentsToEditor()
-    {
-        // Здесь ваша логика отрисовки сегментов
-        // Например, перерисовка TextView
-        CodeTextBox.TextArea.TextView.Redraw();
-    }
-
 
 
     private async void SaveEntry_Click(object sender, RoutedEventArgs e)
@@ -2674,15 +2649,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CutMenuItem_Click(object sender, RoutedEventArgs e)
-    {
-        if (!string.IsNullOrEmpty(CodeTextBox.SelectedText))
-        {
-            Clipboard.SetText(CodeTextBox.SelectedText);
-            CodeTextBox.Document.Remove(CodeTextBox.SelectionStart, CodeTextBox.SelectionLength);
-        }
-    }
-
     private void PasteMenuItem_Click(object sender, RoutedEventArgs e)
     {
         if (Clipboard.ContainsText())
@@ -2697,19 +2663,6 @@ public partial class MainWindow : Window
                 CodeTextBox.Document.Insert(CodeTextBox.CaretOffset, text);
             }
         }
-    }
-
-    private void DeleteMenuItem_Click(object sender, RoutedEventArgs e)
-    {
-        if (CodeTextBox.SelectionLength > 0)
-        {
-            CodeTextBox.Document.Remove(CodeTextBox.SelectionStart, CodeTextBox.SelectionLength);
-        }
-    }
-
-    private void SelectAllMenuItem_Click(object sender, RoutedEventArgs e)
-    {
-        CodeTextBox.SelectAll();
     }
 
     private void UndoMenuItem_Click(object sender, RoutedEventArgs e)
@@ -3195,17 +3148,6 @@ public partial class MainWindow : Window
         await ExportCategoryAsync(categoryPath);
     }
 
-    private static string EnsureExportExtension(string fileName, int filterIndex)
-    {
-        var extension = Path.GetExtension(fileName);
-        if (!string.IsNullOrWhiteSpace(extension))
-        {
-            return fileName;
-        }
-
-        return filterIndex == 2 ? $"{fileName}.xml" : $"{fileName}.json";
-    }
-
     private async Task ExportCategoryAsync(string categoryPath)
     {
         var normalizedCategoryPath = _categoryService.NormalizeCategoryPath(categoryPath);
@@ -3664,6 +3606,8 @@ public partial class MainWindow : Window
         bool isVisible = visibility == Visibility.Visible;
         var parentGrid = ErrorListGrid.Parent as Grid;
 
+        AnalyzeToggle.IsChecked = isVisible;
+
         if (parentGrid == null || parentGrid.RowDefinitions.Count < 5)
             return;
 
@@ -3727,59 +3671,6 @@ public partial class MainWindow : Window
         };
 
         CompositionTarget.Rendering += renderingHandler;
-    }
-
-    // Вспомогательный класс для анимации
-    public class DoubleAnimator
-    {
-        private double _currentValue;
-        private Action<double> _updateAction;
-        private System.Windows.Threading.DispatcherTimer _timer;
-        private DateTime _startTime;
-        private double _startValue;
-        private double _endValue;
-        private TimeSpan _duration;
-
-        public DoubleAnimator(double initialValue, Action<double> updateAction)
-        {
-            _currentValue = initialValue;
-            _updateAction = updateAction;
-        }
-
-        public void BeginAnimation(double from, double to, TimeSpan duration)
-        {
-            _startValue = from;
-            _endValue = to;
-            _duration = duration;
-            _startTime = DateTime.Now;
-            _currentValue = from;
-
-            _timer = new System.Windows.Threading.DispatcherTimer();
-            _timer.Interval = TimeSpan.FromMilliseconds(10); // ~60 FPS
-            _timer.Tick += OnTick;
-            _timer.Start();
-        }
-
-        private void OnTick(object sender, EventArgs e)
-        {
-            var elapsed = DateTime.Now - _startTime;
-            var progress = Math.Min(1.0, elapsed.TotalMilliseconds / _duration.TotalMilliseconds);
-
-            // Используем CubicEase
-            progress = progress < 0.5
-                ? 4 * progress * progress * progress
-                : 1 - Math.Pow(-2 * progress + 2, 3) / 2;
-
-            _currentValue = _startValue + (_endValue - _startValue) * progress;
-            _updateAction(_currentValue);
-
-            if (progress >= 1.0)
-            {
-                _timer.Stop();
-                _timer.Tick -= OnTick;
-                _updateAction(_endValue);
-            }
-        }
     }
 
     private void CloseErrorListButton_Click(object sender, RoutedEventArgs e)
