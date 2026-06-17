@@ -1294,7 +1294,7 @@ public partial class MainWindow : Window
 
         // Настройки диалога
         openFileDialog.Title = "Выберите текстовый файл";
-        openFileDialog.Filter = "Текстовые файлы (*.txt;*.xshd;*.bsl;*.cs;*.xaml;*.json;*.xml)|*.txt;*.xshd;*.bsl;*cs;*.xaml;*.json;*.xml|Все файлы (*.*)|*.*";
+        openFileDialog.Filter = "Текстовые файлы (*.txt;*.xshd;*.bsl;*.html;*.cs;*.xaml;*.json;*.xml)|*.txt;*.xshd;*.bsl;*.html;*cs;*.xaml;*.json;*.xml|Все файлы (*.*)|*.*";
         openFileDialog.FilterIndex = 1;
         openFileDialog.Multiselect = true;
 
@@ -3065,26 +3065,48 @@ public partial class MainWindow : Window
     {
         if (!_descriptionWebView2Ready) return;
 
-        string? html = null;
+        string? htmlJson = null;
         try
         {
-            html = await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
-            html = html?.Trim('"');
+            htmlJson = await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync("document.body.innerHTML");
         }
         catch { }
 
-        if (html != null)
+        if (string.IsNullOrEmpty(htmlJson)) return;
+
+        string? html;
+        try
         {
-            var entry = GetActiveEditorTab()?.Entry;
-            if (entry != null)
-            {
-                entry.Description = html;
-                _isDescriptionEditMode = false;
-                EditDescriptionButton.Content = "✏️ Ред.";
-                SaveDescriptionButton.Visibility = Visibility.Collapsed;
-                _snackbar.Show(CodeTextBox, "Описание сохранено", NotificationType.Success, 1.5);
-            }
+            html = System.Text.Json.JsonSerializer.Deserialize<string>(htmlJson);
         }
+        catch
+        {
+            html = htmlJson.Trim('"');
+        }
+
+        if (string.IsNullOrEmpty(html)) return;
+
+        var activeTab = GetActiveEditorTab();
+        if (activeTab == null) return;
+
+        if (activeTab.Entry != null)
+        {
+            activeTab.Entry.Description = html;
+        }
+
+        if (activeTab.IsFromFile && activeTab.FilePath != null &&
+            Path.GetExtension(activeTab.FilePath).Equals(".html", StringComparison.OrdinalIgnoreCase))
+        {
+            activeTab.Document.Text = html;
+        }
+
+        _isDescriptionEditMode = false;
+        EditDescriptionButton.Content = "✏️ Ред.";
+        SaveDescriptionButton.Visibility = Visibility.Collapsed;
+
+        SetDescriptionHtml(html);
+
+        _snackbar.Show(CodeTextBox, "Описание сохранено", NotificationType.Success, 1.5);
     }
 
     private string? GetCurrentEntryDescription()
