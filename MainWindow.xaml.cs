@@ -3,6 +3,7 @@ using CodeDictionary.Models;
 using CodeDictionary.Properties;
 using CodeDictionary.Services;
 using CodeDictionary.SyntaxChecking;
+using CodeDictionary.SyntaxChecking.Providers;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
@@ -95,6 +96,8 @@ public partial class MainWindow : Window
 
 
     private readonly RoslynCompletionService _roslynCompletionService;
+    private readonly BslCompletionService _bslCompletionService = new();
+    private readonly BslSignatureHelpService _bslSignatureHelpService = new();
 
     private HashSet<string> _expandedCategories = new();
 
@@ -126,9 +129,12 @@ public partial class MainWindow : Window
         else if (e.Text == "(" || e.Text == ",")
         {
             var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
-            if (syntax != null && syntax.Contains("C#"))
+            if (syntax != null)
             {
-                Dispatcher.BeginInvoke(new Action(async () => await ShowSignatureHelp()));
+                if (syntax.Contains("C#"))
+                    Dispatcher.BeginInvoke(new Action(async () => await ShowSignatureHelp()));
+                else if (syntax.Contains("1C"))
+                    Dispatcher.BeginInvoke(new Action(() => ShowBslSignatureHelp()));
             }
         }
     }
@@ -143,6 +149,24 @@ public partial class MainWindow : Window
         {
             if (_hoverToolTip == null) _hoverToolTip = new ToolTip();
             _hoverToolTip.Content = signatureInfo.FullSignature;
+            _hoverToolTip.PlacementTarget = CodeTextBox;
+            _hoverToolTip.IsOpen = true;
+        }
+    }
+
+    private void ShowBslSignatureHelp()
+    {
+        var symbols = _bslAnalyzer is BslCodeAnalyzer coreAnalyzer
+            ? coreAnalyzer.Symbols
+            : [];
+
+        var sig = _bslSignatureHelpService.GetSignature(
+            CodeTextBox.Text, CodeTextBox.CaretOffset, symbols);
+
+        if (sig != null && sig.Found)
+        {
+            if (_hoverToolTip == null) _hoverToolTip = new ToolTip();
+            _hoverToolTip.Content = sig.HighlightedSignature;
             _hoverToolTip.PlacementTarget = CodeTextBox;
             _hoverToolTip.IsOpen = true;
         }
@@ -164,37 +188,6 @@ public partial class MainWindow : Window
             {
                 e.Handled = true;
                 ShowCompletion1C(string.Empty, true);
-            }
-        }
-    }
-
-    private void AddStandardSymbols(System.Collections.Generic.IList<ICompletionData> data)
-    {
-        string[] keywords = { 
-                // Русский вариант
-                "Процедура", "Функция", "КонецПроцедуры", "КонецФункции",
-                "Если", "Тогда", "Иначе", "ИначеЕсли", "КонецЕсли",
-                "Для", "Каждого", "Из", "По", "Цикл", "КонецЦикла",
-                "Пока", "Прервать", "Продолжить", "Возврат",
-                "Попытка", "Исключение", "КонецПопытки", "ВызватьИсключение",
-                "Перем", "Знач", "Экспорт", "Истина", "Ложь", "Неопределено", "Null",
-                "Новый", "Перейти", "КонецПротокола", "Выполнить",
-
-                // Английский вариант (синонимы)
-                "Procedure", "Function", "EndProcedure", "EndFunction",
-                "If", "Then", "Else", "ElsIf", "EndIf",
-                "For", "Each", "In", "To", "Do", "EndDo",
-                "While", "Break", "Continue", "Return",
-                "Try", "Except", "EndTry", "Raise",
-                "Var", "Val", "Export", "True", "False", "Undefined",
-                "New", "And", "Or", "Not"
-            };
-
-        foreach (var kw in keywords)
-        {
-            if (!data.Any(d => d.Text.Equals(kw, StringComparison.OrdinalIgnoreCase)))
-            {
-                data.Add(new BslCompletionData(kw, "Ключевое слово", "Keyword"));
             }
         }
     }
@@ -250,33 +243,42 @@ public partial class MainWindow : Window
 
     private void ShowCompletion1C(string enteredText, bool controlSpace)
     {
-        // Сначала собираем все возможные данные
-        var allData = new List<ICompletionData>();
+        var context = BslSyntaxContext.Detect(CodeTextBox.Text, CodeTextBox.CaretOffset);
 
-        // Добавляем символы из анализатора
+        if (context.Kind == BslContextKind.StringOrComment)
+            return;
+
+        IReadOnlyList<SymbolInfo> symbols;
+        IReadOnlyDictionary<string, string> variableTypes;
+
         if (_bslAnalyzer is BslCodeAnalyzer coreAnalyzer)
         {
-            foreach (var symbol in coreAnalyzer.Symbols)
-            {
-                if (!allData.Any(d => d.Text == symbol.Name))
-                {
-                    allData.Add(new BslCompletionData(symbol.Name, symbol.Name, symbol.Type));
-                }
-            }
+            symbols = coreAnalyzer.Symbols;
+            variableTypes = coreAnalyzer.VariableTypes;
+        }
+        else
+        {
+            symbols = [];
+            variableTypes = new Dictionary<string, string>();
         }
 
-        // Добавляем стандартные ключевые слова BSL
-        AddStandardSymbols(allData);
+        var analysis = new BslAnalysisSnapshot
+        {
+            Symbols = symbols,
+            VariableTypes = variableTypes
+        };
 
-        // Если это автоматический вызов (не через Ctrl+Space), фильтруем список
+        var allData = _bslCompletionService.GetCompletions(context, analysis);
+
         var filteredList = allData.ToList();
         if (!controlSpace && !string.IsNullOrEmpty(enteredText))
         {
-            // Получаем слово целиком до курсора для более точной фильтрации
             string currentWord = GetWordAtOffset(CodeTextBox.CaretOffset);
             if (!string.IsNullOrEmpty(currentWord))
             {
-                filteredList = allData.Where(d => d.Text.StartsWith(currentWord, StringComparison.OrdinalIgnoreCase)).ToList();
+                filteredList = allData
+                    .Where(d => d.Text.StartsWith(currentWord, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
             }
         }
 

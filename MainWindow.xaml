@@ -229,6 +229,7 @@
                     x:Name="EntriesTreeView"
                     Grid.Row="1"
                     Margin="8,0"
+                    FontSize="13"
                     AllowDrop="True"
                     Background="Transparent"
                     BorderThickness="0"

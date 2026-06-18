@@ -12,9 +12,11 @@ namespace CodeDictionary.SyntaxChecking
         private readonly object _lock = new();
         private readonly List<CodeSyntaxError> _errors = [];
         private readonly List<SymbolInfo> _symbols = [];
+        private IReadOnlyDictionary<string, string> _variableTypes = new Dictionary<string, string>();
 
         public IReadOnlyList<CodeSyntaxError> Errors => _errors;
         public IReadOnlyList<SymbolInfo> Symbols => _symbols;
+        public IReadOnlyDictionary<string, string> VariableTypes => _variableTypes;
         public bool HasErrors => _errors.Any();
 
         public async Task<AnalysisResult> AnalyzeAsync(string code, CancellationToken cancellationToken = default)
@@ -89,6 +91,8 @@ namespace CodeDictionary.SyntaxChecking
                 {
                     var extractor = new SymbolExtractor();
                     extractor.Visit(parserResult);
+
+                    _variableTypes = extractor.VariableTypes;
 
                     foreach (var symbol in extractor.Symbols)
                     {

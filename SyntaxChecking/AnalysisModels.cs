@@ -15,8 +15,15 @@ namespace CodeDictionary.Analysis
         public string Type { get; set; } = string.Empty;
         public int Line { get; set; }
         public int Column { get; set; }
+        public string[] ParameterNames { get; set; } = [];
+        public string[] ParameterTypes { get; set; } = [];
 
-        // Useful for UI display
+        public int ParameterCount => ParameterNames?.Length ?? 0;
+
+        public string Signature => ParameterCount > 0
+            ? $"{Name}({string.Join(", ", ParameterNames)})"
+            : Name;
+
         public string Position => $"Стр. {Line}, Кол. {Column}";
     }
 
