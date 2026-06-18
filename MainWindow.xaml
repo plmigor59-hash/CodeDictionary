@@ -697,7 +697,8 @@
                             <materialIcons:MaterialIcon
                                 Width="18"
                                 Height="18"
-                                Foreground="{DynamicResource AccentBrush}"
+                                Foreground="{DynamicResource DictAccent}"
+                                Background="{DynamicResource DictCardBackground}"
                                 Kind="AutoFix" />
                         </ToggleButton>
 

@@ -4,10 +4,12 @@ using CodeDictionary.Properties;
 using CodeDictionary.Services;
 using CodeDictionary.SyntaxChecking;
 using CodeDictionary.SyntaxChecking.Providers;
+using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using ICSharpCode.AvalonEdit.Rendering;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
@@ -175,16 +177,26 @@ public partial class MainWindow : Window
 
         var sig = _bslSignatureHelpService.GetSignature(
             CodeTextBox.Text, CodeTextBox.CaretOffset, symbols);
-
         if (sig != null && sig.Found)
         {
             if (_hoverToolTip == null) _hoverToolTip = new ToolTip();
 
             var textView = CodeTextBox.TextArea.TextView;
-            var caretLine = CodeTextBox.TextArea.Caret.Line;
-            var visualLine = textView.GetVisualLine(caretLine);
-            double yOffset = (visualLine?.VisualTop ?? 0) + (visualLine?.Height ?? textView.DefaultLineHeight);
+            var caretPos = CodeTextBox.TextArea.Caret.Position;
 
+            // Получаем позицию окончания слова
+            int wordEnd = caretPos.Column - 1;
+
+            // Получаем визуальную позицию
+            var visualPos = textView.GetVisualPosition(
+                new TextViewPosition(caretPos.Line, wordEnd + 1),
+                VisualYPosition.LineBottom
+            );
+
+            // Преобразуем в экранные координаты
+            var screenPos = textView.PointToScreen(visualPos - textView.ScrollOffset);
+
+            // Настройка тултипа
             var bg = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
             var fg = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
             var br = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
@@ -193,11 +205,23 @@ public partial class MainWindow : Window
             _hoverToolTip.Foreground = fg;
             _hoverToolTip.BorderBrush = br;
             _hoverToolTip.Content = sig.HighlightedSignature;
-            _hoverToolTip.Placement = PlacementMode.Relative;
-            _hoverToolTip.PlacementTarget = CodeTextBox.TextArea;
-            _hoverToolTip.VerticalOffset = yOffset;
-            _hoverToolTip.HorizontalOffset = 0;
+
+            // Позиционирование с использованием экранных координат
+            _hoverToolTip.Placement = PlacementMode.Absolute;
+            _hoverToolTip.HorizontalOffset = screenPos.X;
+            _hoverToolTip.VerticalOffset = screenPos.Y + 5; // небольшой отступ
             _hoverToolTip.IsOpen = true;
+            var timer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(5)
+            };
+            timer.Tick += (s, e) =>
+            {
+                _hoverToolTip.IsOpen = false;
+                timer.Stop();
+            };
+            timer.Start();
+
         }
     }
 
