@@ -81,6 +81,7 @@ public partial class MainWindow : Window
     private readonly ICodeAnalysisService _csharpAnalyzer;
     private ToolTip? _hoverToolTip;
     private CompletionWindow? _completionWindow;
+    private bool _autoCompletionEnabled = true;
     private readonly DispatcherTimer _debounceTimer;
     private readonly DispatcherTimer _searchDebounceTimer; // Added timer
     private readonly DispatcherTimer _completionDebounceTimer;
@@ -109,6 +110,8 @@ public partial class MainWindow : Window
 
     private void CodeTextBox_TextEntering(object sender, TextCompositionEventArgs e)
     {
+        if (!_autoCompletionEnabled) return;
+
         var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
         var isBsl = syntax != null && syntax.Contains("1C");
 
@@ -143,6 +146,10 @@ public partial class MainWindow : Window
                     Dispatcher.BeginInvoke(new Action(() => ShowBslSignatureHelp()));
             }
         }
+        else if (e.Text == ";")
+        {
+            CloseSignatureHelpToolTip();
+        }
     }
 
     private async Task ShowSignatureHelp()
@@ -172,8 +179,24 @@ public partial class MainWindow : Window
         if (sig != null && sig.Found)
         {
             if (_hoverToolTip == null) _hoverToolTip = new ToolTip();
+
+            var textView = CodeTextBox.TextArea.TextView;
+            var caretLine = CodeTextBox.TextArea.Caret.Line;
+            var visualLine = textView.GetVisualLine(caretLine);
+            double yOffset = (visualLine?.VisualTop ?? 0) + (visualLine?.Height ?? textView.DefaultLineHeight);
+
+            var bg = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
+            var fg = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
+            var br = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
+
+            _hoverToolTip.Background = bg;
+            _hoverToolTip.Foreground = fg;
+            _hoverToolTip.BorderBrush = br;
             _hoverToolTip.Content = sig.HighlightedSignature;
-            _hoverToolTip.PlacementTarget = CodeTextBox;
+            _hoverToolTip.Placement = PlacementMode.Relative;
+            _hoverToolTip.PlacementTarget = CodeTextBox.TextArea;
+            _hoverToolTip.VerticalOffset = yOffset;
+            _hoverToolTip.HorizontalOffset = 0;
             _hoverToolTip.IsOpen = true;
         }
     }
@@ -182,6 +205,8 @@ public partial class MainWindow : Window
     {
         if (e.Key == Key.Space && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
         {
+            if (!_autoCompletionEnabled) return;
+
             _completionDebounceTimer.Stop();
             var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
             if (syntax != null && syntax.Contains("C#"))
@@ -195,7 +220,20 @@ public partial class MainWindow : Window
                 e.Handled = true;
                 ShowCompletion1C(string.Empty, true);
             }
+            return;
         }
+
+        if (e.Key == Key.Enter || e.Key == Key.Escape)
+        {
+            CloseSignatureHelpToolTip();
+        }
+    }
+
+    private void CloseSignatureHelpToolTip()
+    {
+        if (_hoverToolTip == null) return;
+        _hoverToolTip.IsOpen = false;
+        _hoverToolTip = null;
     }
 
     private static bool IsIdentifierChar(char c)
@@ -266,6 +304,8 @@ public partial class MainWindow : Window
 
     private void OnTextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
     {
+        if (!_autoCompletionEnabled) return;
+
         if (e.Text.Length > 0 && (char.IsLetter(e.Text[0]) || e.Text[0] == '_' || e.Text[0] == '.'))
         {
             var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
@@ -338,7 +378,10 @@ public partial class MainWindow : Window
             _completionWindow?.Close();
             _completionWindow = new CompletionWindow(CodeTextBox.TextArea)
             {
-                Width = 500
+                Width = 500,
+                WindowStyle = WindowStyle.None,
+                ResizeMode = ResizeMode.NoResize,
+                BorderThickness = new Thickness(1)
             };
 
             var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
@@ -4575,6 +4618,45 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             _debounceTimer.Stop();
 
             // Очистка ошибок при выключении
+            var emptyResult = new AnalysisResult(new List<CodeSyntaxError>(), new List<CodeDictionary.Analysis.SymbolInfo>());
+            UpdateUiWithResult(emptyResult);
+        }
+    }
+
+    private void AutoCompletionToggle_Click(object sender, RoutedEventArgs e)
+    {
+        if (AutoCompletionToggle.IsChecked == true)
+        {
+            _autoCompletionEnabled = true;
+
+            // Restore syntax highlighting
+            var selected = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+            if (!string.IsNullOrEmpty(selected))
+                SelectSyntax(selected);
+
+            if (AnalyzeToggle.IsChecked == true)
+            {
+                _debounceTimer.Start();
+                DebounceTimer_Tick(null, EventArgs.Empty);
+            }
+        }
+        else
+        {
+            _autoCompletionEnabled = false;
+
+            // Close windows
+            _completionWindow?.Close();
+            _completionWindow = null;
+            CloseSignatureHelpToolTip();
+
+            // Stop timers
+            _debounceTimer.Stop();
+            _completionDebounceTimer.Stop();
+
+            // Disable syntax highlighting (plain text)
+            CodeTextBox.SyntaxHighlighting = null;
+
+            // Clear errors
             var emptyResult = new AnalysisResult(new List<CodeSyntaxError>(), new List<CodeDictionary.Analysis.SymbolInfo>());
             UpdateUiWithResult(emptyResult);
         }

@@ -688,6 +688,19 @@
                             FontSize="11"
                             SelectionChanged="SyntaxHighlightingComboBox_SelectionChanged" />
 
+                        <ToggleButton
+                            x:Name="AutoCompletionToggle"
+                            IsChecked="True"
+                            Click="AutoCompletionToggle_Click"
+                            Style="{StaticResource IconToggleButton}"
+                            ToolTip="Автоподбор и подсветка синтаксиса">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Kind="AutoFix" />
+                        </ToggleButton>
+
                         <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
 
