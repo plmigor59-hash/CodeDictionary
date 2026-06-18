@@ -220,10 +220,10 @@ public partial class MainWindow : Window
                 if (_hoverToolTip != null)
                 {
                     _hoverToolTip.IsOpen = false;
-                    
+
                     timer.Stop();
                 }
-               
+
             };
             timer.Start();
 
@@ -2604,7 +2604,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     {
         var pos = e.GetPosition(EntriesTreeView);
         const double margin = 40;
-        const double speed = 1;
+        const double speed = 10;
 
         var sv = FindScrollViewer(EntriesTreeView);
         if (sv == null) return;

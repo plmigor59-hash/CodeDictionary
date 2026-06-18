@@ -1,5 +1,4 @@
 using CodeDictionary.Analysis;
-using OneScript.Language;
 using OneScript.Language.LexicalAnalysis;
 using OneScript.Language.Sources;
 using OneScript.Sources;

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace CodeDictionary.SyntaxChecking
 {
     public static class BslBuiltInFunctions

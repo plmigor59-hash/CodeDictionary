@@ -1,5 +1,5 @@
-using ICSharpCode.AvalonEdit.CodeCompletion;
 using CodeDictionary.SyntaxChecking.Providers;
+using ICSharpCode.AvalonEdit.CodeCompletion;
 
 namespace CodeDictionary.SyntaxChecking
 {

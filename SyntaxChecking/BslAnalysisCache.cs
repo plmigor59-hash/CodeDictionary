@@ -85,7 +85,9 @@ namespace CodeDictionary.SyntaxChecking
                 {
                     errors.Add(new CodeSyntaxError
                     {
-                        Line = 1, Column = 1, Length = 1,
+                        Line = 1,
+                        Column = 1,
+                        Length = 1,
                         Message = $"Ошибка анализа: {ex.Message}",
                         ErrorType = "FatalError"
                     });
