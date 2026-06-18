@@ -217,8 +217,13 @@ public partial class MainWindow : Window
             };
             timer.Tick += (s, e) =>
             {
-                _hoverToolTip.IsOpen = false;
-                timer.Stop();
+                if (_hoverToolTip != null)
+                {
+                    _hoverToolTip.IsOpen = false;
+                    
+                    timer.Stop();
+                }
+               
             };
             timer.Start();
 
@@ -2591,6 +2596,38 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
 
         e.Effects = DragDropEffects.Move;
         e.Handled = true;
+
+        HandleDragScroll(e);
+    }
+
+    private void HandleDragScroll(DragEventArgs e)
+    {
+        var pos = e.GetPosition(EntriesTreeView);
+        const double margin = 40;
+        const double speed = 1;
+
+        var sv = FindScrollViewer(EntriesTreeView);
+        if (sv == null) return;
+
+        if (pos.Y < margin)
+        {
+            sv.ScrollToVerticalOffset(sv.VerticalOffset - speed);
+        }
+        else if (pos.Y > EntriesTreeView.ActualHeight - margin)
+        {
+            sv.ScrollToVerticalOffset(sv.VerticalOffset + speed);
+        }
+    }
+
+    private static ScrollViewer? FindScrollViewer(DependencyObject dep)
+    {
+        if (dep is ScrollViewer sv) return sv;
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(dep); i++)
+        {
+            var result = FindScrollViewer(VisualTreeHelper.GetChild(dep, i));
+            if (result != null) return result;
+        }
+        return null;
     }
 
     private async void EntriesTreeView_Drop(object sender, DragEventArgs e)

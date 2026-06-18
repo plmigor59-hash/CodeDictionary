@@ -133,7 +133,7 @@ namespace CodeDictionary.SyntaxChecking
             while (end < document.TextLength && IsIdentifierChar(document.GetCharAt(end)))
                 end++;
 
-            string suffix = Type.Contains("Функция") || Type.Contains("Встроенная функция") ? "()" : " ";
+            string suffix = Type.Contains("Функция") || Type.Contains("Встроенная функция") ? "()" : "";
             textArea.Document.Replace(start, end - start, Text + suffix);
 
             if (suffix == "()")

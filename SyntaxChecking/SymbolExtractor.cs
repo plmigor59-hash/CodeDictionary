@@ -22,6 +22,7 @@ namespace CodeDictionary.SyntaxChecking
         private readonly Stack<HashSet<string>> _variableScopes = new();
         private readonly Dictionary<string, string> _variableTypes = new(StringComparer.OrdinalIgnoreCase);
         private string _currentMethodName = string.Empty;
+        private string? _lastAssignmentLeftVar;
 
         public SymbolExtractor()
         {
@@ -158,9 +159,12 @@ namespace CodeDictionary.SyntaxChecking
 
         protected override void VisitAssignmentLeftPart(BslSyntaxNode node)
         {
+            _lastAssignmentLeftVar = null;
+
             if (node is TerminalNode term && term.Kind == NodeKind.Identifier)
             {
                 var varName = term.Lexem.Content;
+                _lastAssignmentLeftVar = varName;
 
                 if (!IsVariableDeclared(varName))
                 {
@@ -170,6 +174,24 @@ namespace CodeDictionary.SyntaxChecking
                 }
             }
             base.VisitAssignmentLeftPart(node);
+        }
+
+        protected override void VisitAssignmentRightPart(BslSyntaxNode node)
+        {
+            // Ensure the right side is fully traversed so that VisitNewObjectCreation fires
+            foreach (var child in node.Children)
+                DefaultVisit(child);
+        }
+
+        protected override void VisitAssignment(BslSyntaxNode assignment)
+        {
+            // Ensure both parts of the assignment are visited
+            // Left part first (records variable name)
+            if (assignment.Children.Count > 0)
+                VisitAssignmentLeftPart(assignment.Children[0]);
+            // Right part (may contain NewObjectNode)
+            if (assignment.Children.Count > 1)
+                VisitAssignmentRightPart(assignment.Children[1]);
         }
 
         protected override void VisitIteratorLoopVariable(TerminalNode node)
@@ -236,13 +258,28 @@ namespace CodeDictionary.SyntaxChecking
             if (node.TypeNameNode is TerminalNode term)
             {
                 var typeName = term.Lexem.Content;
+                bool found = false;
 
-                if (node.Parent is NonTerminalNode assign && assign.Kind == NodeKind.Assignment)
+                // Walk up parent chain to find the assignment node
+                BslSyntaxNode? parent = node.Parent;
+                while (parent != null)
                 {
-                    if (assign.Children[0] is TerminalNode leftTerm && leftTerm.Kind == NodeKind.Identifier)
+                    if (parent is NonTerminalNode assign && assign.Kind == NodeKind.Assignment)
                     {
-                        _variableTypes[leftTerm.Lexem.Content] = typeName;
+                        if (assign.Children[0] is TerminalNode leftTerm && leftTerm.Kind == NodeKind.Identifier)
+                        {
+                            _variableTypes[leftTerm.Lexem.Content] = typeName;
+                            found = true;
+                        }
+                        break;
                     }
+                    parent = parent.Parent;
+                }
+
+                // Fallback: use variable name recorded from VisitAssignmentLeftPart
+                if (!found && _lastAssignmentLeftVar != null)
+                {
+                    _variableTypes[_lastAssignmentLeftVar] = typeName;
                 }
             }
 
