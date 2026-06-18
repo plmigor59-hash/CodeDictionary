@@ -119,9 +119,13 @@ public partial class MainWindow : Window
 
         if (e.Text.Length > 0 && _completionWindow != null)
         {
-            // For BSL, let the dot pass through to trigger member access completion
             if (e.Text == "." && isBsl)
             {
+                _completionWindow.Close();
+            }
+            else if (e.Text == " ")
+            {
+                // Space closes completion without inserting
                 _completionWindow.Close();
             }
             else if (!char.IsLetterOrDigit(e.Text[0]))
@@ -247,7 +251,7 @@ public partial class MainWindow : Window
             if (syntax != null && syntax.Contains("1C"))
             {
                 e.Handled = true;
-                ShowCompletion1C(string.Empty, true);
+                ShowCompletion1C(GetWordAtOffset(CodeTextBox.CaretOffset), true);
             }
             return;
         }
@@ -335,17 +339,20 @@ public partial class MainWindow : Window
     {
         if (!_autoCompletionEnabled) return;
 
-        if (e.Text.Length > 0 && (char.IsLetter(e.Text[0]) || e.Text[0] == '_' || e.Text[0] == '.'))
+        var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+
+        if (e.Text == "." && syntax != null && syntax.Contains("1C"))
         {
-            var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+            ShowCompletion1C("", false);
+            return;
+        }
+
+        if (e.Text.Length > 0 && (char.IsLetter(e.Text[0]) || e.Text[0] == '_'))
+        {
             if (syntax != null && syntax.Contains("C#"))
             {
                 _completionDebounceTimer.Stop();
                 _completionDebounceTimer.Start();
-            }
-            else
-            {
-                ShowCompletion1C(e.Text, false);
             }
         }
     }
@@ -365,6 +372,21 @@ public partial class MainWindow : Window
         {
             symbols = coreAnalyzer.Symbols;
             variableTypes = coreAnalyzer.VariableTypes;
+
+            if (context.Kind == BslContextKind.MemberAccess && context.HasLeftSide)
+            {
+                var varName = context.LeftSide.Split('.').First();
+                if (!variableTypes.ContainsKey(varName))
+                {
+                    var pos = CodeTextBox.CaretOffset;
+                    if (pos > 0 && CodeTextBox.Text[pos - 1] == '.')
+                    {
+                        var codeBeforeDot = CodeTextBox.Text.Substring(0, pos - 1);
+                        coreAnalyzer.Analyze(codeBeforeDot);
+                        variableTypes = coreAnalyzer.VariableTypes;
+                    }
+                }
+            }
         }
         else
         {
@@ -378,29 +400,26 @@ public partial class MainWindow : Window
             VariableTypes = variableTypes
         };
 
-        var allData = _bslCompletionService.GetCompletions(context, analysis);
-
-        var filteredList = allData.ToList();
-        if (!controlSpace && !string.IsNullOrEmpty(enteredText))
+        List<ICompletionData> allData;
+        try
         {
-            string filterWord;
-
-            if (context.Kind == BslContextKind.MemberAccess)
-            {
-                filterWord = GetTextAfterDot(CodeTextBox.CaretOffset);
-            }
-            else
-            {
-                filterWord = GetWordAtOffset(CodeTextBox.CaretOffset);
-            }
-
-            if (!string.IsNullOrEmpty(filterWord))
-            {
-                filteredList = allData
-                    .Where(d => d.Text.StartsWith(filterWord, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-            }
+            allData = _bslCompletionService.GetCompletions(context, analysis);
         }
+        catch (Exception ex)
+        {
+            _snackbar.Show(CodeTextBox, $"Ошибка дополнения: {ex.Message}", NotificationType.Error, 3.0);
+            return;
+        }
+
+        string filterWord;
+        if (context.Kind == BslContextKind.MemberAccess)
+            filterWord = GetTextAfterDot(CodeTextBox.CaretOffset);
+        else
+            filterWord = GetWordAtOffset(CodeTextBox.CaretOffset);
+
+        var filteredList = !string.IsNullOrEmpty(filterWord)
+            ? allData.Where(d => d.Text.StartsWith(filterWord, StringComparison.OrdinalIgnoreCase)).ToList()
+            : allData.ToList();
 
         if (filteredList.Any())
         {
@@ -437,9 +456,9 @@ public partial class MainWindow : Window
 
             _completionWindow.Show();
 
-            if (!controlSpace && !string.IsNullOrEmpty(enteredText))
+            if (!string.IsNullOrEmpty(filterWord))
             {
-                _completionWindow.CompletionList.SelectItem(enteredText);
+                _completionWindow.CompletionList.SelectItem(filterWord);
             }
         }
         else

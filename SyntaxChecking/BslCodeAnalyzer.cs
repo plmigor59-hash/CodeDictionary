@@ -92,8 +92,6 @@ namespace CodeDictionary.SyntaxChecking
                     var extractor = new SymbolExtractor();
                     extractor.Visit(parserResult);
 
-                    _variableTypes = extractor.VariableTypes;
-
                     foreach (var symbol in extractor.Symbols)
                     {
                         newSymbols.Add(symbol);
@@ -104,6 +102,17 @@ namespace CodeDictionary.SyntaxChecking
                         // Update length for extractor errors too
                         error.Length = GetIdentifierLength(code, error.Line, error.Column);
                         newErrors.Add(error);
+                    }
+
+                    lock (_lock)
+                    {
+                        // Merge: keep old types when new analysis can't resolve them
+                        // (e.g. after typing '.' the code becomes temporarily invalid)
+                        if (_variableTypes is Dictionary<string, string> vt)
+                        {
+                            foreach (var kv in extractor.VariableTypes)
+                                vt[kv.Key] = kv.Value;
+                        }
                     }
                 }
             }

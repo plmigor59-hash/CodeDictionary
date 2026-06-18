@@ -56,16 +56,12 @@ namespace CodeDictionary.SyntaxChecking.Providers
 
         public bool IsApplicable(BslSyntaxContext context)
         {
-            return context.Kind is BslContextKind.StatementStart or BslContextKind.Expression;
+            return context.Kind != BslContextKind.StringOrComment;
         }
 
         public IEnumerable<ICompletionData> GetCompletions(BslSyntaxContext context, BslAnalysisSnapshot analysis)
         {
-            var keywords = context.Kind == BslContextKind.StatementStart
-                ? _statementStartKeywords.Concat(_expressionKeywords)
-                : _expressionKeywords;
-
-            foreach (var (ru, en, type) in keywords)
+            foreach (var (ru, en, type) in _statementStartKeywords.Concat(_expressionKeywords))
             {
                 yield return new BslCompletionData(ru, type, type);
                 yield return new BslCompletionData(en, type, type);

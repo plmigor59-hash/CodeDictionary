@@ -161,16 +161,16 @@ namespace CodeDictionary.SyntaxChecking
         {
             _lastAssignmentLeftVar = null;
 
-            if (node is TerminalNode term && term.Kind == NodeKind.Identifier)
+            var varName = FindIdentifierName(node);
+            if (varName != null)
             {
-                var varName = term.Lexem.Content;
                 _lastAssignmentLeftVar = varName;
 
                 if (!IsVariableDeclared(varName))
                 {
                     var currentScope = _variableScopes.Peek();
                     currentScope.Add(varName);
-                    AddSymbol(varName, "Автоматическая переменная", term.Location);
+                    AddSymbol(varName, "Автоматическая переменная", node.Location);
                 }
             }
             base.VisitAssignmentLeftPart(node);
@@ -266,9 +266,13 @@ namespace CodeDictionary.SyntaxChecking
                 {
                     if (parent is NonTerminalNode assign && assign.Kind == NodeKind.Assignment)
                     {
-                        if (assign.Children[0] is TerminalNode leftTerm && leftTerm.Kind == NodeKind.Identifier)
+                        var leftVarName = assign.Children.Count > 0
+                            ? FindIdentifierName(assign.Children[0])
+                            : null;
+
+                        if (leftVarName != null)
                         {
-                            _variableTypes[leftTerm.Lexem.Content] = typeName;
+                            _variableTypes[leftVarName] = typeName;
                             found = true;
                         }
                         break;
@@ -314,6 +318,23 @@ namespace CodeDictionary.SyntaxChecking
         }
 
         // === Вспомогательные методы ===
+
+        private static string? FindIdentifierName(BslSyntaxNode node)
+        {
+            if (node is TerminalNode term && term.Kind == NodeKind.Identifier)
+                return term.Lexem.Content;
+
+            if (node is NonTerminalNode nt)
+            {
+                foreach (var child in nt.Children)
+                {
+                    if (child is TerminalNode childTerm && childTerm.Kind == NodeKind.Identifier)
+                        return childTerm.Lexem.Content;
+                }
+            }
+
+            return null;
+        }
 
         private bool IsVariableDeclared(string name)
         {
