@@ -14,6 +14,7 @@ namespace CodeDictionary.SyntaxChecking
                 new BslKeywordProvider(),
                 new BslSymbolProvider(),
                 new BslBuiltInFunctionProvider(),
+                new BslGlobalContextProvider(),
                 new BslMemberAccessProvider(),
                 new BslNewTypeProvider(),
             ];

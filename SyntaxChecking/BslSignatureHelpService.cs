@@ -116,6 +116,21 @@ namespace CodeDictionary.SyntaxChecking
                     };
                 }
 
+                // Look up in global context
+                foreach (var (name, type, parms) in BslGlobalContext.All)
+                {
+                    if (string.Equals(name, methodName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return new SignatureInfo
+                        {
+                            MethodName = methodName,
+                            ParameterNames = parms,
+                            CurrentParameterIndex = Math.Min(currentParam, Math.Max(0, parms.Length - 1)),
+                            Found = true
+                        };
+                    }
+                }
+
                 // Look up in type system
                 foreach (var type in BslTypeSystem.KnownTypes.Values)
                 {

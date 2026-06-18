@@ -204,12 +204,18 @@ namespace CodeDictionary.SyntaxChecking
         private void CheckAndTrackMethodCall(CallNode node)
         {
             var methodName = node.Identifier?.Lexem.Content;
-            if (!string.IsNullOrEmpty(methodName) && !_declaredMethods.Contains(methodName))
-            {
-                AddError($"Метод '{methodName}' не объявлен",
-                    node.Location,
-                    ErrorType.UndeclaredMethod);
-            }
+            if (string.IsNullOrEmpty(methodName))
+                return;
+
+            if (_declaredMethods.Contains(methodName))
+                return;
+
+            if (BslGlobalContext.IsGlobalMethod(methodName))
+                return;
+
+            AddError($"Метод '{methodName}' не объявлен",
+                node.Location,
+                ErrorType.UndeclaredMethod);
         }
 
         private void TraverseArgumentList(CallNode node)
@@ -231,7 +237,7 @@ namespace CodeDictionary.SyntaxChecking
             {
                 var typeName = term.Lexem.Content;
 
-                if (node.Parent?.Parent is NonTerminalNode assign && assign.Kind == NodeKind.Assignment)
+                if (node.Parent is NonTerminalNode assign && assign.Kind == NodeKind.Assignment)
                 {
                     if (assign.Children[0] is TerminalNode leftTerm && leftTerm.Kind == NodeKind.Identifier)
                     {

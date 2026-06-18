@@ -109,9 +109,17 @@ public partial class MainWindow : Window
 
     private void CodeTextBox_TextEntering(object sender, TextCompositionEventArgs e)
     {
+        var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+        var isBsl = syntax != null && syntax.Contains("1C");
+
         if (e.Text.Length > 0 && _completionWindow != null)
         {
-            if (!char.IsLetterOrDigit(e.Text[0]))
+            // For BSL, let the dot pass through to trigger member access completion
+            if (e.Text == "." && isBsl)
+            {
+                _completionWindow.Close();
+            }
+            else if (!char.IsLetterOrDigit(e.Text[0]))
             {
                 _completionWindow.CompletionList.RequestInsertion(e);
             }
@@ -119,7 +127,6 @@ public partial class MainWindow : Window
 
         if (e.Text == ".")
         {
-            var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
             if (syntax != null && syntax.Contains("C#"))
             {
                 _completionDebounceTimer.Stop();
@@ -128,7 +135,6 @@ public partial class MainWindow : Window
         }
         else if (e.Text == "(" || e.Text == ",")
         {
-            var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
             if (syntax != null)
             {
                 if (syntax.Contains("C#"))
@@ -222,6 +228,41 @@ public partial class MainWindow : Window
         return document.GetText(start, end - start + 1);
     }
 
+    private string GetTextAfterDot(int offset)
+    {
+        var document = CodeTextBox.Document;
+        if (document.TextLength == 0 || offset <= 0) return string.Empty;
+
+        int pos = Math.Min(offset, document.TextLength) - 1;
+
+        // Walk back to find the last dot
+        int lastDot = -1;
+        for (int i = pos; i >= 0; i--)
+        {
+            char c = document.GetCharAt(i);
+            if (c == '.')
+            {
+                lastDot = i;
+                break;
+            }
+            if (!char.IsLetterOrDigit(c) && c != '_')
+                break;
+        }
+
+        if (lastDot < 0)
+            return string.Empty;
+
+        // Collect text after the last dot up to the cursor
+        int end = lastDot + 1;
+        while (end < document.TextLength && (char.IsLetterOrDigit(document.GetCharAt(end)) || document.GetCharAt(end) == '_'))
+            end++;
+
+        end = Math.Min(end, offset);
+        int start = lastDot + 1;
+
+        return start < end ? document.GetText(start, end - start) : string.Empty;
+    }
+
 
     private void OnTextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
     {
@@ -273,11 +314,21 @@ public partial class MainWindow : Window
         var filteredList = allData.ToList();
         if (!controlSpace && !string.IsNullOrEmpty(enteredText))
         {
-            string currentWord = GetWordAtOffset(CodeTextBox.CaretOffset);
-            if (!string.IsNullOrEmpty(currentWord))
+            string filterWord;
+
+            if (context.Kind == BslContextKind.MemberAccess)
+            {
+                filterWord = GetTextAfterDot(CodeTextBox.CaretOffset);
+            }
+            else
+            {
+                filterWord = GetWordAtOffset(CodeTextBox.CaretOffset);
+            }
+
+            if (!string.IsNullOrEmpty(filterWord))
             {
                 filteredList = allData
-                    .Where(d => d.Text.StartsWith(currentWord, StringComparison.OrdinalIgnoreCase))
+                    .Where(d => d.Text.StartsWith(filterWord, StringComparison.OrdinalIgnoreCase))
                     .ToList();
             }
         }
