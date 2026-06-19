@@ -702,6 +702,11 @@ public partial class MainWindow : Window
         _completionWindow?.Close();
         _completionWindow = new CompletionWindow(CodeTextBox.TextArea)
         {
+            WindowStyle = WindowStyle.None,
+            ResizeMode = ResizeMode.NoResize,
+            BorderThickness = new Thickness(1),
+
+
             StartOffset = wordStart,
             Width = 500
         };
