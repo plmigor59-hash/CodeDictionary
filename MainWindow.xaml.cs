@@ -3585,18 +3585,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             var root = doc.RootElement;
             string type = root.GetProperty("type").GetString() ?? "";
 
-            if (type == "color")
-            {
-                string target = root.GetProperty("target").GetString() ?? "foreColor";
-                using var cd = new System.Windows.Forms.ColorDialog();
-                if (cd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    string hex = $"#{cd.Color.R:X2}{cd.Color.G:X2}{cd.Color.B:X2}";
-                    string js = $"document.execCommand('{target}',false,'{hex}')";
-                    await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
-                }
-            }
-            else if (type == "pic")
+            if (type == "pic")
             {
                 var ofd = new OpenFileDialog
                 {
@@ -3755,8 +3744,45 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     addBtn('🔗','Ссылка',function(){{var u=prompt('URL:','https://');if(u)document.execCommand('createLink',false,u);this.blur()}});
     addBtn('🖼','Изображение',function(){{window.chrome.webview.postMessage(JSON.stringify({{type:'pic'}}))}});
     addSep();
-    addBtn('A','Цвет текста',function(){{window.chrome.webview.postMessage(JSON.stringify({{type:'color',target:'foreColor'}}))}});
-    addBtn('▨','Цвет фона',function(){{window.chrome.webview.postMessage(JSON.stringify({{type:'color',target:'hiliteColor'}}))}});
+    var paletteColors = ['#000000','#434343','#666666','#999999','#B7B7B7','#CCCCCC','#D9D9D9','#EFEFEF','#F3F3F3','#FFFFFF','#980000','#FF0000','#FF6D01','#FFFF00','#00FF00','#00B0F0','#0070C0','#002060','#7030A0','#A64D79','#E6B8AF','#F4CCCC','#FCE5CD','#FFF2CC','#D9EAD3','#D0E0E3','#C9DAF8','#CFE2F3','#D9D2E9','#EAD1DC','#DD7A6B','#EA9999','#F9CB9C','#FFE599','#B6D7A8','#A2C4C9','#A4C2F4','#9FC5E8','#B4A7D6','#D5A6BD','#CC4125','#E06666','#F6B26B','#FFD966','#93C47D','#76A5AF','#6D9EEB','#6FA8DC','#8E7CC3','#C27BA0','#A61C00','#CC0000','#E69138','#F1C232','#6AA84F','#45818E','#3C78D8','#3D85C6','#674EA7','#A64D79','#85200C','#990000','#B45F06','#BF9000','#38761D','#134F5C','#1155CC','#0B5394','#351C75','#741B47'];
+    var palette = document.createElement('div');
+    palette.id = '__color_palette';
+    palette.style.cssText = 'position:fixed;top:40px;right:20px;z-index:99999;display:none;background:{tbBg};border:1px solid {tbBorder};border-radius:4px;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,.3);';
+    var paletteGrid = document.createElement('div');
+    paletteGrid.style.cssText = 'display:grid;grid-template-columns:repeat(10,18px);gap:2px;';
+    function applyColor(color){{
+        var sel=window.getSelection();
+        sel.removeAllRanges();
+        if(window.__savedRange){{sel.addRange(window.__savedRange);}}
+        document.execCommand(window.__colorTarget||'foreColor',false,color);
+        window.__savedRange=null;
+        palette.style.display='none';
+    }}
+    paletteColors.forEach(function(c){{
+        var sw = document.createElement('div');
+        sw.style.cssText = 'width:18px;height:18px;background:'+c+';border:1px solid {btnBorder};border-radius:2px;cursor:pointer;';
+        sw.addEventListener('click',function(){{applyColor(c);}});
+        paletteGrid.appendChild(sw);
+    }});
+    palette.appendChild(paletteGrid);
+    var cp = document.createElement('input');
+    cp.type = 'color'; cp.style.cssText = 'width:100%;margin-top:4px;border:none;padding:0;height:20px;cursor:pointer;';
+    cp.addEventListener('change',function(){{applyColor(this.value);}});
+    palette.appendChild(cp);
+    document.body.appendChild(palette);
+    document.addEventListener('click',function(e){{
+        if(!e.target.closest('#__color_palette')&&!e.target.closest('#__fmt_toolbar')) palette.style.display='none';
+    }});
+    function showPalette(btn,target){{
+        var sel=window.getSelection();
+        window.__savedRange=sel.rangeCount>0?sel.getRangeAt(0):null;
+        window.__colorTarget=target;
+        var r=btn.getBoundingClientRect();
+        palette.style.top=(r.bottom+4)+'px';palette.style.left=r.left+'px';palette.style.display='block';
+        btn.blur();
+    }}
+    addBtn('A','Цвет текста',function(){{showPalette(this,'foreColor');}});
+    addBtn('▨','Цвет фона',function(){{showPalette(this,'hiliteColor');}});
     var content = document.getElementById('__content'); if(content) content.parentNode.insertBefore(tb, content);
 }})();
 ";
