@@ -179,8 +179,7 @@ namespace CodeDictionary.SyntaxChecking
         protected override void VisitAssignmentRightPart(BslSyntaxNode node)
         {
             // Ensure the right side is fully traversed so that VisitNewObjectCreation fires
-            foreach (var child in node.Children)
-                DefaultVisit(child);
+            Visit(node);
         }
 
         protected override void VisitAssignment(BslSyntaxNode assignment)
