@@ -424,12 +424,13 @@
                             Margin="0,0,4,0"
                             Click="SaveEntry_Click"
                             Content="Сохранить"
-                            Style="{StaticResource ModernButton}" />
+                             Style="{StaticResource AccentButton}" />
                         <Button
                             Grid.Column="1"
                             Margin="4,0,0,0"
                             Click="DeleteSingleEntry_Click"
                             Content="Удалить"
+                            Foreground="Red"
                             Style="{StaticResource ModernButton}" />
                     </Grid>
                 </StackPanel>
