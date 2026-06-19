@@ -615,6 +615,20 @@
 
                         <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
+                        <ToggleButton
+                            x:Name="TerminalToggleButton"
+                            Click="TerminalToggleButton_Click"
+                            Style="{StaticResource IconToggleButton}"
+                            ToolTip="Терминал">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Kind="Console" />
+                        </ToggleButton>
+
+                        <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
                         <Button
                             Click="FormatCode_Click"
                             Style="{StaticResource IconButton}"
@@ -915,6 +929,9 @@
                         <RowDefinition Height="0" />
                         <RowDefinition Height="0" />
                         <RowDefinition Height="0" />
+                        <RowDefinition Height="0" />
+                        <RowDefinition Height="0" />
+                        <RowDefinition Height="0" />
                     </Grid.RowDefinitions>
 
                     <TabControl
@@ -1154,6 +1171,124 @@
                             TextWrapping="Wrap"
                             VerticalScrollBarVisibility="Auto" />
                     </Border>
+
+                    <!--  Terminal Panel Header  -->
+                    <Grid
+                        x:Name="TerminalPanelHeader"
+                        Grid.Row="8"
+                        Background="{DynamicResource SidePanelBackground}"
+                        Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="10,2" Orientation="Horizontal">
+                            <materialIcons:MaterialIcon
+                                Width="16"
+                                Height="16"
+                                Margin="0,0,5,0"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Kind="Console" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Text="Терминал" />
+                        </StackPanel>
+                        <Button
+                            x:Name="ClearTerminalButton"
+                            Grid.Column="1"
+                            Click="ClearTerminalButton_Click"
+                            Foreground="{DynamicResource DictTextPrimary}"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Очистить">
+                            <materialIcons:MaterialIcon
+                                Width="14"
+                                Height="14"
+                                Kind="Delete" />
+                        </Button>
+                        <Button
+                            x:Name="CloseTerminalButton"
+                            Grid.Column="2"
+                            Click="CloseTerminalButton_Click"
+                            Foreground="{DynamicResource DictTextPrimary}"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Закрыть">
+                            <materialIcons:MaterialIcon
+                                Width="14"
+                                Height="14"
+                                Kind="Close" />
+                        </Button>
+                    </Grid>
+
+                    <!--  Terminal Splitter  -->
+                    <Border
+                        x:Name="TerminalSplitter"
+                        Grid.Row="9"
+                        Height="5"
+                        HorizontalAlignment="Stretch"
+                        Background="{DynamicResource BorderBrush}"
+                        Cursor="SizeNS"
+                        Visibility="Collapsed"
+                        MouseLeftButtonDown="TerminalSplitter_MouseLeftButtonDown"
+                        MouseMove="TerminalSplitter_MouseMove"
+                        MouseLeftButtonUp="TerminalSplitter_MouseLeftButtonUp" />
+
+                    <!--  Terminal Panel Content  -->
+                    <Grid
+                        x:Name="TerminalPanelContent"
+                        Grid.Row="10"
+                        Background="{DynamicResource SurfaceBackground}"
+                        Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBox
+                            x:Name="TerminalOutputTextBox"
+                            Margin="8,8,8,4"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            FontFamily="Cascadia Mono"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            IsReadOnly="True"
+                            VerticalScrollBarVisibility="Auto" />
+                        <Border
+                            Grid.Row="1"
+                            Margin="8,0,8,8"
+                            Background="{DynamicResource WindowBackground}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="3">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    Grid.Column="0"
+                                    Margin="6,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Cascadia Mono"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource SuccessBrush}"
+                                    Text="❯" />
+                                <TextBox
+                                    x:Name="TerminalInputTextBox"
+                                    Grid.Column="1"
+                                    Margin="4,2"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    FontFamily="Cascadia Mono"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"
+                                    KeyDown="TerminalInputTextBox_KeyDown" />
+                            </Grid>
+                        </Border>
+                    </Grid>
                 </Grid>
 
                 <!--  Bottom Bar: Tags and Description Toggle  -->

@@ -79,6 +79,11 @@ public partial class MainWindow : Window
     private bool _isDraggingSplitter;
     private double _dragStartY;
     private double _dragStartHeight;
+    private Process? _terminalProcess;
+    private bool _isDraggingTerminalSplitter;
+    private double _terminalDragStartY;
+    private double _terminalDragStartHeight;
+    private StringBuilder _terminalOutputBuffer = new();
 
     /// <summary>
     /// /Syntax
@@ -3246,6 +3251,8 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             }
         }
 
+        StopTerminalProcess();
+
         // Сохраняем текущее состояние
         _appState.SelectedCategory = !string.IsNullOrWhiteSpace(_selectedCategoryPath)
             ? _selectedCategoryPath
@@ -4788,6 +4795,212 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         if (!_isDraggingSplitter) return;
         _isDraggingSplitter = false;
         OutputSplitter.ReleaseMouseCapture();
+        e.Handled = true;
+    }
+
+    private void StartTerminalProcess()
+    {
+        if (_terminalProcess != null && !_terminalProcess.HasExited)
+            return;
+
+        _terminalProcess = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
+            },
+            EnableRaisingEvents = true
+        };
+
+        _terminalProcess.OutputDataReceived += (s, e) =>
+        {
+            if (e.Data != null)
+            {
+                _terminalOutputBuffer.AppendLine(e.Data);
+                Dispatcher.BeginInvoke(() =>
+                {
+                    TerminalOutputTextBox.AppendText(e.Data + Environment.NewLine);
+                    TerminalOutputTextBox.ScrollToEnd();
+                });
+            }
+        };
+
+        _terminalProcess.ErrorDataReceived += (s, e) =>
+        {
+            if (e.Data != null)
+            {
+                _terminalOutputBuffer.AppendLine(e.Data);
+                Dispatcher.BeginInvoke(() =>
+                {
+                    TerminalOutputTextBox.AppendText(e.Data + Environment.NewLine);
+                    TerminalOutputTextBox.ScrollToEnd();
+                });
+            }
+        };
+
+        _terminalProcess.Exited += (s, e) =>
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                TerminalOutputTextBox.AppendText(Environment.NewLine + "--- Процесс завершён ---" + Environment.NewLine);
+                TerminalOutputTextBox.ScrollToEnd();
+                _terminalProcess?.Dispose();
+                _terminalProcess = null;
+            });
+        };
+
+        _terminalProcess.Start();
+        _terminalProcess.BeginOutputReadLine();
+        _terminalProcess.BeginErrorReadLine();
+    }
+
+    private void StopTerminalProcess()
+    {
+        if (_terminalProcess == null || _terminalProcess.HasExited)
+        {
+            _terminalProcess?.Dispose();
+            _terminalProcess = null;
+            return;
+        }
+
+        try
+        {
+            _terminalProcess.Kill();
+            _terminalProcess.WaitForExit(3000);
+        }
+        catch { }
+        _terminalProcess.Dispose();
+        _terminalProcess = null;
+    }
+
+    private void TerminalToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (TerminalPanelContent.Visibility == Visibility.Visible)
+        {
+            HideTerminalPanel();
+        }
+        else
+        {
+            ShowTerminalPanel();
+        }
+    }
+
+    private void ShowTerminalPanel()
+    {
+        TerminalPanelHeader.Visibility = Visibility.Visible;
+        TerminalSplitter.Visibility = Visibility.Visible;
+        TerminalPanelContent.Visibility = Visibility.Visible;
+        TerminalToggleButton.IsChecked = true;
+
+        var parentGrid = TerminalPanelHeader.Parent as Grid;
+        if (parentGrid?.RowDefinitions.Count > 10)
+        {
+            parentGrid.RowDefinitions[8].Height = GridLength.Auto;
+            parentGrid.RowDefinitions[9].Height = new GridLength(5);
+            parentGrid.RowDefinitions[10].Height = new GridLength(200);
+        }
+
+        TerminalInputTextBox.Focus();
+        StartTerminalProcess();
+    }
+
+    private void HideTerminalPanel()
+    {
+        TerminalPanelHeader.Visibility = Visibility.Collapsed;
+        TerminalSplitter.Visibility = Visibility.Collapsed;
+        TerminalPanelContent.Visibility = Visibility.Collapsed;
+        TerminalToggleButton.IsChecked = false;
+
+        var parentGrid = TerminalPanelHeader.Parent as Grid;
+        if (parentGrid?.RowDefinitions.Count > 10)
+        {
+            parentGrid.RowDefinitions[8].Height = new GridLength(0);
+            parentGrid.RowDefinitions[9].Height = new GridLength(0);
+            parentGrid.RowDefinitions[10].Height = new GridLength(0);
+        }
+    }
+
+    private void CloseTerminalButton_Click(object sender, RoutedEventArgs e)
+    {
+        HideTerminalPanel();
+    }
+
+    private void ClearTerminalButton_Click(object sender, RoutedEventArgs e)
+    {
+        TerminalOutputTextBox.Clear();
+        _terminalOutputBuffer.Clear();
+    }
+
+    private void TerminalInputTextBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            var command = TerminalInputTextBox.Text;
+            TerminalInputTextBox.Clear();
+
+            if (_terminalProcess == null || _terminalProcess.HasExited)
+            {
+                TerminalOutputTextBox.AppendText("--- Терминал не запущен. Нажмите кнопку 'Терминал' для запуска ---" + Environment.NewLine);
+                TerminalOutputTextBox.ScrollToEnd();
+                return;
+            }
+
+            TerminalOutputTextBox.AppendText("❯ " + command + Environment.NewLine);
+            TerminalOutputTextBox.ScrollToEnd();
+
+            try
+            {
+                _terminalProcess.StandardInput.WriteLine(command);
+                _terminalProcess.StandardInput.Flush();
+            }
+            catch (Exception ex)
+            {
+                TerminalOutputTextBox.AppendText("Ошибка: " + ex.Message + Environment.NewLine);
+                TerminalOutputTextBox.ScrollToEnd();
+            }
+
+            e.Handled = true;
+        }
+    }
+
+    private void TerminalSplitter_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _isDraggingTerminalSplitter = true;
+        _terminalDragStartY = e.GetPosition(this).Y;
+        var parentGrid = TerminalPanelHeader.Parent as Grid;
+        if (parentGrid?.RowDefinitions.Count > 10)
+        {
+            _terminalDragStartHeight = parentGrid.RowDefinitions[10].Height.Value;
+        }
+        TerminalSplitter.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void TerminalSplitter_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_isDraggingTerminalSplitter) return;
+        var parentGrid = TerminalPanelHeader.Parent as Grid;
+        if (parentGrid?.RowDefinitions.Count > 10)
+        {
+            double delta = e.GetPosition(this).Y - _terminalDragStartY;
+            double newHeight = Math.Max(50, _terminalDragStartHeight - delta);
+            parentGrid.RowDefinitions[10].Height = new GridLength(newHeight);
+        }
+        e.Handled = true;
+    }
+
+    private void TerminalSplitter_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_isDraggingTerminalSplitter) return;
+        _isDraggingTerminalSplitter = false;
+        TerminalSplitter.ReleaseMouseCapture();
         e.Handled = true;
     }
 
