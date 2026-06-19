@@ -1,11 +1,10 @@
-using System.Text;
 using OneScript.Language.Sources;
 using OneScript.Sources;
 using OneScript.StandardLibrary;
 using ScriptEngine.HostedScript;
 using ScriptEngine.HostedScript.Extensions;
 using ScriptEngine.Hosting;
-using ScriptEngine.Machine;
+using System.Text;
 
 namespace CodeDictionary.SyntaxChecking
 {

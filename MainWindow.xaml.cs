@@ -76,6 +76,9 @@ public partial class MainWindow : Window
     private bool _isDescriptionEditMode;
     private int _navigationSequence;
     private bool _descriptionWebView2Ready;
+    private bool _isDraggingSplitter;
+    private double _dragStartY;
+    private double _dragStartHeight;
 
     /// <summary>
     /// /Syntax
@@ -1026,6 +1029,7 @@ public partial class MainWindow : Window
         this.InputBindings.Add(new InputBinding(new RelayCommand(() => OpenFile_Click(null, null)), new KeyGesture(Key.O, ModifierKeys.Control)));
         this.InputBindings.Add(new InputBinding(new RelayCommand(() => AddEntry_Click(null, null)), new KeyGesture(Key.N, ModifierKeys.Control)));
         CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ShowGoToLineWindow), new KeyGesture(Key.G, ModifierKeys.Control)));
+        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(GoToDefinition), new KeyGesture(Key.F12)));
     }
 
     private void ShowGoToLineWindow()
@@ -1072,6 +1076,105 @@ public partial class MainWindow : Window
         CodeTextBox.TextArea.Caret.Line = lineNumber;
         CodeTextBox.TextArea.Caret.BringCaretToView();
         CodeTextBox.Focus();
+    }
+
+    private void NavigateToPosition(int line, int column)
+    {
+        CodeTextBox.ScrollToLine(line);
+        CodeTextBox.TextArea.Caret.Line = line;
+        CodeTextBox.TextArea.Caret.Column = Math.Max(1, column);
+        CodeTextBox.TextArea.Caret.BringCaretToView();
+        CodeTextBox.Focus();
+    }
+
+    private void GoToDefinition()
+    {
+        var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+        if (string.IsNullOrEmpty(syntax))
+            return;
+
+        var offset = CodeTextBox.CaretOffset;
+        var word = GetWordAtOffset(offset);
+        if (string.IsNullOrEmpty(word))
+            return;
+
+        (int line, int column)? definition = null;
+
+        if (syntax.Contains("1C"))
+        {
+            var symbols = _bslAnalyzer is BslCodeAnalyzer coreAnalyzer
+                ? coreAnalyzer.Symbols
+                : [];
+
+            var caretLine = CodeTextBox.TextArea.Caret.Line;
+            var caretCol = CodeTextBox.TextArea.Caret.Column;
+
+            var match = symbols.FirstOrDefault(s =>
+                s.Name.Equals(word, StringComparison.OrdinalIgnoreCase) &&
+                !(s.Line == caretLine && Math.Abs(s.Column - caretCol) <= word.Length));
+            if (match != null)
+                definition = (match.Line, match.Column);
+        }
+        else if (syntax.Contains("Python"))
+        {
+            var code = CodeTextBox.Text;
+            definition = FindPythonDefinition(code, word, CodeTextBox.TextArea.Caret.Line);
+        }
+
+        if (definition.HasValue)
+        {
+            NavigateToPosition(definition.Value.line, definition.Value.column);
+        }
+        else
+        {
+            _snackbar.Show(CodeTextBox, $"Определение для '{word}' не найдено", NotificationType.Warning, 1.5);
+        }
+    }
+
+    private static (int line, int column)? FindPythonDefinition(string code, string word, int caretLine)
+    {
+        var lines = code.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            var trimmed = lines[i].TrimStart();
+
+            int col = lines[i].Length - trimmed.Length + 1;
+
+            if (trimmed.StartsWith("def ") && trimmed.Length > 4)
+            {
+                var name = ExtractPythonDefName(trimmed, 4);
+                if (name.Equals(word, StringComparison.Ordinal) && i + 1 != caretLine)
+                    return (i + 1, col);
+            }
+
+            if (trimmed.StartsWith("class ") && trimmed.Length > 6)
+            {
+                var name = ExtractPythonDefName(trimmed, 6);
+                if (name.Equals(word, StringComparison.Ordinal) && i + 1 != caretLine)
+                    return (i + 1, col);
+            }
+
+            if (trimmed.Contains('=') && !trimmed.StartsWith("def ") && !trimmed.StartsWith("class ")
+                && !trimmed.StartsWith("if ") && !trimmed.StartsWith("for ") && !trimmed.StartsWith("while ")
+                && !trimmed.StartsWith("with ") && !trimmed.StartsWith("elif ") && !trimmed.StartsWith("except "))
+            {
+                var eqIdx = trimmed.IndexOf('=');
+                var varName = trimmed[..eqIdx].Trim();
+                if (varName.Equals(word, StringComparison.Ordinal) && i + 1 != caretLine)
+                    return (i + 1, col);
+            }
+        }
+
+        return null;
+    }
+
+    private static string ExtractPythonDefName(string line, int startIndex)
+    {
+        int end = startIndex;
+        while (end < line.Length && (char.IsLetterOrDigit(line[end]) || line[end] == '_'))
+            end++;
+        return line[startIndex..end];
     }
 
     private void GoToNextBookmark()
@@ -4592,16 +4695,23 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         }
     }
 
+    private void ClearOutputPanelButton_Click(object sender, RoutedEventArgs e)
+    {
+        OutputTextBox.Text = string.Empty;
+    }
+
     private void CloseOutputPanelButton_Click(object sender, RoutedEventArgs e)
     {
         OutputPanelHeader.Visibility = Visibility.Collapsed;
+        OutputSplitter.Visibility = Visibility.Collapsed;
         OutputPanelContent.Visibility = Visibility.Collapsed;
 
         var parentGrid = OutputPanelHeader.Parent as Grid;
-        if (parentGrid != null && parentGrid.RowDefinitions.Count > 6)
+        if (parentGrid != null && parentGrid.RowDefinitions.Count > 7)
         {
             parentGrid.RowDefinitions[5].Height = new GridLength(0);
             parentGrid.RowDefinitions[6].Height = new GridLength(0);
+            parentGrid.RowDefinitions[7].Height = new GridLength(0);
         }
     }
 
@@ -4609,14 +4719,50 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     {
         OutputTextBox.Text = text;
         OutputPanelHeader.Visibility = Visibility.Visible;
+        OutputSplitter.Visibility = Visibility.Visible;
         OutputPanelContent.Visibility = Visibility.Visible;
 
         var parentGrid = OutputPanelHeader.Parent as Grid;
-        if (parentGrid != null && parentGrid.RowDefinitions.Count > 6)
+        if (parentGrid != null && parentGrid.RowDefinitions.Count > 7)
         {
             parentGrid.RowDefinitions[5].Height = GridLength.Auto;
-            parentGrid.RowDefinitions[6].Height = GridLength.Auto;
+            parentGrid.RowDefinitions[6].Height = new GridLength(5);
+            parentGrid.RowDefinitions[7].Height = new GridLength(200);
         }
+    }
+
+    private void OutputSplitter_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _isDraggingSplitter = true;
+        _dragStartY = e.GetPosition(this).Y;
+        var parentGrid = OutputPanelHeader.Parent as Grid;
+        if (parentGrid?.RowDefinitions.Count > 7)
+        {
+            _dragStartHeight = parentGrid.RowDefinitions[7].Height.Value;
+        }
+        OutputSplitter.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void OutputSplitter_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_isDraggingSplitter) return;
+        var parentGrid = OutputPanelHeader.Parent as Grid;
+        if (parentGrid?.RowDefinitions.Count > 7)
+        {
+            double delta = e.GetPosition(this).Y - _dragStartY;
+            double newHeight = Math.Max(50, _dragStartHeight - delta);
+            parentGrid.RowDefinitions[7].Height = new GridLength(newHeight);
+        }
+        e.Handled = true;
+    }
+
+    private void OutputSplitter_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_isDraggingSplitter) return;
+        _isDraggingSplitter = false;
+        OutputSplitter.ReleaseMouseCapture();
+        e.Handled = true;
     }
 
     private void Format1CCode()

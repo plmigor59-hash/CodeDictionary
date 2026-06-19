@@ -110,10 +110,11 @@
             BorderThickness="0,0,0,1"
             MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
                 <StackPanel Margin="8,0" Orientation="Horizontal">
                     <TextBlock
@@ -982,6 +983,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Margin="10,2" Orientation="Horizontal">
                             <materialIcons:MaterialIcon
@@ -1013,7 +1015,7 @@
 
                     <StackPanel
                         x:Name="ErrorListSplitter"
-                        Grid.Row="4"
+                        Grid.Row="3"
                         Height="8"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
@@ -1022,7 +1024,7 @@
 
                     <DataGrid
                         x:Name="ErrorListGrid"
-                        Grid.Row="8"
+                        Grid.Row="4"
                         AutoGenerateColumns="False"
                         Background="{DynamicResource SurfaceBackground}"
                         BorderBrush="{DynamicResource BorderBrush}"
@@ -1077,6 +1079,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Margin="10,2" Orientation="Horizontal">
                             <materialIcons:MaterialIcon
@@ -1093,8 +1096,20 @@
                                 Text="Результат выполнения" />
                         </StackPanel>
                         <Button
-                            x:Name="CloseOutputPanelButton"
+                            x:Name="ClearOutputPanelButton"
                             Grid.Column="1"
+                            Click="ClearOutputPanelButton_Click"
+                            Foreground="{DynamicResource DictTextPrimary}"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Очистить">
+                            <materialIcons:MaterialIcon
+                                Width="14"
+                                Height="14"
+                                Kind="Delete" />
+                        </Button>
+                        <Button
+                            x:Name="CloseOutputPanelButton"
+                            Grid.Column="2"
                             Click="CloseOutputPanelButton_Click"
                             Foreground="{DynamicResource DictTextPrimary}"
                             Style="{StaticResource IconButton}"
@@ -1106,10 +1121,23 @@
                         </Button>
                     </Grid>
 
+                    <!--  Output Panel Splitter  -->
+                    <Border
+                        x:Name="OutputSplitter"
+                        Grid.Row="6"
+                        Height="5"
+                        HorizontalAlignment="Stretch"
+                        Background="{DynamicResource BorderBrush}"
+                        Cursor="SizeNS"
+                        Visibility="Collapsed"
+                        MouseLeftButtonDown="OutputSplitter_MouseLeftButtonDown"
+                        MouseMove="OutputSplitter_MouseMove"
+                        MouseLeftButtonUp="OutputSplitter_MouseLeftButtonUp" />
+
                     <!--  Output Panel Content  -->
                     <Border
                         x:Name="OutputPanelContent"
-                        Grid.Row="6"
+                        Grid.Row="7"
                         Background="{DynamicResource SurfaceBackground}"
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="0,1,0,0"

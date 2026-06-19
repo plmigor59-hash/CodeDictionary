@@ -37,7 +37,6 @@ namespace CodeDictionary.SyntaxChecking
             indentStack.Push(0);
             bool inFunction = false;
             bool inLoop = false;
-            bool hasAsyncPrefix = false;
 
             for (int i = 0; i < lines.Length; i++)
             {
@@ -88,17 +87,14 @@ namespace CodeDictionary.SyntaxChecking
 
                 if (firstToken == "async" && tokens.Count > 1 && tokens[1].ToLower() == "def")
                 {
-                    hasAsyncPrefix = true;
                     firstToken = "def";
                 }
                 else if (firstToken == "async" && tokens.Count > 1 && tokens[1].ToLower() == "with")
                 {
-                    hasAsyncPrefix = true;
                     firstToken = "with";
                 }
                 else
                 {
-                    hasAsyncPrefix = false;
                 }
 
                 if (BlockKeywords.Contains(firstToken))
