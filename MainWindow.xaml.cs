@@ -1570,15 +1570,7 @@ public partial class MainWindow : Window
             ".bsl" or ".os" => _currentTheme == AppTheme.Dark ? "Темная 1C" : "Стандартная 1C",
             ".xml" or ".xsd" or ".xaml" => _currentTheme == AppTheme.Dark ? "Темная XML" : "Стандартная XML",
             ".html" or ".htm" => _currentTheme == AppTheme.Dark ? "Темная HTML" : "Стандартная HTML",
-            ".js" => "Стандартная JavaScript",
-            ".java" => "Стандартная Java",
-            ".css" => "Стандартная CSS",
-            ".php" => "Стандартная PHP",
-            ".ps1" => "Стандартная PowerShell",
             ".py" => _currentTheme == AppTheme.Dark ? "Темная Python" : "Стандартная Python",
-            ".sql" => "Стандартная SQL",
-            ".vb" => "Стандартная VB",
-            ".patch" or ".diff" => "Стандартная Patch",
             _ => null
         };
     }
@@ -2261,14 +2253,6 @@ public partial class MainWindow : Window
         {
             CodeTextBox.SyntaxHighlighting = _lightPythonHigh ?? HighlightingManager.Instance.GetDefinition("Python Light");
         }
-        else if (selected == "Стандартная Java")
-        {
-            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Java");
-        }
-        else if (selected == "Стандартная JavaScript")
-        {
-            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("JavaScript");
-        }
         else if (selected == "Стандартная HTML")
         {
             CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("HTML");
@@ -2277,37 +2261,6 @@ public partial class MainWindow : Window
         {
             CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("XML");
         }
-        else if (selected == "Стандартная CSS")
-        {
-            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("CSS");
-        }
-        else if (selected == "Стандартная PHP")
-        {
-            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("PHP");
-        }
-
-        else if (selected == "Стандартная PowerShell")
-        {
-            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("PowerShell");
-        }
-        else if (selected == "Стандартная SQL")
-        {
-            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("SQL");
-        }
-        else if (selected == "Стандартная (VB")
-        {
-            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("VB");
-        }
-        else if (selected == "Стандартная ASP/XHTML")
-        {
-            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("ASP/XHTML");
-        }
-        else if (selected == "Стандартная Patch")
-        {
-            CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("Patch");
-        }
-
-
         else
         {
             CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
@@ -2446,17 +2399,8 @@ public partial class MainWindow : Window
                 SyntaxHighlightingComboBox?.Items.Add("Стандартная C#");
                 SyntaxHighlightingComboBox?.Items.Add("Стандартная C++");
                 SyntaxHighlightingComboBox?.Items.Add("Стандартная Python");
-                SyntaxHighlightingComboBox?.Items.Add("Стандартная Java");
-                SyntaxHighlightingComboBox?.Items.Add("Стандартная JavaScript");
                 SyntaxHighlightingComboBox?.Items.Add("Стандартная HTML");
                 SyntaxHighlightingComboBox?.Items.Add("Стандартная XML");
-                SyntaxHighlightingComboBox?.Items.Add("Стандартная CSS");
-                SyntaxHighlightingComboBox?.Items.Add("Стандартная PHP");
-                SyntaxHighlightingComboBox?.Items.Add("Стандартная PowerShell");
-                SyntaxHighlightingComboBox?.Items.Add("Стандартная SQL");
-                SyntaxHighlightingComboBox?.Items.Add("Стандартная VB");
-                SyntaxHighlightingComboBox?.Items.Add("Стандартная ASP/XHTML");
-                SyntaxHighlightingComboBox?.Items.Add("Стандартная Patch");
             }
 
             // Restore selection or set default
