@@ -602,6 +602,19 @@
                         <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
                         <Button
+                            Click="RunScript_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Запустить скрипт">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource SuccessBrush}"
+                                Kind="Play" />
+                        </Button>
+
+                        <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
+                        <Button
                             Click="FormatCode_Click"
                             Style="{StaticResource IconButton}"
                             ToolTip="Форматировать код">
@@ -898,6 +911,9 @@
                         <RowDefinition Height="0" />
                         <RowDefinition Height="0" />
                         <RowDefinition Height="0" />
+                        <RowDefinition Height="0" />
+                        <RowDefinition Height="0" />
+                        <RowDefinition Height="0" />
                     </Grid.RowDefinitions>
 
                     <TabControl
@@ -1051,6 +1067,65 @@
                             </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <!--  Output Panel Header  -->
+                    <Grid
+                        x:Name="OutputPanelHeader"
+                        Grid.Row="5"
+                        Background="{DynamicResource SidePanelBackground}"
+                        Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="10,2" Orientation="Horizontal">
+                            <materialIcons:MaterialIcon
+                                Width="16"
+                                Height="16"
+                                Margin="0,0,5,0"
+                                Foreground="{DynamicResource SuccessBrush}"
+                                Kind="PlayCircle" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Text="Результат выполнения" />
+                        </StackPanel>
+                        <Button
+                            x:Name="CloseOutputPanelButton"
+                            Grid.Column="1"
+                            Click="CloseOutputPanelButton_Click"
+                            Foreground="{DynamicResource DictTextPrimary}"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Закрыть">
+                            <materialIcons:MaterialIcon
+                                Width="14"
+                                Height="14"
+                                Kind="Close" />
+                        </Button>
+                    </Grid>
+
+                    <!--  Output Panel Content  -->
+                    <Border
+                        x:Name="OutputPanelContent"
+                        Grid.Row="6"
+                        Background="{DynamicResource SurfaceBackground}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="0,1,0,0"
+                        Visibility="Collapsed">
+                        <TextBox
+                            x:Name="OutputTextBox"
+                            Margin="8"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            FontFamily="Cascadia Mono"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            IsReadOnly="True"
+                            TextWrapping="Wrap"
+                            VerticalScrollBarVisibility="Auto" />
+                    </Border>
                 </Grid>
 
                 <!--  Bottom Bar: Tags and Description Toggle  -->

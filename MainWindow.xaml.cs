@@ -101,6 +101,7 @@ public partial class MainWindow : Window
 
     private readonly RoslynCompletionService _roslynCompletionService;
     private readonly BslCompletionService _bslCompletionService = new();
+    private readonly BslExecutionService _bslExecutionService = new();
     private readonly PythonCompletionService _pythonCompletionService = new();
     private readonly BslSignatureHelpService _bslSignatureHelpService = new();
 
@@ -4553,6 +4554,69 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     {
         var trimmed = line.Trim();
         return trimmed.StartsWith("#") || trimmed.StartsWith("\"\"\"") || trimmed.StartsWith("'''");
+    }
+
+    private async void RunScript_Click(object sender, RoutedEventArgs e)
+    {
+        var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+        if (syntax == null || !syntax.Contains("1C"))
+        {
+            _snackbar.Show(CodeTextBox, "Запуск доступен только для BSL/1C", NotificationType.Warning, 2);
+            return;
+        }
+
+        var code = CodeTextBox.Text;
+        if (string.IsNullOrWhiteSpace(code)) return;
+
+        ShowOutputPanel("Выполнение...");
+
+        try
+        {
+            var result = await _bslExecutionService.ExecuteAsync(code);
+
+            if (result.Success)
+            {
+                if (string.IsNullOrEmpty(result.Output))
+                    ShowOutputPanel("Скрипт выполнен успешно (нет вывода)");
+                else
+                    ShowOutputPanel(result.Output);
+            }
+            else
+            {
+                ShowOutputPanel($"Ошибка: {result.Error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowOutputPanel($"Ошибка: {ex.Message}");
+        }
+    }
+
+    private void CloseOutputPanelButton_Click(object sender, RoutedEventArgs e)
+    {
+        OutputPanelHeader.Visibility = Visibility.Collapsed;
+        OutputPanelContent.Visibility = Visibility.Collapsed;
+
+        var parentGrid = OutputPanelHeader.Parent as Grid;
+        if (parentGrid != null && parentGrid.RowDefinitions.Count > 6)
+        {
+            parentGrid.RowDefinitions[5].Height = new GridLength(0);
+            parentGrid.RowDefinitions[6].Height = new GridLength(0);
+        }
+    }
+
+    private void ShowOutputPanel(string text)
+    {
+        OutputTextBox.Text = text;
+        OutputPanelHeader.Visibility = Visibility.Visible;
+        OutputPanelContent.Visibility = Visibility.Visible;
+
+        var parentGrid = OutputPanelHeader.Parent as Grid;
+        if (parentGrid != null && parentGrid.RowDefinitions.Count > 6)
+        {
+            parentGrid.RowDefinitions[5].Height = GridLength.Auto;
+            parentGrid.RowDefinitions[6].Height = GridLength.Auto;
+        }
     }
 
     private void Format1CCode()
