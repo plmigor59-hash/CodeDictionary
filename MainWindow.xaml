@@ -603,6 +603,7 @@
                         <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
                         <Button
+                            x:Name="RunScriptButton"
                             Click="RunScript_Click"
                             Style="{StaticResource IconButton}"
                             ToolTip="Запустить скрипт">
@@ -623,7 +624,7 @@
                             <materialIcons:MaterialIcon
                                 Width="18"
                                 Height="18"
-                                Foreground="{DynamicResource AccentBrush}"
+                                Foreground="{DynamicResource WarningBrush}"
                                 Kind="Console" />
                         </ToggleButton>
 
@@ -721,13 +722,14 @@
                             x:Name="AutoCompletionToggle"
                             IsChecked="True"
                             Click="AutoCompletionToggle_Click"
+                           
                             Style="{StaticResource IconToggleButton}"
                             ToolTip="Автоподбор и подсветка синтаксиса">
                             <materialIcons:MaterialIcon
                                 Width="18"
                                 Height="18"
-                                Foreground="{DynamicResource DictAccent}"
-                                Background="{DynamicResource DictCardBackground}"
+                                Foreground="{DynamicResource WarningBrush}"
+                              
                                 Kind="AutoFix" />
                         </ToggleButton>
 
@@ -1241,7 +1243,8 @@
                         x:Name="TerminalPanelContent"
                         Grid.Row="10"
                         Background="{DynamicResource SurfaceBackground}"
-                        Visibility="Collapsed">
+                        Visibility="Collapsed"
+                        MouseDown="TerminalPanelContent_MouseDown">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
@@ -1258,7 +1261,8 @@
                             VerticalScrollBarVisibility="Auto" />
                         <Border
                             Grid.Row="1"
-                            Margin="8,0,8,8"
+                            Height="36"
+                            Margin="8,4,8,8"
                             Background="{DynamicResource WindowBackground}"
                             BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="1"
@@ -1270,21 +1274,24 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock
                                     Grid.Column="0"
-                                    Margin="6,0,0,0"
+                                    Margin="8,0,0,0"
                                     VerticalAlignment="Center"
                                     FontFamily="Cascadia Mono"
-                                    FontSize="12"
+                                    FontSize="16"
                                     Foreground="{DynamicResource SuccessBrush}"
                                     Text="❯" />
                                 <TextBox
                                     x:Name="TerminalInputTextBox"
                                     Grid.Column="1"
-                                    Margin="4,2"
+                                    Margin="6,2"
                                     Background="Transparent"
                                     BorderThickness="0"
                                     FontFamily="Cascadia Mono"
-                                    FontSize="12"
+                                    FontSize="16"
+                                    VerticalContentAlignment="Center"
                                     Foreground="{DynamicResource TextPrimaryBrush}"
+                                    CaretBrush="{DynamicResource AccentBrush}"
+                                    ToolTip="Введите команду и нажмите Enter"
                                     KeyDown="TerminalInputTextBox_KeyDown" />
                             </Grid>
                         </Border>

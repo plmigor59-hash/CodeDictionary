@@ -110,6 +110,7 @@ public partial class MainWindow : Window
     private readonly RoslynCompletionService _roslynCompletionService;
     private readonly BslCompletionService _bslCompletionService = new();
     private readonly BslExecutionService _bslExecutionService = new();
+    private readonly PythonExecutionService _pythonExecutionService = new();
     private readonly PythonCompletionService _pythonCompletionService = new();
     private readonly BslSignatureHelpService _bslSignatureHelpService = new();
 
@@ -891,6 +892,7 @@ public partial class MainWindow : Window
 
 
     {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         _viewModel = new MainViewModel();
         DataContext = _viewModel;
 
@@ -2377,6 +2379,7 @@ public partial class MainWindow : Window
 
 
         UpdateCodeEditorColors(selected);
+        RunScriptButton.IsEnabled = selected != null && (selected.Contains("1C") || selected.Contains("Python"));
     }
 
     private void SyntaxHighlightingComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -4695,9 +4698,9 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     private async void RunScript_Click(object sender, RoutedEventArgs e)
     {
         var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
-        if (syntax == null || !syntax.Contains("1C"))
+        if (syntax == null || (!syntax.Contains("1C") && !syntax.Contains("Python")))
         {
-            _snackbar.Show(CodeTextBox, "Запуск доступен только для BSL/1C", NotificationType.Warning, 2);
+            _snackbar.Show(CodeTextBox, "Запуск доступен только для BSL/1C и Python", NotificationType.Warning, 2);
             return;
         }
 
@@ -4708,18 +4711,37 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
 
         try
         {
-            var result = await _bslExecutionService.ExecuteAsync(code);
-
-            if (result.Success)
+            if (syntax.Contains("1C"))
             {
-                if (string.IsNullOrEmpty(result.Output))
-                    ShowOutputPanel("Скрипт выполнен успешно (нет вывода)");
+                var result = await _bslExecutionService.ExecuteAsync(code);
+
+                if (result.Success)
+                {
+                    if (string.IsNullOrEmpty(result.Output))
+                        ShowOutputPanel("Скрипт выполнен успешно (нет вывода)");
+                    else
+                        ShowOutputPanel(result.Output);
+                }
                 else
-                    ShowOutputPanel(result.Output);
+                {
+                    ShowOutputPanel($"Ошибка: {result.Error}");
+                }
             }
             else
             {
-                ShowOutputPanel($"Ошибка: {result.Error}");
+                var result = await _pythonExecutionService.ExecuteAsync(code);
+
+                if (result.Success)
+                {
+                    if (string.IsNullOrEmpty(result.Output))
+                        ShowOutputPanel("Скрипт выполнен успешно (нет вывода)");
+                    else
+                        ShowOutputPanel(result.Output);
+                }
+                else
+                {
+                    ShowOutputPanel($"Ошибка: {result.Error}");
+                }
             }
         }
         catch (Exception ex)
@@ -4798,67 +4820,73 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         e.Handled = true;
     }
 
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+    static extern uint GetOEMCP();
+
     private void StartTerminalProcess()
     {
         if (_terminalProcess != null && !_terminalProcess.HasExited)
             return;
 
+        var enc = Encoding.GetEncoding((int)GetOEMCP());
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = "cmd.exe",
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+            StandardOutputEncoding = enc,
+            StandardErrorEncoding = enc
+        };
+
         _terminalProcess = new Process
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8
-            },
+            StartInfo = psi,
             EnableRaisingEvents = true
         };
 
-        _terminalProcess.OutputDataReceived += (s, e) =>
-        {
-            if (e.Data != null)
-            {
-                _terminalOutputBuffer.AppendLine(e.Data);
-                Dispatcher.BeginInvoke(() =>
-                {
-                    TerminalOutputTextBox.AppendText(e.Data + Environment.NewLine);
-                    TerminalOutputTextBox.ScrollToEnd();
-                });
-            }
-        };
+        _terminalProcess.OutputDataReceived += OnTerminalOutput;
+        _terminalProcess.ErrorDataReceived += OnTerminalOutput;
+        _terminalProcess.Exited += OnTerminalExited;
 
-        _terminalProcess.ErrorDataReceived += (s, e) =>
+        try
         {
-            if (e.Data != null)
-            {
-                _terminalOutputBuffer.AppendLine(e.Data);
-                Dispatcher.BeginInvoke(() =>
-                {
-                    TerminalOutputTextBox.AppendText(e.Data + Environment.NewLine);
-                    TerminalOutputTextBox.ScrollToEnd();
-                });
-            }
-        };
-
-        _terminalProcess.Exited += (s, e) =>
+            _terminalProcess.Start();
+            _terminalProcess.BeginOutputReadLine();
+            _terminalProcess.BeginErrorReadLine();
+        }
+        catch (Exception ex)
         {
-            Dispatcher.BeginInvoke(() =>
-            {
-                TerminalOutputTextBox.AppendText(Environment.NewLine + "--- Процесс завершён ---" + Environment.NewLine);
-                TerminalOutputTextBox.ScrollToEnd();
-                _terminalProcess?.Dispose();
-                _terminalProcess = null;
-            });
-        };
+            TerminalOutputTextBox.AppendText("Ошибка запуска cmd.exe: " + ex.Message + Environment.NewLine);
+            TerminalOutputTextBox.ScrollToEnd();
+            _terminalProcess?.Dispose();
+            _terminalProcess = null;
+        }
+    }
 
-        _terminalProcess.Start();
-        _terminalProcess.BeginOutputReadLine();
-        _terminalProcess.BeginErrorReadLine();
+    private void OnTerminalOutput(object? sender, DataReceivedEventArgs e)
+    {
+        if (e.Data == null) return;
+
+        Dispatcher.BeginInvoke(() =>
+        {
+            TerminalOutputTextBox.AppendText(e.Data + Environment.NewLine);
+            TerminalOutputTextBox.ScrollToEnd();
+        });
+    }
+
+    private void OnTerminalExited(object? sender, EventArgs e)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            TerminalOutputTextBox.AppendText(Environment.NewLine + "--- Процесс завершён ---" + Environment.NewLine);
+            TerminalOutputTextBox.ScrollToEnd();
+            _terminalProcess?.Dispose();
+            _terminalProcess = null;
+        });
     }
 
     private void StopTerminalProcess()
@@ -4889,6 +4917,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         else
         {
             ShowTerminalPanel();
+            Activate();
+            TerminalPanelContent.UpdateLayout();
+            TerminalInputTextBox.Focus();
+            Keyboard.Focus(TerminalInputTextBox);
         }
     }
 
@@ -4907,7 +4939,13 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             parentGrid.RowDefinitions[10].Height = new GridLength(200);
         }
 
-        TerminalInputTextBox.Focus();
+        if (TerminalOutputTextBox.Text.Length == 0)
+        {
+            TerminalOutputTextBox.AppendText("--- Терминал (cmd.exe) ---" + Environment.NewLine);
+            TerminalOutputTextBox.AppendText("Введите команду в нижнем поле и нажмите Enter." + Environment.NewLine);
+            TerminalOutputTextBox.AppendText("Пример: dir, echo hello, cd .." + Environment.NewLine + Environment.NewLine);
+        }
+
         StartTerminalProcess();
     }
 
@@ -4936,6 +4974,12 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     {
         TerminalOutputTextBox.Clear();
         _terminalOutputBuffer.Clear();
+    }
+
+    private void TerminalPanelContent_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        TerminalInputTextBox.Focus();
+        Keyboard.Focus(TerminalInputTextBox);
     }
 
     private void TerminalInputTextBox_KeyDown(object sender, KeyEventArgs e)
