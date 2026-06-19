@@ -81,6 +81,7 @@ public partial class MainWindow : Window
     /// /Syntax
     private readonly ICodeAnalysisService _bslAnalyzer = new BslCodeAnalyzer();
     private readonly ICodeAnalysisService _csharpAnalyzer;
+    private readonly ICodeAnalysisService _pythonAnalyzer = new PythonCodeAnalyzer();
     private ToolTip? _hoverToolTip;
     private CompletionWindow? _completionWindow;
     private bool _autoCompletionEnabled = true;
@@ -4662,6 +4663,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         ICodeAnalysisService? analyzer = null;
         if (selectedSyntax.Contains("1C")) analyzer = _bslAnalyzer;
         else if (selectedSyntax.Contains("C#")) analyzer = _csharpAnalyzer;
+        else if (selectedSyntax.Contains("Python")) analyzer = _pythonAnalyzer;
 
         if (analyzer == null) return;
 
