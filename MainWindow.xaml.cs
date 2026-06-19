@@ -1,4 +1,4 @@
-﻿using CodeDictionary.Analysis;
+using CodeDictionary.Analysis;
 using CodeDictionary.Models;
 using CodeDictionary.Properties;
 using CodeDictionary.Services;
@@ -100,6 +100,7 @@ public partial class MainWindow : Window
 
     private readonly RoslynCompletionService _roslynCompletionService;
     private readonly BslCompletionService _bslCompletionService = new();
+    private readonly PythonCompletionService _pythonCompletionService = new();
     private readonly BslSignatureHelpService _bslSignatureHelpService = new();
 
     private HashSet<string> _expandedCategories = new();
@@ -253,6 +254,12 @@ public partial class MainWindow : Window
                 e.Handled = true;
                 ShowCompletion1C(GetWordAtOffset(CodeTextBox.CaretOffset), true);
             }
+
+            if (syntax != null && syntax.Contains("Python"))
+            {
+                e.Handled = true;
+                ShowCompletionPython(GetWordAtOffset(CodeTextBox.CaretOffset), true);
+            }
             return;
         }
 
@@ -349,7 +356,7 @@ public partial class MainWindow : Window
 
         if (e.Text.Length > 0 && (char.IsLetter(e.Text[0]) || e.Text[0] == '_'))
         {
-            if (syntax != null && syntax.Contains("C#"))
+            if (syntax != null && (syntax.Contains("C#") || syntax.Contains("Python")))
             {
                 _completionDebounceTimer.Stop();
                 _completionDebounceTimer.Start();
@@ -468,11 +475,85 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ShowCompletionPython(string enteredText, bool controlSpace)
+    {
+        var code = CodeTextBox.Text;
+        var position = CodeTextBox.CaretOffset;
+
+        if (IsCursorInsideStringOrComment(code, position))
+            return;
+
+        string filterWord = GetWordAtOffset(position);
+
+        var allData = _pythonCompletionService.GetCompletions(filterWord);
+
+        if (allData.Any())
+        {
+            _completionWindow?.Close();
+
+            // Calculate start offset of the word to replace
+            int wordStart = position;
+            while (wordStart > 0 && (char.IsLetterOrDigit(code[wordStart - 1]) || code[wordStart - 1] == '_'))
+                wordStart--;
+
+            _completionWindow = new CompletionWindow(CodeTextBox.TextArea)
+            {
+                Width = 400,
+                WindowStyle = WindowStyle.None,
+                ResizeMode = ResizeMode.NoResize,
+                BorderThickness = new Thickness(1),
+                StartOffset = wordStart
+            };
+
+            var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
+            var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
+            var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
+
+            _completionWindow.Background = background;
+            _completionWindow.Foreground = foreground;
+            _completionWindow.BorderBrush = border;
+
+            if (_completionWindow.CompletionList != null)
+            {
+                _completionWindow.CompletionList.Background = background;
+                _completionWindow.CompletionList.Foreground = foreground;
+            }
+
+            _completionWindow.Closed += delegate { _completionWindow = null; };
+
+            var data = _completionWindow.CompletionList.CompletionData;
+            foreach (var item in allData.OrderBy(d => d.Text))
+            {
+                data.Add(item);
+            }
+
+            _completionWindow.Show();
+
+            if (!string.IsNullOrEmpty(filterWord))
+            {
+                _completionWindow.CompletionList.SelectItem(filterWord);
+            }
+        }
+        else
+        {
+            _completionWindow?.Close();
+            _completionWindow = null;
+        }
+    }
+
 
     private void CompletionDebounceTimer_Tick(object? sender, EventArgs e)
     {
         _completionDebounceTimer.Stop();
-        ShowCompletion();
+        var syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString();
+        if (syntax != null && syntax.Contains("C#"))
+        {
+            ShowCompletion();
+        }
+        else if (syntax != null && syntax.Contains("Python"))
+        {
+            ShowCompletionPython(GetWordAtOffset(CodeTextBox.CaretOffset), false);
+        }
     }
 
     private void Caret_PositionChanged(object? sender, EventArgs e)
@@ -705,8 +786,6 @@ public partial class MainWindow : Window
             WindowStyle = WindowStyle.None,
             ResizeMode = ResizeMode.NoResize,
             BorderThickness = new Thickness(1),
-
-
             StartOffset = wordStart,
             Width = 500
         };
@@ -4301,6 +4380,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         {
             Format1CCode();
         }
+        else if (selectedSyntax.Contains("Python"))
+        {
+            FormatPythonCode();
+        }
         else
         {
             _snackbar.Show(CodeTextBox, "Форматирование для данного синтаксиса не поддерживается", NotificationType.Warning, 2);
@@ -4453,6 +4536,78 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         {
             doc.Replace(selStart, selLength, text[blockStart.Length..^blockEnd.Length]);
         }
+    }
+
+    private void FormatPythonCode()
+    {
+        var text = CodeTextBox.Text;
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+        var newLines = new List<string>();
+        int indent = 0;
+        bool prevLineIsBlank = false;
+
+        var blockKeywords = new[]
+        {
+            "def", "class", "if", "elif", "else", "for", "while", "try",
+            "except", "finally", "with", "async def"
+        };
+        var deindentKeywords = new[] { "elif", "else", "except", "finally" };
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.Trim();
+
+            if (string.IsNullOrWhiteSpace(trimmed))
+            {
+                if (!prevLineIsBlank)
+                {
+                    newLines.Add("");
+                    prevLineIsBlank = true;
+                }
+                continue;
+            }
+
+            prevLineIsBlank = false;
+
+            var lowerTrimmed = trimmed.ToLower();
+
+            bool startsWithDeindent = deindentKeywords.Any(k =>
+                lowerTrimmed.StartsWith(k) &&
+                (lowerTrimmed.Length == k.Length || !char.IsLetterOrDigit(lowerTrimmed[k.Length])));
+
+            bool startsWithBlockKeyword = blockKeywords.Any(k =>
+                lowerTrimmed.StartsWith(k) &&
+                (lowerTrimmed.Length == k.Length || !char.IsLetterOrDigit(lowerTrimmed[k.Length])));
+
+            bool isSimpleElseOrElif = lowerTrimmed == "else" || lowerTrimmed.StartsWith("elif");
+
+            if (startsWithDeindent)
+            {
+                indent = Math.Max(0, indent - 1);
+            }
+
+            newLines.Add(new string(' ', indent * 4) + trimmed);
+
+            if (trimmed.EndsWith(":") && !isCommentOrStringLine(trimmed))
+            {
+                indent++;
+            }
+            else if (lowerTrimmed.StartsWith("pass") && indent > 0)
+            {
+                // pass doesn't increase indent
+            }
+        }
+
+        CodeTextBox.Text = string.Join(Environment.NewLine, newLines);
+        _snackbar.Show(CodeTextBox, "Код Python отформатирован", NotificationType.Success, 1.5);
+    }
+
+    private static bool isCommentOrStringLine(string line)
+    {
+        var trimmed = line.Trim();
+        return trimmed.StartsWith("#") || trimmed.StartsWith("\"\"\"") || trimmed.StartsWith("'''");
     }
 
     private void Format1CCode()

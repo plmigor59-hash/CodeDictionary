@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
@@ -30,42 +32,58 @@ namespace CodeDictionary.Services
 
             var references = new List<MetadataReference>();
 
-            var assemblies = new[]
+            // В .NET Core / .NET 5+ при публикации в один файл Assembly.Location возвращает пустую строку.
+            // Использование TRUSTED_PLATFORM_ASSEMBLIES гарантирует получение путей ко всем системным сборкам.
+            if (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") is string trustedAssembliesPaths)
             {
-                typeof(object).Assembly,
-                typeof(System.Console).Assembly,
-                typeof(System.Linq.Enumerable).Assembly,
-                typeof(System.Collections.Generic.List<>).Assembly,
-                typeof(System.Text.StringBuilder).Assembly,
-                typeof(System.Threading.Tasks.Task).Assembly,
-                typeof(System.Net.Http.HttpClient).Assembly,
-                typeof(System.IO.File).Assembly,
-                typeof(System.Text.RegularExpressions.Regex).Assembly,
-                typeof(System.Linq.Expressions.Expression).Assembly,
-                typeof(System.Collections.Concurrent.ConcurrentDictionary<,>).Assembly,
-                typeof(System.ComponentModel.Component).Assembly,
-                typeof(System.IO.Compression.ZipArchive).Assembly,
-                typeof(System.Net.WebClient).Assembly,
-                typeof(System.Xml.XmlDocument).Assembly,
-            };
-
-            foreach (var assembly in assemblies)
-            {
-                if (!string.IsNullOrEmpty(assembly.Location))
-                    references.Add(MetadataReference.CreateFromFile(assembly.Location));
-            }
-
-            var coreAssemblies = new[] { "System.Runtime", "System.Runtime.Extensions", "mscorlib",
-                "System.Collections", "System.Console", "System.Linq", "System.Text.RegularExpressions",
-                "System.Threading.Tasks", "System.Net.Http", "System.IO", "System.Xml" };
-            var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach (var name in coreAssemblies)
-            {
-                var assembly = loadedAssemblies.FirstOrDefault(a => a.GetName().Name == name);
-                if (assembly != null && !string.IsNullOrEmpty(assembly.Location))
+                var paths = trustedAssembliesPaths.Split(Path.PathSeparator);
+                foreach (var path in paths)
                 {
-                    if (!references.Any(r => r.Display != null && r.Display.Contains(name)))
+                    if (File.Exists(path))
+                    {
+                        references.Add(MetadataReference.CreateFromFile(path));
+                    }
+                }
+            }
+            else
+            {
+                var assemblies = new[]
+                {
+                    typeof(object).Assembly,
+                    typeof(System.Console).Assembly,
+                    typeof(System.Linq.Enumerable).Assembly,
+                    typeof(System.Collections.Generic.List<>).Assembly,
+                    typeof(System.Text.StringBuilder).Assembly,
+                    typeof(System.Threading.Tasks.Task).Assembly,
+                    typeof(System.Net.Http.HttpClient).Assembly,
+                    typeof(System.IO.File).Assembly,
+                    typeof(System.Text.RegularExpressions.Regex).Assembly,
+                    typeof(System.Linq.Expressions.Expression).Assembly,
+                    typeof(System.Collections.Concurrent.ConcurrentDictionary<,>).Assembly,
+                    typeof(System.ComponentModel.Component).Assembly,
+                    typeof(System.IO.Compression.ZipArchive).Assembly,
+                    typeof(System.Net.WebClient).Assembly,
+                    typeof(System.Xml.XmlDocument).Assembly,
+                };
+
+                foreach (var assembly in assemblies)
+                {
+                    if (!string.IsNullOrEmpty(assembly.Location))
                         references.Add(MetadataReference.CreateFromFile(assembly.Location));
+                }
+
+                var coreAssemblies = new[] { "System.Runtime", "System.Runtime.Extensions", "mscorlib",
+                    "System.Collections", "System.Console", "System.Linq", "System.Text.RegularExpressions",
+                    "System.Threading.Tasks", "System.Net.Http", "System.IO", "System.Xml" };
+                var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+                foreach (var name in coreAssemblies)
+                {
+                    var assembly = loadedAssemblies.FirstOrDefault(a => a.GetName().Name == name);
+                    if (assembly != null && !string.IsNullOrEmpty(assembly.Location))
+                    {
+                        if (!references.Any(r => r.Display != null && r.Display.Contains(name)))
+                            references.Add(MetadataReference.CreateFromFile(assembly.Location));
+                    }
                 }
             }
 
@@ -101,7 +119,7 @@ namespace CodeDictionary.Services
             if (completionService == null) return Enumerable.Empty<CompletionItem>();
 
             var completionList = await completionService.GetCompletionsAsync(_currentDocument, position + OffsetShift, cancellationToken: cancellationToken);
-            return completionList?.Items ?? Enumerable.Empty<CompletionItem>();
+            return completionList?.ItemsList ?? Enumerable.Empty<CompletionItem>();
         }
 
         public async Task<string> GetDescriptionAsync(CompletionItem item, CancellationToken cancellationToken = default)

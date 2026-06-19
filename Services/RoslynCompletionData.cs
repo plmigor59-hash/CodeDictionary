@@ -84,10 +84,10 @@ namespace CodeDictionary.Services
             _signature = await _service.GetMethodSignatureAsync(_item, _position);
             if (_textBlock != null)
             {
-                _textBlock.Dispatcher.BeginInvoke(new Action(() =>
+                await _textBlock.Dispatcher.InvokeAsync(() =>
                 {
                     _textBlock.Text = _item.DisplayText + _signature;
-                }));
+                });
             }
         }
 
@@ -118,10 +118,10 @@ namespace CodeDictionary.Services
             _description = await _service.GetDescriptionAsync(_item);
             if (_descriptionTextBlock != null)
             {
-                _descriptionTextBlock.Dispatcher.BeginInvoke(new Action(() =>
+                await _descriptionTextBlock.Dispatcher.InvokeAsync(() =>
                 {
                     _descriptionTextBlock.Text = _description;
-                }));
+                });
             }
         }
 
@@ -136,7 +136,7 @@ namespace CodeDictionary.Services
             {
                 string iconName = TagToIconMap.GetValueOrDefault(tag, "Help");
                 if (!Enum.TryParse<Material.Icons.MaterialIconKind>(iconName, true, out var kind))
-                    return null;
+                    return null!;
 
                 var icon = new Material.Icons.WPF.MaterialIcon
                 {
