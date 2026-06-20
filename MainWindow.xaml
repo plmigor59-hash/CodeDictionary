@@ -1242,7 +1242,7 @@
                     <Grid
                         x:Name="TerminalPanelContent"
                         Grid.Row="10"
-                        Background="{DynamicResource SurfaceBackground}"
+                        Background="{DynamicResource DictCardBackground}"
                         Visibility="Collapsed"
                         MouseDown="TerminalPanelContent_MouseDown">
                         <Grid.RowDefinitions>
@@ -1256,7 +1256,7 @@
                             BorderThickness="0"
                             FontFamily="Cascadia Mono"
                             FontSize="12"
-                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            Foreground="{DynamicResource DictTextPrimary}"
                             IsReadOnly="True"
                             VerticalScrollBarVisibility="Auto" />
                         <Border

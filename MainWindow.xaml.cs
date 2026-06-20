@@ -1837,7 +1837,7 @@ public partial class MainWindow : Window
 
         // Настройки диалога
         openFileDialog.Title = "Выберите текстовый файл";
-        openFileDialog.Filter = "Текстовые файлы (*.txt;*.xshd;*.bsl;*.html;*.cs;*.xaml;*.json;*.xml)|*.txt;*.xshd;*.bsl;*.html;*cs;*.xaml;*.json;*.xml|Все файлы (*.*)|*.*";
+        openFileDialog.Filter = "Текстовые файлы (*.os;*.txt;*.xshd;*.bsl;*.html;*.cs;*.xaml;*.json;*.xml)|*.os;*.txt;*.xshd;*.bsl;*.html;*cs;*.xaml;*.json;*.xml|Все файлы (*.*)|*.*";
         openFileDialog.FilterIndex = 1;
         openFileDialog.Multiselect = true;
 
@@ -4939,12 +4939,12 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             parentGrid.RowDefinitions[10].Height = new GridLength(200);
         }
 
-        if (TerminalOutputTextBox.Text.Length == 0)
-        {
-            TerminalOutputTextBox.AppendText("--- Терминал (cmd.exe) ---" + Environment.NewLine);
-            TerminalOutputTextBox.AppendText("Введите команду в нижнем поле и нажмите Enter." + Environment.NewLine);
-            TerminalOutputTextBox.AppendText("Пример: dir, echo hello, cd .." + Environment.NewLine + Environment.NewLine);
-        }
+        //if (TerminalOutputTextBox.Text.Length == 0)
+        //{
+        //    TerminalOutputTextBox.AppendText("--- Терминал (cmd.exe) ---" + Environment.NewLine);
+        //    TerminalOutputTextBox.AppendText("Введите команду в нижнем поле и нажмите Enter." + Environment.NewLine);
+        //    TerminalOutputTextBox.AppendText("Пример: dir, echo hello, cd .." + Environment.NewLine + Environment.NewLine);
+        //}
 
         StartTerminalProcess();
     }

@@ -1,9 +1,12 @@
+using OneScript.Execution;
 using OneScript.Language.Sources;
+using ScriptEngine;
 using OneScript.Sources;
 using OneScript.StandardLibrary;
 using ScriptEngine.HostedScript;
 using ScriptEngine.HostedScript.Extensions;
 using ScriptEngine.Hosting;
+using System.IO;
 using System.Text;
 
 namespace CodeDictionary.SyntaxChecking
@@ -68,7 +71,39 @@ namespace CodeDictionary.SyntaxChecking
                 .SetupEnvironment(env => env.AddStandardLibrary());
 
             var scriptingEngine = builder.Build();
-            return new HostedScriptEngine(scriptingEngine);
+            var engine = new HostedScriptEngine(scriptingEngine);
+
+            var libPath = FindOneScriptLibPath();
+            if (libPath != null)
+            {
+                var resolver = engine.Services.Resolve<IDependencyResolver>() as FileSystemDependencyResolver;
+                if (resolver != null)
+                {
+                    var path = Path.GetFullPath(libPath);
+                    resolver.LibraryRoot = path;
+                    if (!resolver.SearchDirectories.Contains(path, StringComparer.OrdinalIgnoreCase))
+                        resolver.SearchDirectories.Add(path);
+                }
+            }
+
+            return engine;
+        }
+
+        private static string? FindOneScriptLibPath()
+        {
+            var localLib = Path.Combine(AppContext.BaseDirectory, "lib");
+            if (Directory.Exists(localLib))
+                return localLib;
+
+            var envScript = Environment.GetEnvironmentVariable("OSCRIPT");
+            if (!string.IsNullOrEmpty(envScript))
+            {
+                var envLib = Path.Combine(envScript, "lib");
+                if (Directory.Exists(envLib))
+                    return envLib;
+            }
+
+            return null;
         }
 
         private class BslHostApplication : IHostApplication
