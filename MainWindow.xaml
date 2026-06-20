@@ -1159,11 +1159,68 @@
                         Background="{DynamicResource SidePanelBackground}"
                         Visibility="Collapsed">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel Margin="10,2" Orientation="Horizontal">
+                        <Button
+                            x:Name="ClearOutputPanelButton"
+                            Grid.Column="0"
+                            Click="ClearOutputPanelButton_Click"
+                            Foreground="{DynamicResource DictTextPrimary}"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Очистить">
+                            <materialIcons:MaterialIcon
+                                Width="14"
+                                Height="14"
+                                Kind="Delete" />
+                        </Button>
+                        <Button
+                            x:Name="ContinueDebugButton"
+                            Grid.Column="1"
+                            Width="22"
+                            Height="22"
+                            Margin="2,0"
+                            Click="ContinueDebugButton_Click"
+                            Foreground="{DynamicResource SuccessBrush}"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Продолжить (F5)">
+                            <materialIcons:MaterialIcon
+                                Width="16"
+                                Height="16"
+                                Kind="PlayArrow" />
+                        </Button>
+                        <Button
+                            x:Name="StepOverButton"
+                            Grid.Column="2"
+                            Width="22"
+                            Height="22"
+                            Margin="2,0"
+                            Click="StepOverButton_Click"
+                            Foreground="{DynamicResource WarningBrush}"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Шаг с обходом (F10)"
+                            Visibility="Collapsed">
+                            <materialIcons:MaterialIcon
+                                Width="16"
+                                Height="16"
+                                Kind="DebugStepOver" />
+                        </Button>
+                        <Button
+                            x:Name="CloseOutputPanelButton"
+                            Grid.Column="3"
+                            Click="CloseOutputPanelButton_Click"
+                            Foreground="{DynamicResource DictTextPrimary}"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Закрыть">
+                            <materialIcons:MaterialIcon
+                                Width="14"
+                                Height="14"
+                                Kind="Close" />
+                        </Button>
+                        <StackPanel Grid.Column="4" Margin="10,2" HorizontalAlignment="Center" Orientation="Horizontal">
                             <materialIcons:MaterialIcon
                                 Width="16"
                                 Height="16"
@@ -1177,30 +1234,6 @@
                                 Foreground="{DynamicResource TextSecondaryBrush}"
                                 Text="Результат выполнения" />
                         </StackPanel>
-                        <Button
-                            x:Name="ClearOutputPanelButton"
-                            Grid.Column="1"
-                            Click="ClearOutputPanelButton_Click"
-                            Foreground="{DynamicResource DictTextPrimary}"
-                            Style="{StaticResource IconButton}"
-                            ToolTip="Очистить">
-                            <materialIcons:MaterialIcon
-                                Width="14"
-                                Height="14"
-                                Kind="Delete" />
-                        </Button>
-                        <Button
-                            x:Name="CloseOutputPanelButton"
-                            Grid.Column="2"
-                            Click="CloseOutputPanelButton_Click"
-                            Foreground="{DynamicResource DictTextPrimary}"
-                            Style="{StaticResource IconButton}"
-                            ToolTip="Закрыть">
-                            <materialIcons:MaterialIcon
-                                Width="14"
-                                Height="14"
-                                Kind="Close" />
-                        </Button>
                     </Grid>
 
                     <!--  Output Panel Splitter  -->
@@ -1224,17 +1257,76 @@
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="0,1,0,0"
                         Visibility="Collapsed">
-                        <TextBox
-                            x:Name="OutputTextBox"
-                            Margin="8"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            FontFamily="Cascadia Mono"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextPrimaryBrush}"
-                            IsReadOnly="True"
-                            TextWrapping="Wrap"
-                            VerticalScrollBarVisibility="Auto" />
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBox
+                                x:Name="OutputTextBox"
+                                Grid.Row="0"
+                                Margin="8"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontFamily="Cascadia Mono"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                IsReadOnly="True"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Auto" />
+                            <Border
+                                x:Name="WatchPanel"
+                                Grid.Row="1"
+                                Height="28"
+                                Padding="8,2"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="0,1,0,0"
+                                Background="{DynamicResource SidePanelBackground}"
+                                Visibility="Collapsed">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Смотреть:" />
+                                    <TextBox
+                                        x:Name="WatchTextBox"
+                                        Grid.Column="1"
+                                        Height="22"
+                                        VerticalContentAlignment="Center"
+                                        FontFamily="Cascadia Mono"
+                                        FontSize="11"
+                                        Background="{DynamicResource WindowBackground}"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        ToolTip="Введите имя переменной и нажмите Enter"
+                                        KeyDown="WatchTextBox_KeyDown" />
+                                    <Button
+                                        x:Name="WatchEvalButton"
+                                        Grid.Column="2"
+                                        Width="20"
+                                        Height="20"
+                                        Margin="4,0,0,0"
+                                        Click="WatchEvalButton_Click"
+                                        Style="{StaticResource IconButton}"
+                                        ToolTip="Вычислить">
+                                        <materialIcons:MaterialIcon
+                                            Width="14"
+                                            Height="14"
+                                            Foreground="{DynamicResource SuccessBrush}"
+                                            Kind="PlayArrow" />
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </Grid>
                     </Border>
 
                     <!--  Terminal Panel Header  -->

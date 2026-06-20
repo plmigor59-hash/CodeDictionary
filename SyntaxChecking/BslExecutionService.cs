@@ -5,6 +5,7 @@ using ScriptEngine;
 using ScriptEngine.HostedScript;
 using ScriptEngine.HostedScript.Extensions;
 using ScriptEngine.Hosting;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -12,7 +13,11 @@ namespace CodeDictionary.SyntaxChecking
 {
     public class BslExecutionService
     {
-        public async Task<BslExecutionResult> ExecuteAsync(string code, string[]? args = null, CancellationToken cancellationToken = default)
+        private BslDebugger? _currentDebugger;
+
+        public BslDebugger? GetCurrentDebugger() => _currentDebugger;
+
+        public async Task<BslExecutionResult> ExecuteAsync(string code, string[]? args = null, HashSet<int>? breakpoints = null, Action<BslDebugger>? onDebuggerReady = null, CancellationToken cancellationToken = default)
         {
             var result = new BslExecutionResult();
 
@@ -30,8 +35,15 @@ namespace CodeDictionary.SyntaxChecking
                     .FromSource(source)
                     .Build();
 
-                var engine = CreateEngine();
+                var (engine, debugger) = CreateEngine(breakpoints);
+                _currentDebugger = debugger;
                 var process = engine.CreateProcess(host, sourceCode);
+
+                if (debugger != null && breakpoints != null && breakpoints.Count > 0)
+                {
+                    debugger.SetBreakpoints("memory", breakpoints.Select(l => (l, (string)null!)).ToArray());
+                    onDebuggerReady?.Invoke(debugger);
+                }
 
                 var exitCode = await Task.Run(() => process.Start(), cancellationToken);
 
@@ -59,7 +71,7 @@ namespace CodeDictionary.SyntaxChecking
             return result;
         }
 
-        private static HostedScriptEngine CreateEngine()
+        private static (HostedScriptEngine engine, BslDebugger? debugger) CreateEngine(HashSet<int>? breakpoints)
         {
             var builder = DefaultEngineBuilder.Create()
                 .SetDefaultOptions()
@@ -68,6 +80,13 @@ namespace CodeDictionary.SyntaxChecking
                 .UseNativeRuntime()
                 .UseEventHandlers()
                 .SetupEnvironment(env => env.AddStandardLibrary());
+
+            BslDebugger? debugger = null;
+            if (breakpoints != null && breakpoints.Count > 0)
+            {
+                debugger = new BslDebugger();
+                builder.WithDebugger(debugger);
+            }
 
             var scriptingEngine = builder.Build();
             var engine = new HostedScriptEngine(scriptingEngine);
@@ -85,7 +104,7 @@ namespace CodeDictionary.SyntaxChecking
                 }
             }
 
-            return engine;
+            return (engine, debugger);
         }
 
         private static string? FindOneScriptLibPath()

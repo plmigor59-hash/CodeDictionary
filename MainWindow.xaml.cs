@@ -1,8 +1,9 @@
 using CodeDictionary.Analysis;
 using CodeDictionary.Models;
+using CodeDictionary.SyntaxChecking;
+using ScriptEngine.Machine;
 using CodeDictionary.Properties;
 using CodeDictionary.Services;
-using CodeDictionary.SyntaxChecking;
 using CodeDictionary.SyntaxChecking.Providers;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
@@ -113,6 +114,43 @@ public partial class MainWindow : Window
     private readonly PythonExecutionService _pythonExecutionService = new();
     private readonly PythonCompletionService _pythonCompletionService = new();
     private readonly BslSignatureHelpService _bslSignatureHelpService = new();
+
+    private readonly HashSet<int> _activeBreakpoints = new();
+    private readonly DebugLineHighlighter _debugLineHighlighter = new();
+    private BslDebugger? _currentDebugger;
+    private bool _isDebugPaused;
+
+    private void ContinueDebug()
+    {
+        if (_isDebugPaused && _currentDebugger != null)
+        {
+            _isDebugPaused = false;
+            if (IsBslSyntax)
+            {
+                ContinueDebugButton.Visibility = Visibility.Collapsed;
+                StepOverButton.Visibility = Visibility.Collapsed;
+                WatchPanel.Visibility = Visibility.Collapsed;
+            }
+            ShowOutputPanel("Выполнение...");
+            _currentDebugger.Resume();
+        }
+    }
+
+    private void DebugStepOver()
+    {
+        if (_isDebugPaused && _currentDebugger != null)
+        {
+            _currentDebugger.StepOver();
+            _isDebugPaused = false;
+            if (IsBslSyntax)
+            {
+                ContinueDebugButton.Visibility = Visibility.Collapsed;
+                StepOverButton.Visibility = Visibility.Collapsed;
+                WatchPanel.Visibility = Visibility.Collapsed;
+            }
+            ShowOutputPanel("Выполнение...");
+        }
+    }
 
     private HashSet<string> _expandedCategories = new();
 
@@ -1006,10 +1044,19 @@ public partial class MainWindow : Window
         CodeTextBox.TextArea.Caret.PositionChanged += Caret_PositionChanged;
 
 
+        // Debug line highlighter
+        CodeTextBox.TextArea.TextView.BackgroundRenderers.Add(_debugLineHighlighter);
+
+        // F9 toggle breakpoint, F5 continue
+        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ToggleBreakpointAtCaret), new KeyGesture(Key.F9)));
+        this.InputBindings.Add(new InputBinding(new RelayCommand(ContinueDebug), new KeyGesture(Key.F5)));
+        this.InputBindings.Add(new InputBinding(new RelayCommand(DebugStepOver), new KeyGesture(Key.F10)));
+
         // Bookmark margin handler
         _bookmarkMargin = new BookmarkMargin(
             () => GetActiveEditorTab()?.Bookmarks ?? new HashSet<int>(),
-            () => (Brush)Application.Current.TryFindResource("AccentBrush") ?? Brushes.Blue
+            () => (Brush)Application.Current.TryFindResource("AccentBrush") ?? Brushes.Blue,
+            () => _activeBreakpoints
         );
         CodeTextBox.TextArea.LeftMargins.Insert(0, _bookmarkMargin);
         _bookmarkMargin.MouseDown += Margin_MouseDown;
@@ -1233,6 +1280,18 @@ public partial class MainWindow : Window
         // Ensure we get the correct document line number from the caret
         int lineNumber = CodeTextBox.TextArea.Caret.Line;
         ToggleBookmark(lineNumber);
+    }
+
+    private void ToggleBreakpointAtCaret()
+    {
+        if (!IsBslSyntax) return;
+        int lineNumber = CodeTextBox.TextArea.Caret.Line;
+        if (_activeBreakpoints.Contains(lineNumber))
+            _activeBreakpoints.Remove(lineNumber);
+        else
+            _activeBreakpoints.Add(lineNumber);
+        CodeTextBox.TextArea.TextView.Redraw();
+        _bookmarkMargin?.Redraw();
     }
 
     private void ToggleBookmark(int lineNumber)
@@ -4707,14 +4766,46 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         var code = CodeTextBox.Text;
         if (string.IsNullOrWhiteSpace(code)) return;
 
-        ShowOutputPanel("Выполнение...");
+        _debugLineHighlighter.CurrentLine = null;
+        _currentDebugger = null;
+        _isDebugPaused = false;
+
+        if (syntax.Contains("1C") && _activeBreakpoints.Count > 0)
+        {
+            ShowOutputPanel("Выполнение (debug)...", showContinue: false);
+        }
+        else
+        {
+            ShowOutputPanel("Выполнение...");
+        }
 
         try
         {
             if (syntax.Contains("1C"))
             {
                 var args = ParseArguments(ScriptArgsTextBox.Text);
-                var result = await _bslExecutionService.ExecuteAsync(code, args);
+                _currentDebugger = null;
+                var debuggerForCleanup = _currentDebugger;
+                var result = await _bslExecutionService.ExecuteAsync(
+                    code, args,
+                    _activeBreakpoints.Count > 0 ? _activeBreakpoints : null,
+                    debugger =>
+                    {
+                        _currentDebugger = debugger;
+                        debugger.BreakpointHit += OnDebugBreakpointHit;
+                        debugger.ExecutionFinished += OnDebugExecutionFinished;
+                    });
+
+                _debugLineHighlighter.CurrentLine = null;
+                CodeTextBox.TextArea.TextView.Redraw();
+
+                if (debuggerForCleanup != null)
+                {
+                    debuggerForCleanup.BreakpointHit -= OnDebugBreakpointHit;
+                    debuggerForCleanup.ExecutionFinished -= OnDebugExecutionFinished;
+                }
+                _currentDebugger = null;
+                _isDebugPaused = false;
 
                 if (result.Success)
                 {
@@ -4748,8 +4839,53 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         }
         catch (Exception ex)
         {
+            _debugLineHighlighter.CurrentLine = null;
+            CodeTextBox.TextArea.TextView.Redraw();
+            if (_currentDebugger != null)
+            {
+                _currentDebugger.BreakpointHit -= OnDebugBreakpointHit;
+                _currentDebugger.ExecutionFinished -= OnDebugExecutionFinished;
+                _currentDebugger = null;
+            }
+            _isDebugPaused = false;
             ShowOutputPanel($"Ошибка: {ex.Message}");
         }
+    }
+
+    private bool IsBslSyntax => SyntaxHighlightingComboBox.SelectedItem?.ToString()?.Contains("1C") == true;
+
+    private void OnDebugBreakpointHit(int threadId, MachineStopReason reason, string errorMessage)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            var line = _currentDebugger?.StoppedLineNumber ?? -1;
+            if (line > 0)
+            {
+                _debugLineHighlighter.CurrentLine = line;
+                CodeTextBox.TextArea.TextView.Redraw();
+                CodeTextBox.TextArea.Caret.Line = line;
+                CodeTextBox.TextArea.Caret.BringCaretToView();
+            }
+            _isDebugPaused = true;
+            ShowOutputPanel($"Останов на строке {line}", showContinue: IsBslSyntax);
+            if (IsBslSyntax)
+            {
+                StepOverButton.Visibility = Visibility.Visible;
+                WatchPanel.Visibility = Visibility.Visible;
+                WatchTextBox.Focus();
+            }
+        });
+    }
+
+    private void OnDebugExecutionFinished()
+    {
+        Dispatcher.Invoke(() =>
+        {
+            _debugLineHighlighter.CurrentLine = null;
+            CodeTextBox.TextArea.TextView.Redraw();
+            if (IsBslSyntax)
+                WatchPanel.Visibility = Visibility.Collapsed;
+        });
     }
 
     private void ClearArgsButton_Click(object sender, RoutedEventArgs e)
@@ -4821,9 +4957,32 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         }
     }
 
-    private void ShowOutputPanel(string text)
+    private void ContinueDebugButton_Click(object sender, RoutedEventArgs e) => ContinueDebug();
+
+    private void StepOverButton_Click(object sender, RoutedEventArgs e) => DebugStepOver();
+
+    private void WatchTextBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+            EvaluateWatch();
+    }
+
+    private void WatchEvalButton_Click(object sender, RoutedEventArgs e) => EvaluateWatch();
+
+    private void EvaluateWatch()
+    {
+        var expr = WatchTextBox.Text.Trim();
+        if (string.IsNullOrEmpty(expr) || _currentDebugger == null) return;
+
+        var value = _currentDebugger.Evaluate(expr);
+        if (value != null)
+            OutputTextBox.Text += $"\n{expr} = {value}";
+    }
+
+    private void ShowOutputPanel(string text, bool showContinue = false)
     {
         OutputTextBox.Text = text;
+        ContinueDebugButton.Visibility = showContinue ? Visibility.Visible : Visibility.Collapsed;
         OutputPanelHeader.Visibility = Visibility.Visible;
         OutputSplitter.Visibility = Visibility.Visible;
         OutputPanelContent.Visibility = Visibility.Visible;
