@@ -1167,7 +1167,7 @@
                         </Grid.ColumnDefinitions>
                         <Button
                             x:Name="ClearOutputPanelButton"
-                            Grid.Column="0"
+                            Grid.Column="1"
                             Click="ClearOutputPanelButton_Click"
                             Foreground="{DynamicResource DictTextPrimary}"
                             Style="{StaticResource IconButton}"
@@ -1179,7 +1179,7 @@
                         </Button>
                         <Button
                             x:Name="ContinueDebugButton"
-                            Grid.Column="1"
+                            Grid.Column="2"
                             Width="22"
                             Height="22"
                             Margin="2,0"
@@ -1194,7 +1194,7 @@
                         </Button>
                         <Button
                             x:Name="StepOverButton"
-                            Grid.Column="2"
+                            Grid.Column="3"
                             Width="22"
                             Height="22"
                             Margin="2,0"
@@ -1210,7 +1210,8 @@
                         </Button>
                         <Button
                             x:Name="CloseOutputPanelButton"
-                            Grid.Column="3"
+                            Grid.Column="4"
+                            HorizontalAlignment="Right"
                             Click="CloseOutputPanelButton_Click"
                             Foreground="{DynamicResource DictTextPrimary}"
                             Style="{StaticResource IconButton}"
@@ -1220,7 +1221,7 @@
                                 Height="14"
                                 Kind="Close" />
                         </Button>
-                        <StackPanel Grid.Column="4" Margin="10,2" HorizontalAlignment="Center" Orientation="Horizontal">
+                        <StackPanel Grid.Column="0" Margin="10,2" HorizontalAlignment="Left" Orientation="Horizontal">
                             <materialIcons:MaterialIcon
                                 Width="16"
                                 Height="16"

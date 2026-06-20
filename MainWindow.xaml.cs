@@ -5149,12 +5149,6 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             parentGrid.RowDefinitions[10].Height = new GridLength(200);
         }
 
-        //if (TerminalOutputTextBox.Text.Length == 0)
-        //{
-        //    TerminalOutputTextBox.AppendText("--- Терминал (cmd.exe) ---" + Environment.NewLine);
-        //    TerminalOutputTextBox.AppendText("Введите команду в нижнем поле и нажмите Enter." + Environment.NewLine);
-        //    TerminalOutputTextBox.AppendText("Пример: dir, echo hello, cd .." + Environment.NewLine + Environment.NewLine);
-        //}
 
         StartTerminalProcess();
     }
