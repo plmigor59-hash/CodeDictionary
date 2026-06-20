@@ -614,6 +614,69 @@
                                 Kind="Play" />
                         </Button>
 
+                        <TextBox
+                            x:Name="ScriptArgsTextBox"
+                            Width="180"
+                            Height="22"
+                            Margin="4,0"
+                            VerticalContentAlignment="Center"
+                            FontFamily="Cascadia Mono"
+                            FontSize="11"
+                            Background="{DynamicResource WindowBackground}"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            ToolTip="Аргументы для скрипта (через пробел)"
+                            Text=""
+                            TextChanged="ScriptArgsTextBox_TextChanged">
+
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="TextBox">
+                                                <Border
+                                                    Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="3">
+                                                    <Grid>
+                                                        <ScrollViewer x:Name="PART_ContentHost" Margin="4,0" />
+                                                        <TextBlock
+                                                            x:Name="PlaceholderText"
+                                                            Margin="6,0"
+                                                            HorizontalAlignment="Left"
+                                                            VerticalAlignment="Center"
+                                                            FontFamily="{TemplateBinding FontFamily}"
+                                                            FontSize="{TemplateBinding FontSize}"
+                                                            Foreground="{DynamicResource TextSecondaryBrush}"
+                                                            IsHitTestVisible="False"
+                                                            Text="аргументы (--flag arg)"
+                                                            Visibility="Collapsed" />
+                                                    </Grid>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+
+                        <Button
+                            x:Name="ClearArgsButton"
+                            Width="20"
+                            Height="20"
+                            Margin="2,0,4,0"
+                            Click="ClearArgsButton_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Очистить аргументы">
+                            <materialIcons:MaterialIcon
+                                Width="14"
+                                Height="14"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Kind="Close" />
+                        </Button>
+
                         <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
                         <ToggleButton

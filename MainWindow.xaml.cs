@@ -4713,7 +4713,8 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         {
             if (syntax.Contains("1C"))
             {
-                var result = await _bslExecutionService.ExecuteAsync(code);
+                var args = ParseArguments(ScriptArgsTextBox.Text);
+                var result = await _bslExecutionService.ExecuteAsync(code, args);
 
                 if (result.Success)
                 {
@@ -4729,7 +4730,8 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             }
             else
             {
-                var result = await _pythonExecutionService.ExecuteAsync(code);
+                var pyArgs = ParseArguments(ScriptArgsTextBox.Text);
+                var result = await _pythonExecutionService.ExecuteAsync(code, pyArgs);
 
                 if (result.Success)
                 {
@@ -4748,6 +4750,55 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         {
             ShowOutputPanel($"Ошибка: {ex.Message}");
         }
+    }
+
+    private void ClearArgsButton_Click(object sender, RoutedEventArgs e)
+    {
+        ScriptArgsTextBox.Text = string.Empty;
+    }
+
+    private void ScriptArgsTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        var tb = (TextBox)sender;
+        var placeholder = tb.Template.FindName("PlaceholderText", tb) as TextBlock;
+        if (placeholder != null)
+            placeholder.Visibility = string.IsNullOrEmpty(tb.Text) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static string[] ParseArguments(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return [];
+
+        var args = new List<string>();
+        var current = new StringBuilder();
+        bool inQuote = false;
+
+        for (int i = 0; i < input.Length; i++)
+        {
+            var c = input[i];
+            if (c == '"')
+            {
+                inQuote = !inQuote;
+            }
+            else if (c == ' ' && !inQuote)
+            {
+                if (current.Length > 0)
+                {
+                    args.Add(current.ToString());
+                    current.Clear();
+                }
+            }
+            else
+            {
+                current.Append(c);
+            }
+        }
+
+        if (current.Length > 0)
+            args.Add(current.ToString());
+
+        return args.ToArray();
     }
 
     private void ClearOutputPanelButton_Click(object sender, RoutedEventArgs e)

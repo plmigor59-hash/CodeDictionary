@@ -1,8 +1,7 @@
-using OneScript.Execution;
 using OneScript.Language.Sources;
-using ScriptEngine;
 using OneScript.Sources;
 using OneScript.StandardLibrary;
+using ScriptEngine;
 using ScriptEngine.HostedScript;
 using ScriptEngine.HostedScript.Extensions;
 using ScriptEngine.Hosting;
@@ -13,7 +12,7 @@ namespace CodeDictionary.SyntaxChecking
 {
     public class BslExecutionService
     {
-        public async Task<BslExecutionResult> ExecuteAsync(string code, CancellationToken cancellationToken = default)
+        public async Task<BslExecutionResult> ExecuteAsync(string code, string[]? args = null, CancellationToken cancellationToken = default)
         {
             var result = new BslExecutionResult();
 
@@ -25,7 +24,7 @@ namespace CodeDictionary.SyntaxChecking
 
             try
             {
-                var host = new BslHostApplication();
+                var host = new BslHostApplication(args ?? []);
                 var source = new StringCodeSource(code);
                 var sourceCode = SourceCodeBuilder.Create()
                     .FromSource(source)
@@ -106,7 +105,7 @@ namespace CodeDictionary.SyntaxChecking
             return null;
         }
 
-        private class BslHostApplication : IHostApplication
+        private class BslHostApplication(string[] args) : IHostApplication
         {
             public StringBuilder OutputBuilder { get; } = new();
             public StringBuilder ErrorBuilder { get; } = new();
@@ -133,10 +132,7 @@ namespace CodeDictionary.SyntaxChecking
                 return false;
             }
 
-            public string[] GetCommandLineArguments()
-            {
-                return [];
-            }
+            public string[] GetCommandLineArguments() => args;
         }
 
         private class StringCodeSource : ICodeSource

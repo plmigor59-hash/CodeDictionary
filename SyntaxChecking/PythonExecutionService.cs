@@ -5,7 +5,7 @@ namespace CodeDictionary.SyntaxChecking
 {
     public class PythonExecutionService
     {
-        public async Task<PythonExecutionResult> ExecuteAsync(string code, CancellationToken cancellationToken = default)
+        public async Task<PythonExecutionResult> ExecuteAsync(string code, string[]? args = null, CancellationToken cancellationToken = default)
         {
             var result = new PythonExecutionResult();
 
@@ -20,13 +20,20 @@ namespace CodeDictionary.SyntaxChecking
                 var psi = new ProcessStartInfo("python")
                 {
                     UseShellExecute = false,
-                    RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     StandardOutputEncoding = Encoding.UTF8,
                     StandardErrorEncoding = Encoding.UTF8,
                     CreateNoWindow = true
                 };
+
+                psi.ArgumentList.Add("-c");
+                psi.ArgumentList.Add(code);
+                if (args != null)
+                {
+                    foreach (var arg in args)
+                        psi.ArgumentList.Add(arg);
+                }
 
                 using var process = Process.Start(psi);
                 if (process == null)
@@ -58,10 +65,6 @@ namespace CodeDictionary.SyntaxChecking
 
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
-
-                    await process.StandardInput.WriteAsync(code);
-                    await process.StandardInput.FlushAsync();
-                    process.StandardInput.Close();
 
                     await process.WaitForExitAsync(cancellationToken);
 
