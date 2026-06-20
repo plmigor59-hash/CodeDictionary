@@ -1643,6 +1643,37 @@
                                 </StackPanel>
                             </Grid>
 
+                            <TextBlock
+                                Margin="0,8,0,4"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Text="Отладка (1С)" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Key" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="F9" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="F5" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="F10" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Точка останова" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Продолжить выполнение" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Шаг с обходом" />
+                                </StackPanel>
+                            </Grid>
+
                             <!--  Toolbar Section  -->
                             <TextBlock
                                 Margin="0,8,0,4"
