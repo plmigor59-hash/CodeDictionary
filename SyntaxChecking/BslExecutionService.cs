@@ -5,7 +5,6 @@ using ScriptEngine;
 using ScriptEngine.HostedScript;
 using ScriptEngine.HostedScript.Extensions;
 using ScriptEngine.Hosting;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 

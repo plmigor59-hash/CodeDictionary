@@ -1,9 +1,8 @@
 using CodeDictionary.Analysis;
 using CodeDictionary.Models;
-using CodeDictionary.SyntaxChecking;
-using ScriptEngine.Machine;
 using CodeDictionary.Properties;
 using CodeDictionary.Services;
+using CodeDictionary.SyntaxChecking;
 using CodeDictionary.SyntaxChecking.Providers;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
@@ -14,6 +13,7 @@ using ICSharpCode.AvalonEdit.Rendering;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
+using ScriptEngine.Machine;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -1483,8 +1483,7 @@ public partial class MainWindow : Window
 
         var entry = activeTab.Entry;
         entry.Title = TitleTextBox.Text;
-        // Описание теперь только отображается через WebBrowser и не редактируется напрямую в UI
-        entry.Code = CodeTextBox.Text;
+        entry.Code = entry.Extension.Contains(".html") ? "" : CodeTextBox.Text;
         entry.Category = _categoryService.NormalizeCategoryPath(CategoryComboBox.Text);
         entry.Tags = TagsTextBox.Text
             .Split(',')
@@ -1493,7 +1492,6 @@ public partial class MainWindow : Window
             .ToList();
         entry.Syntax = SyntaxHighlightingComboBox.SelectedItem?.ToString() ?? string.Empty;
 
-        // For HTML entries, sync editor content to Description and refresh browser
         if (entry.Extension.Contains(".html"))
         {
             entry.Description = CodeTextBox.Text;
@@ -1521,6 +1519,7 @@ public partial class MainWindow : Window
         }
         _isNewRecordDescription = false;
 
+        ClearDebugState();
         ActivateEditorTab(tab, selectInTabControl: false);
     }
 
@@ -1595,9 +1594,22 @@ public partial class MainWindow : Window
         {
             return;
         }
+
+        // Ensure code editor shows HTML content for HTML-only entry tabs
+        if (tab.Entry != null && tab.Entry.Extension.Contains(".html"))
+        {
+            if (string.IsNullOrEmpty(tab.Entry.Code) && !string.IsNullOrEmpty(tab.Entry.Description))
+            {
+                tab.Document.Text = tab.Entry.Description;
+            }
+            tab.SyntaxName ??= "HTML";
+           
+        }
+
         ToggleDescription_Close();
         _isSwitchingEditorTab = true;
         _isUpdatingEditorContent = true;
+       
         try
         {
             _activeEditorTab = tab;
@@ -1625,6 +1637,7 @@ public partial class MainWindow : Window
 
                 // Update syntax checking services for the new document
                 InitializeSyntaxServices();
+               
             }
 
 
@@ -1656,6 +1669,8 @@ public partial class MainWindow : Window
                 {
                     ToggleDescription_Open();
                 }
+
+                
             }
             else
             {
@@ -1673,6 +1688,7 @@ public partial class MainWindow : Window
                 TagsTextBox.Text = string.Empty;
                 _currentEntry = null;
                 _selectedCategoryPath = string.Empty;
+                
             }
 
             try
@@ -1699,6 +1715,8 @@ public partial class MainWindow : Window
             _isUpdatingEditorContent = false;
             _isSwitchingEditorTab = false;
         }
+
+       
     }
 
 
@@ -1726,7 +1744,7 @@ public partial class MainWindow : Window
         var tab = new EditorTabModel(Path.GetFileName(filePath), filePath, GetSyntaxSelectionForFile(filePath), content, isClosable: true);
         tab.MarkSaved();
         _editorTabs.Add(tab);
-        //TitleTextBox.Text = Path.GetFileName(filePath);
+        TitleTextBox.Text = Path.GetFileName(filePath);
         ActivateEditorTab(tab);
         return tab;
     }
@@ -2947,6 +2965,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     {
         _isUpdatingEditorContent = true;
         _updateDescription = entry.Extension.Contains(".html");
+       
         try
         {
             _isDescriptionEditMode = false;
@@ -2979,12 +2998,16 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                 {
                     SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
                 }
+
+               
             }
             else
             {
                 // Если кода нет (только документация/HTML), не создаем закладку
                 _activeEditorTab = null;
                 if (_updateDescription)
+
+                  
 
                 {
                     if (_currentTheme == AppTheme.Dark)
@@ -2995,8 +3018,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                 }
                 if (!_isNewRecordDescription)
                 {
+                   
                     ToggleDescription_Open();
                 }
+               
             }
 
             ClearSearch();
@@ -3006,6 +3031,9 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         {
             _isUpdatingEditorContent = false;
         }
+
+
+       
     }
 
     private void AddEntry_Click(object sender, RoutedEventArgs e)
@@ -3105,30 +3133,38 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             return;
         }
 
-        var tabTitle = activeTab?.Title;
-
-        if (string.IsNullOrWhiteSpace(tabTitle))
-        {
-            ShowAlert("Нет активной закладки", isError: true);
-            return;
-        }
-
         if (string.IsNullOrWhiteSpace(TitleTextBox.Text))
         {
             ShowAlert("Введите название", isError: true);
             return;
         }
 
-        var entryToUpdate = _data.Entries.FirstOrDefault(e => e.Title == tabTitle);
-        if (entryToUpdate == null)
+        CodeEntry entryToUpdate;
+        if (activeTab?.Entry != null)
         {
-            ShowAlert("Запись не найдена", isError: true);
-            return;
+            entryToUpdate = activeTab.Entry;
+        }
+        else
+        {
+            var tabTitle = activeTab?.Title;
+            if (string.IsNullOrWhiteSpace(tabTitle))
+            {
+                ShowAlert("Нет активной закладки", isError: true);
+                return;
+            }
+            entryToUpdate = _data.Entries.FirstOrDefault(e => e.Title == tabTitle);
+            if (entryToUpdate == null)
+            {
+                ShowAlert("Запись не найдена", isError: true);
+                return;
+            }
         }
 
         entryToUpdate.Title = TitleTextBox.Text;
-        // Описание теперь отображается через WebBrowser и не редактируется напрямую
-        entryToUpdate.Code = CodeTextBox.Text;
+        var isHtmlEntry = entryToUpdate.Extension.Contains(".html");
+        entryToUpdate.Code = isHtmlEntry ? "" : CodeTextBox.Text;
+        if (isHtmlEntry)
+            entryToUpdate.Description = CodeTextBox.Text;
         entryToUpdate.Category = _categoryService.NormalizeCategoryPath(CategoryComboBox.Text);
         entryToUpdate.Tags = TagsTextBox.Text
             .Split(',')
@@ -3302,6 +3338,8 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         var dirtyTabs = _editorTabs.Where(t => t.IsDirty).ToList();
         if (dirtyTabs.Any())
         {
+            ActivateEditorTab(dirtyTabs[0]);
+
             string message = dirtyTabs.Count == 1
                 ? $"Вкладка \"{dirtyTabs[0].DisplayName}\" содержит несохранённые изменения. Закрыть без сохранения?"
                 : $"{dirtyTabs.Count} вкладок содержат несохранённые изменения. Закрыть без сохранения?";
@@ -4955,6 +4993,19 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             parentGrid.RowDefinitions[6].Height = new GridLength(0);
             parentGrid.RowDefinitions[7].Height = new GridLength(0);
         }
+    }
+
+    private void ClearDebugState()
+    {
+        _activeBreakpoints.Clear();
+        _currentDebugger = null;
+        _isDebugPaused = false;
+        _debugLineHighlighter.CurrentLine = null;
+        ContinueDebugButton.Visibility = Visibility.Collapsed;
+        StepOverButton.Visibility = Visibility.Collapsed;
+        WatchPanel.Visibility = Visibility.Collapsed;
+        CodeTextBox.TextArea.TextView.Redraw();
+        _bookmarkMargin?.Redraw();
     }
 
     private void ContinueDebugButton_Click(object sender, RoutedEventArgs e) => ContinueDebug();

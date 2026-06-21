@@ -1,12 +1,5 @@
-using OneScript.Compilation;
-using OneScript.Execution;
-using ScriptEngine;
 using ScriptEngine.Machine;
 using ScriptEngine.Machine.Debugger;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 
 namespace CodeDictionary.SyntaxChecking
 {
