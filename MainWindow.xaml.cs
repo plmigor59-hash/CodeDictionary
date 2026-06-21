@@ -1677,6 +1677,17 @@ public partial class MainWindow : Window
                 _isDescriptionEditMode = false;
                 EditDescriptionButton.Content = "✏️ Ред.";
                 SaveDescriptionButton.Visibility = Visibility.Collapsed;
+
+                bool isMd = tab.Entry.Extension.Contains(".md") || tab.Entry.Extension.Contains(".markdown");
+                if (isMd)
+                {
+                    EditDescriptionButton.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    EditDescriptionButton.Visibility = Visibility.Visible;
+                }
+
                 TitleTextBox.Text = tab.Entry.Title;
                 SetDescriptionHtml(tab.Entry.Description);
                 CategoryComboBox.Text = _categoryService.NormalizeCategoryPath(tab.Entry.Category);
@@ -1702,11 +1713,14 @@ public partial class MainWindow : Window
                     var ext = Path.GetExtension(tab.FilePath).ToLower();
                     if (ext == ".html")
                     {
+                        EditDescriptionButton.Visibility = Visibility.Visible;
                         SetDescriptionHtml(tab.Document.Text);
                         ToggleDescription_Open();
                     }
                     else if (ext == ".md" || ext == ".markdown")
                     {
+                        EditDescriptionButton.Visibility = Visibility.Collapsed;
+                        SaveDescriptionButton.Visibility = Visibility.Collapsed;
                         try
                         {
                             string mdHtml = MarkdownConverter.ToHtml(tab.Document.Text);
@@ -1720,6 +1734,7 @@ public partial class MainWindow : Window
                     }
                     else
                     {
+                        EditDescriptionButton.Visibility = Visibility.Visible;
                         SetDescriptionHtml(string.Empty);
                     }
                 }
@@ -3521,7 +3536,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             else
                 html = null;
 
-            SetDescriptionHtml(html);
+        SetDescriptionHtml(html);
         }
 
         InitializeWebView2();
@@ -3866,6 +3881,16 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
 
     private void EditDescriptionButton_Click(object sender, RoutedEventArgs e)
     {
+        var activeTab = GetActiveEditorTab();
+        if (activeTab != null)
+        {
+            bool isMd = (activeTab.Entry != null && (activeTab.Entry.Extension.Contains(".md") || activeTab.Entry.Extension.Contains(".markdown")))
+                || (activeTab.IsFromFile && activeTab.FilePath != null &&
+                    (Path.GetExtension(activeTab.FilePath).Equals(".md", StringComparison.OrdinalIgnoreCase) ||
+                     Path.GetExtension(activeTab.FilePath).Equals(".markdown", StringComparison.OrdinalIgnoreCase)));
+            if (isMd) return;
+        }
+
         _isDescriptionEditMode = !_isDescriptionEditMode;
         EditDescriptionButton.Content = _isDescriptionEditMode ? "✏️ Просмотр" : "✏️ Ред.";
         SaveDescriptionButton.Visibility = _isDescriptionEditMode ? Visibility.Visible : Visibility.Collapsed;
@@ -3997,6 +4022,13 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         var activeTab = GetActiveEditorTab();
         if (activeTab == null) return;
 
+        bool isMdTab = (activeTab.IsFromFile && activeTab.FilePath != null &&
+            (Path.GetExtension(activeTab.FilePath).Equals(".md", StringComparison.OrdinalIgnoreCase) ||
+             Path.GetExtension(activeTab.FilePath).Equals(".markdown", StringComparison.OrdinalIgnoreCase)))
+            || (activeTab.Entry != null && (activeTab.Entry.Extension.Contains(".md") || activeTab.Entry.Extension.Contains(".markdown")));
+
+        if (isMdTab) return;
+
         if (activeTab.Entry != null)
         {
             activeTab.Entry.Description = html;
@@ -4006,24 +4038,9 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             Path.GetExtension(activeTab.FilePath).Equals(".html", StringComparison.OrdinalIgnoreCase))
             || (activeTab.Entry != null && activeTab.Entry.Extension.Contains(".html"));
 
-        bool isMdTab = (activeTab.IsFromFile && activeTab.FilePath != null &&
-            (Path.GetExtension(activeTab.FilePath).Equals(".md", StringComparison.OrdinalIgnoreCase) ||
-             Path.GetExtension(activeTab.FilePath).Equals(".markdown", StringComparison.OrdinalIgnoreCase)))
-            || (activeTab.Entry != null && (activeTab.Entry.Extension.Contains(".md") || activeTab.Entry.Extension.Contains(".markdown")));
-
-        string? md = null;
         if (isHtmlTab)
         {
             activeTab.Document.Text = html;
-        }
-        else if (isMdTab)
-        {
-            md = MarkdownConverter.ToMarkdown(html);
-            activeTab.Document.Text = md;
-            if (activeTab.Entry != null)
-            {
-                activeTab.Entry.Code = md;
-            }
         }
 
         activeTab.IsDirty = true;
