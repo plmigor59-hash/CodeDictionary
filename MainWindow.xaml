@@ -300,6 +300,28 @@
                                                     Kind="PencilOutline" />
                                             </MenuItem.Icon>
                                         </MenuItem>
+                                        <MenuItem
+                                            Click="ExportCategoryToDisk_Click"
+                                            Header="Выгрузить категорию на диск"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="Export" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem
+                                            Click="ImportCategoryFromDisk_Click"
+                                            Header="Загрузить категорию с диска"
+                                            Tag="{Binding}">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="Import" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
                                         <Separator />
                                         <MenuItem
                                             Click="DeleteCategory_Click"

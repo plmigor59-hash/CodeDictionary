@@ -4455,6 +4455,190 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         await DeleteCategoryAsync(categoryNode);
     }
 
+    private async void ExportCategoryToDisk_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem menuItem || menuItem.Tag is not CategoryNode categoryNode)
+        {
+            return;
+        }
+
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Выберите папку для выгрузки категории"
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        string categoryName = !string.IsNullOrWhiteSpace(categoryNode.FullPath)
+            ? categoryNode.FullPath.Replace('/', '_').Replace('\\', '_')
+            : "Корневая категория";
+
+        string targetPath = Path.Combine(dialog.FolderName, categoryName);
+        Directory.CreateDirectory(targetPath);
+
+        await ExportCategoryRecursiveAsync(categoryNode, targetPath);
+
+        _snackbar.Show(CodeTextBox, $"Категория выгружена: {CategoryNodeCountString(categoryNode)} записей в '{targetPath}'", NotificationType.Success, 3);
+    }
+
+    private async Task ExportCategoryRecursiveAsync(CategoryNode node, string folderPath)
+    {
+        foreach (var entryVm in node.Entries)
+        {
+            var entry = entryVm.Entry;
+            string fileName = SanitizeFileName(entry.Title);
+            string extension = !string.IsNullOrWhiteSpace(entry.Extension)
+                ? entry.Extension
+                : ".txt";
+            if (!extension.StartsWith('.'))
+                extension = "." + extension;
+
+            if (extension.Equals(".html", StringComparison.OrdinalIgnoreCase) &&
+                string.IsNullOrEmpty(entry.Code) && !string.IsNullOrEmpty(entry.Description))
+            {
+                fileName += extension;
+                var filePath = Path.Combine(folderPath, fileName);
+                await File.WriteAllTextAsync(filePath, entry.Description);
+            }
+            else
+            {
+                fileName += extension;
+                var filePath = Path.Combine(folderPath, fileName);
+                await File.WriteAllTextAsync(filePath, entry.Code ?? string.Empty);
+            }
+        }
+
+        foreach (var child in node.Children)
+        {
+            string childFolderName = SanitizeFileName(child.Name);
+            string childPath = Path.Combine(folderPath, childFolderName);
+            Directory.CreateDirectory(childPath);
+            await ExportCategoryRecursiveAsync(child, childPath);
+        }
+    }
+
+    private async void ImportCategoryFromDisk_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem menuItem || menuItem.Tag is not CategoryNode categoryNode)
+        {
+            return;
+        }
+
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Выберите папку для загрузки категории"
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        string baseCategory = !string.IsNullOrWhiteSpace(categoryNode.FullPath)
+            ? categoryNode.FullPath
+            : string.Empty;
+
+        int imported = 0;
+        ImportCategoryFromDiskRecursive(dialog.FolderName, baseCategory, ref imported);
+
+        if (imported > 0)
+        {
+            _categoryService.NormalizeImportedData(_data);
+            await _dataService.SaveDataAsync(_data);
+            RefreshEntriesList();
+            _snackbar.Show(CodeTextBox, $"Загружено {imported} записей в категорию '{categoryNode.Name}'", NotificationType.Success, 3);
+        }
+        else
+        {
+            ShowAlert("Файлы для импорта не найдены", isError: true);
+        }
+    }
+
+    private void ImportCategoryFromDiskRecursive(string folderPath, string parentCategory, ref int imported)
+    {
+        var files = Directory.GetFiles(folderPath);
+        foreach (var filePath in files)
+        {
+            string extension = Path.GetExtension(filePath).ToLowerInvariant();
+            string title = Path.GetFileNameWithoutExtension(filePath);
+
+            if (string.IsNullOrWhiteSpace(title))
+                continue;
+
+            string content = File.ReadAllText(filePath);
+            string category = parentCategory;
+
+            var entry = new CodeEntry
+            {
+                Title = title,
+                Extension = extension,
+                Category = category,
+                Syntax = DetectSyntax(extension),
+                Tags = new List<string>(),
+                Bookmarks = new List<int>(),
+                FormattingData = string.Empty
+            };
+
+            if (extension == ".html")
+            {
+                entry.Code = "";
+                entry.Description = content;
+            }
+            else
+            {
+                entry.Code = content;
+                entry.Description = "";
+            }
+
+            _data.Entries.Add(entry);
+            imported++;
+        }
+
+        var dirs = Directory.GetDirectories(folderPath);
+        foreach (var dir in dirs)
+        {
+            string dirName = Path.GetFileName(dir);
+            string subCategory = string.IsNullOrWhiteSpace(parentCategory)
+                ? dirName
+                : $"{parentCategory}/{dirName}";
+
+            _categoryService.EnsureCategoryPathExists(subCategory, _data.Categories);
+            ImportCategoryFromDiskRecursive(dir, subCategory, ref imported);
+        }
+    }
+
+    private static string DetectSyntax(string extension)
+    {
+        return extension.ToLowerInvariant() switch
+        {
+            ".bsl" or ".os" => "Стандартная 1C",
+            ".html" or ".htm" => "Стандартная HTML",
+            ".xml" => "Стандартная XML",
+            ".py" => "Стандартная Python",
+            ".js" => "JavaScript",
+            ".css" => "CSS",
+            ".json" => "JSON",
+            ".sql" => "SQL",
+            ".md" => "Markdown",
+            _ => ""
+        };
+    }
+
+    private static string SanitizeFileName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        return string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries)).TrimEnd('.');
+    }
+
+    private static string CategoryNodeCountString(CategoryNode node)
+    {
+        int count = node.Entries.Count;
+        foreach (var child in node.Children)
+        {
+            count += child.Entries.Count;
+        }
+        return count.ToString();
+    }
+
     private async Task DeleteCategoryAsync(CategoryNode categoryNode)
     {
         var categoryPath = _categoryService.NormalizeCategoryPath(categoryNode.FullPath);
