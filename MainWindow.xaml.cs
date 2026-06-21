@@ -4470,11 +4470,11 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         if (dialog.ShowDialog() != true)
             return;
 
-        string categoryName = !string.IsNullOrWhiteSpace(categoryNode.FullPath)
-            ? categoryNode.FullPath.Replace('/', '_').Replace('\\', '_')
+        string categoryName = !string.IsNullOrWhiteSpace(categoryNode.Name)
+            ? categoryNode.Name
             : "Корневая категория";
 
-        string targetPath = Path.Combine(dialog.FolderName, categoryName);
+        string targetPath = Path.Combine(dialog.FolderName, SanitizeFileName(categoryName));
         Directory.CreateDirectory(targetPath);
 
         await ExportCategoryRecursiveAsync(categoryNode, targetPath);
