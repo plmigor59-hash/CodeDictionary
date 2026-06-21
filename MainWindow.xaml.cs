@@ -41,6 +41,15 @@ public partial class MainWindow : Window
     private readonly FormattingService _formattingService;
     private readonly MainViewModel _viewModel;
     private CodeDictionaryData _data;
+
+    private const int DebounceTimerMs = 500;
+    private const int SearchDebounceTimerMs = 400;
+    private const int CompletionDebounceMs = 200;
+    private const int HtmlPositionDebounceMs = 300;
+    private const int BrowserSelectionDebounceMs = 200;
+    private const int DescriptionPanelHeight = 350;
+    private const int MinPanelHeight = 50;
+    private const int AnimationDurationMs = 300;
     private List<CodeEntry> _filteredEntries;
     private CodeEntry? _currentEntry;
     private bool _isInitialized;
@@ -910,32 +919,32 @@ public partial class MainWindow : Window
         // Инициализация компонентов для 1С (SyntaxChecking)
         _debounceTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(500)
+            Interval = TimeSpan.FromMilliseconds(DebounceTimerMs)
         };
         _debounceTimer.Tick += DebounceTimer_Tick;
 
         // Инициализация компонента для поиска (Debouncing)
         _searchDebounceTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(400)
+            Interval = TimeSpan.FromMilliseconds(SearchDebounceTimerMs)
         };
         _searchDebounceTimer.Tick += SearchDebounceTimer_Tick;
 
         _completionDebounceTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(200)
+            Interval = TimeSpan.FromMilliseconds(CompletionDebounceMs)
         };
         _completionDebounceTimer.Tick += CompletionDebounceTimer_Tick;
 
         _htmlPositionDebounceTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(300)
+            Interval = TimeSpan.FromMilliseconds(HtmlPositionDebounceMs)
         };
         _htmlPositionDebounceTimer.Tick += HtmlPositionDebounceTimer_Tick;
 
         _browserSelectionDebounceTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(200)
+            Interval = TimeSpan.FromMilliseconds(BrowserSelectionDebounceMs)
         };
         _browserSelectionDebounceTimer.Tick += BrowserSelectionDebounceTimer_Tick;
 
@@ -3429,7 +3438,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     {
         DescriptionPanel.Visibility = Visibility.Visible;
         DescriptionSplitter.Visibility = Visibility.Visible;
-        DescriptionRow.Height = new GridLength(350);
+        DescriptionRow.Height = new GridLength(DescriptionPanelHeight);
         ToggleDescriptionButton.Content = " ▲ Свернуть ";
         _updateDescription = false;
 
@@ -5367,7 +5376,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         if (parentGrid?.RowDefinitions.Count > 7)
         {
             double delta = e.GetPosition(this).Y - _dragStartY;
-            double newHeight = Math.Max(50, _dragStartHeight - delta);
+            double newHeight = Math.Max(MinPanelHeight, _dragStartHeight - delta);
             parentGrid.RowDefinitions[7].Height = new GridLength(newHeight);
         }
         e.Handled = true;
@@ -5592,7 +5601,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         if (parentGrid?.RowDefinitions.Count > 10)
         {
             double delta = e.GetPosition(this).Y - _terminalDragStartY;
-            double newHeight = Math.Max(50, _terminalDragStartHeight - delta);
+            double newHeight = Math.Max(MinPanelHeight, _terminalDragStartHeight - delta);
             parentGrid.RowDefinitions[10].Height = new GridLength(newHeight);
         }
         e.Handled = true;
@@ -5718,7 +5727,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             parentGrid.RowDefinitions[3].Height = new GridLength(4);
 
             // Анимируем появление
-            AnimateHeight(parentGrid.RowDefinitions[4], 0, 140, TimeSpan.FromMilliseconds(300));
+            AnimateHeight(parentGrid.RowDefinitions[4], 0, 140, TimeSpan.FromMilliseconds(AnimationDurationMs));
         }
         else
         {
@@ -5726,7 +5735,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             double currentHeight = parentGrid.RowDefinitions[4].Height.Value;
             if (currentHeight <= 0) currentHeight = 140;
 
-            AnimateHeight(parentGrid.RowDefinitions[4], currentHeight, 0, TimeSpan.FromMilliseconds(300), () =>
+            AnimateHeight(parentGrid.RowDefinitions[4], currentHeight, 0, TimeSpan.FromMilliseconds(AnimationDurationMs), () =>
             {
                 ErrorListGrid.Visibility = Visibility.Collapsed;
                 ErrorListHeader.Visibility = Visibility.Collapsed;
