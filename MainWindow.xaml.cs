@@ -1697,10 +1697,31 @@ public partial class MainWindow : Window
             else
             {
                 TitleTextBox.Text = tab.Title;
-                if (tab.IsFromFile && tab.FilePath != null && Path.GetExtension(tab.FilePath).ToLower() == ".html")
+                if (tab.IsFromFile && tab.FilePath != null)
                 {
-                    SetDescriptionHtml(tab.Document.Text);
-                    ToggleDescription_Open();
+                    var ext = Path.GetExtension(tab.FilePath).ToLower();
+                    if (ext == ".html")
+                    {
+                        SetDescriptionHtml(tab.Document.Text);
+                        ToggleDescription_Open();
+                    }
+                    else if (ext == ".md" || ext == ".markdown")
+                    {
+                        try
+                        {
+                            string mdHtml = MarkdownConverter.ToHtml(tab.Document.Text);
+                            SetDescriptionHtml(mdHtml);
+                        }
+                        catch (Exception ex)
+                        {
+                            SetDescriptionHtml($"<p>Ошибка преобразования Markdown: {ex.Message}</p>");
+                        }
+                        ToggleDescription_Open();
+                    }
+                    else
+                    {
+                        SetDescriptionHtml(string.Empty);
+                    }
                 }
                 else
                 {
@@ -1936,7 +1957,7 @@ public partial class MainWindow : Window
 
         // Настройки диалога
         openFileDialog.Title = "Выберите текстовый файл";
-        openFileDialog.Filter = "Текстовые файлы (*.os;*.txt;*.xshd;*.bsl;*.html;*.cs;*.xaml;*.json;*.xml)|*.os;*.txt;*.xshd;*.bsl;*.html;*cs;*.xaml;*.json;*.xml|Все файлы (*.*)|*.*";
+        openFileDialog.Filter = "1C (os, bsl)|*.os;*.bsl|CSharp (cs)|*.cs|CPlusPlus (cpp, cxx, hpp, h)|*.cpp;*.cxx;*.hpp;*.h|HTML (html, htm)|*.html;*.htm|Markdown (md)|*.md|Python (py)|*.py|XML/JSON (xml, json, xaml, xshd)|*.xml;*.json;*.xaml;*.xshd|SQL (sql)|*.sql|CSS/JS (css, js)|*.css;*.js|Текстовые (txt)|*.txt|Все файлы|*.*";
         openFileDialog.FilterIndex = 1;
         openFileDialog.Multiselect = true;
 
@@ -3478,9 +3499,25 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             string? html;
             if (activeTab.Entry != null)
                 html = activeTab.Entry.Description;
-            else if (activeTab.IsFromFile && activeTab.FilePath != null &&
-                     Path.GetExtension(activeTab.FilePath).Equals(".html", StringComparison.OrdinalIgnoreCase))
-                html = activeTab.Document.Text;
+            else if (activeTab.IsFromFile && activeTab.FilePath != null)
+            {
+                var ext = Path.GetExtension(activeTab.FilePath).ToLowerInvariant();
+                if (ext == ".html")
+                    html = activeTab.Document.Text;
+                else if (ext == ".md" || ext == ".markdown")
+                {
+                    try
+                    {
+                        html = MarkdownConverter.ToHtml(activeTab.Document.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        html = $"<p>Ошибка преобразования Markdown: {ex.Message}</p>";
+                    }
+                }
+                else
+                    html = null;
+            }
             else
                 html = null;
 
@@ -3969,9 +4006,24 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             Path.GetExtension(activeTab.FilePath).Equals(".html", StringComparison.OrdinalIgnoreCase))
             || (activeTab.Entry != null && activeTab.Entry.Extension.Contains(".html"));
 
+        bool isMdTab = (activeTab.IsFromFile && activeTab.FilePath != null &&
+            (Path.GetExtension(activeTab.FilePath).Equals(".md", StringComparison.OrdinalIgnoreCase) ||
+             Path.GetExtension(activeTab.FilePath).Equals(".markdown", StringComparison.OrdinalIgnoreCase)))
+            || (activeTab.Entry != null && (activeTab.Entry.Extension.Contains(".md") || activeTab.Entry.Extension.Contains(".markdown")));
+
+        string? md = null;
         if (isHtmlTab)
         {
             activeTab.Document.Text = html;
+        }
+        else if (isMdTab)
+        {
+            md = MarkdownConverter.ToMarkdown(html);
+            activeTab.Document.Text = md;
+            if (activeTab.Entry != null)
+            {
+                activeTab.Entry.Code = md;
+            }
         }
 
         activeTab.IsDirty = true;

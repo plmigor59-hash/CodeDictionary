@@ -164,11 +164,11 @@ public static class MarkdownConverter
 
         // Bold+Italic: ***text*** or ___text___
         text = Regex.Replace(text, @"\*\*\*(.+?)\*\*\*", "<strong><em>$1</em></strong>");
-        text = Regex.Replace(text, @"\_\_\_(.+?)\_\_\_", "<strong><em>$1</em></strong>");
+        text = Regex.Replace(text, @"___(.+?)___", "<strong><em>$1</em></strong>");
 
         // Bold: **text** or __text__
         text = Regex.Replace(text, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
-        text = Regex.Replace(text, @"\_\_(.+?)\_\_", "<strong>$1</strong>");
+        text = Regex.Replace(text, @"__(.+?)__", "<strong>$1</strong>");
 
         // Italic: *text* or _text_
         text = Regex.Replace(text, @"\*(.+?)\*", "<em>$1</em>");
@@ -178,6 +178,66 @@ public static class MarkdownConverter
         text = Regex.Replace(text, @"~~(.+?)~~", "<del>$1</del>");
 
         return text;
+    }
+
+    public static string ToMarkdown(string html)
+    {
+        if (string.IsNullOrWhiteSpace(html))
+            return string.Empty;
+
+        var text = html
+            .Replace("&amp;", "&")
+            .Replace("&lt;", "<")
+            .Replace("&gt;", ">")
+            .Replace("&quot;", "\"")
+            .Replace("</h1>", "\n")
+            .Replace("</h2>", "\n")
+            .Replace("</h3>", "\n")
+            .Replace("</h4>", "\n")
+            .Replace("</h5>", "\n")
+            .Replace("</h6>", "\n")
+            .Replace("</p>", "\n")
+            .Replace("</li>", "\n")
+            .Replace("</blockquote>", "\n")
+            .Replace("</div>", "\n")
+            .Replace("<br />", "\n")
+            .Replace("<br/>", "\n")
+            .Replace("<br>", "\n")
+            .Replace("</pre>", "\n");
+
+        text = Regex.Replace(text, @"<h1[^>]*>(.*?)</h1>", "# $1", RegexOptions.Singleline);
+        text = Regex.Replace(text, @"<h2[^>]*>(.*?)</h2>", "## $1", RegexOptions.Singleline);
+        text = Regex.Replace(text, @"<h3[^>]*>(.*?)</h3>", "### $1", RegexOptions.Singleline);
+        text = Regex.Replace(text, @"<h4[^>]*>(.*?)</h4>", "#### $1", RegexOptions.Singleline);
+        text = Regex.Replace(text, @"<h5[^>]*>(.*?)</h5>", "##### $1", RegexOptions.Singleline);
+        text = Regex.Replace(text, @"<h6[^>]*>(.*?)</h6>", "###### $1", RegexOptions.Singleline);
+        text = Regex.Replace(text, @"<hr[^>]*>", "\n---\n");
+        text = Regex.Replace(text, @"<blockquote[^>]*>(.*?)</blockquote>", "> $1", RegexOptions.Singleline);
+        text = Regex.Replace(text, @"<img[^>]*src=""([^""]*)""[^>]*alt=""([^""]*)""[^>]*>", "![$2]($1)");
+        text = Regex.Replace(text, @"<img[^>]*alt=""([^""]*)""[^>]*src=""([^""]*)""[^>]*>", "![$1]($2)");
+        text = Regex.Replace(text, @"<a[^>]*href=""([^""]*)""[^>]*>(.*?)</a>", "[$2]($1)");
+        text = Regex.Replace(text, @"<pre><code[^>]*>(.*?)</code></pre>", "```\n$1\n```", RegexOptions.Singleline);
+        text = Regex.Replace(text, @"<pre>(.*?)</pre>", "```\n$1\n```", RegexOptions.Singleline);
+        text = Regex.Replace(text, @"<code[^>]*>(.*?)</code>", "`$1`");
+        text = Regex.Replace(text, @"<strong><em>(.*?)</em></strong>", "***$1***");
+        text = Regex.Replace(text, @"<em><strong>(.*?)</strong></em>", "***$1***");
+        text = Regex.Replace(text, @"<strong>(.*?)</strong>", "**$1**");
+        text = Regex.Replace(text, @"<b>(.*?)</b>", "**$1**");
+        text = Regex.Replace(text, @"<em>(.*?)</em>", "*$1*");
+        text = Regex.Replace(text, @"<i>(.*?)</i>", "*$1*");
+        text = Regex.Replace(text, @"<del>(.*?)</del>", "~~$1~~");
+        text = Regex.Replace(text, @"<s>(.*?)</s>", "~~$1~~");
+        text = Regex.Replace(text, @"<strike>(.*?)</strike>", "~~$1~~");
+        text = Regex.Replace(text, @"</ul>", "");
+        text = Regex.Replace(text, @"</ol>", "");
+        text = Regex.Replace(text, @"<ul[^>]*>", "");
+        text = Regex.Replace(text, @"<ol[^>]*>", "");
+        text = Regex.Replace(text, @"<li[^>]*>(.*?)</li>", "- $1");
+        text = Regex.Replace(text, @"<[^>]+>", "");
+        text = Regex.Replace(text, @"\n{3,}", "\n\n");
+        text = Regex.Replace(text, @"^\n+", "", RegexOptions.Multiline);
+
+        return text.Trim();
     }
 
     private static string EscapeHtml(string text)
