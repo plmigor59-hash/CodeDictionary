@@ -10,7 +10,7 @@ namespace CodeDictionary.SyntaxChecking
     {
         private readonly TextDocument _document;
         private readonly List<CodeSyntaxError> _markers = new();
-        private TextView _textView;
+        private TextView? _textView;
 
         public TextMarkerService(TextDocument document)
         {

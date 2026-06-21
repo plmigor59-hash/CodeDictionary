@@ -72,6 +72,6 @@ public partial class BookmarkListWindow : Window
     private class BookmarkItem
     {
         public int LineNumber { get; set; }
-        public string DisplayText { get; set; }
+        public string DisplayText { get; set; } = string.Empty;
     }
 }

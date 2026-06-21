@@ -49,13 +49,13 @@ namespace CodeDictionary
                 case CustomMessageBoxType.Warning:
                     msgBox.CaptionText.Text = "Предупреждение";
                     msgBox.IconText.Text = "!";
-                    msgBox.IconText.Foreground = (Application.Current.TryFindResource("WarningBrush") as Brush) ?? Brushes.Orange;
+                    msgBox.IconText.Foreground = (Application.Current?.TryFindResource("WarningBrush") as Brush) ?? Brushes.Orange;
                     break;
 
                 case CustomMessageBoxType.Error:
                     msgBox.CaptionText.Text = "Произошла ошибка";
                     msgBox.IconText.Text = "✕";
-                    msgBox.IconText.Foreground = (Application.Current.TryFindResource("DangerBrush") as Brush) ?? Brushes.Red;
+                    msgBox.IconText.Foreground = (Application.Current?.TryFindResource("DangerBrush") as Brush) ?? Brushes.Red;
                     break;
 
                 case CustomMessageBoxType.Question:
@@ -64,13 +64,13 @@ namespace CodeDictionary
                     msgBox.CancelButton.Content = "Нет";
                     msgBox.CancelButton.Visibility = Visibility.Visible;
                     msgBox.IconText.Text = "?";
-                    msgBox.IconText.Foreground = (Application.Current.TryFindResource("AccentBrush") as Brush) ?? Brushes.Blue;
+                    msgBox.IconText.Foreground = (Application.Current?.TryFindResource("AccentBrush") as Brush) ?? Brushes.Blue;
                     break;
 
                 default:
                     msgBox.CaptionText.Text = "Системное сообщение";
                     msgBox.IconText.Text = "ℹ";
-                    msgBox.IconText.Foreground = (Application.Current.TryFindResource("AccentBrush") as Brush) ?? Brushes.Blue;
+                    msgBox.IconText.Foreground = (Application.Current?.TryFindResource("AccentBrush") as Brush) ?? Brushes.Blue;
                     break;
             }
 

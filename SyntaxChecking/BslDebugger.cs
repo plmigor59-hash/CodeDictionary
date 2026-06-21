@@ -7,7 +7,7 @@ namespace CodeDictionary.SyntaxChecking
     {
         private readonly ManualResetEventSlim _pauseEvent = new(true);
         private readonly Dictionary<string, List<(int Line, string Condition)>> _breakpoints = new();
-        private MachineInstance _machine;
+        private MachineInstance? _machine;
         private int _stoppedThreadId;
         private MachineStopReason _stopReason;
         private string _errorMessage = string.Empty;

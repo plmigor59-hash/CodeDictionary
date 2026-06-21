@@ -36,7 +36,7 @@ public class BookmarkMargin : AbstractMargin
         }
     }
 
-    private void TextViewScrollOffsetChanged(object sender, EventArgs e)
+    private void TextViewScrollOffsetChanged(object? sender, EventArgs e)
     {
         InvalidateVisual();
     }

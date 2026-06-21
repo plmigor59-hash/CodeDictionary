@@ -20,7 +20,7 @@ public partial class GoToLineWindow : Window
         LineNumberTextBox.Focus();
     }
 
-    private TextBox LineNumberTextBox;
+    private TextBox LineNumberTextBox = null!;
 
     private void InitializeComponent()
     {

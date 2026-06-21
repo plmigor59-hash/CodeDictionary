@@ -79,7 +79,7 @@ public partial class MainWindow : Window
     private FoldingManager _foldingManager;
     private BraceFoldingStrategy _foldingStrategy;
     private BslFoldingStrategy _bslFoldingStrategy;
-    private BookmarkBackgroundRenderer _bookmarkRenderer;
+    private BookmarkBackgroundRenderer? _bookmarkRenderer;
     private BookmarkMargin _bookmarkMargin;
     private bool _updateDescription;
     private bool _isNewRecordDescription;
@@ -1014,9 +1014,9 @@ public partial class MainWindow : Window
         // Help and Global shortcuts
         this.InputBindings.Add(new InputBinding(new RelayCommand(ToggleHelp), new KeyGesture(Key.F1)));
         this.InputBindings.Add(new InputBinding(new RelayCommand(CloseHelp), new KeyGesture(Key.Escape)));
-        this.InputBindings.Add(new InputBinding(new RelayCommand(() => SaveFile_Click(null, null)), new KeyGesture(Key.S, ModifierKeys.Control)));
-        this.InputBindings.Add(new InputBinding(new RelayCommand(() => OpenFile_Click(null, null)), new KeyGesture(Key.O, ModifierKeys.Control)));
-        this.InputBindings.Add(new InputBinding(new RelayCommand(() => AddEntry_Click(null, null)), new KeyGesture(Key.N, ModifierKeys.Control)));
+        this.InputBindings.Add(new InputBinding(new RelayCommand(() => SaveFile_Click(null!, null!)), new KeyGesture(Key.S, ModifierKeys.Control)));
+        this.InputBindings.Add(new InputBinding(new RelayCommand(() => OpenFile_Click(null!, null!)), new KeyGesture(Key.O, ModifierKeys.Control)));
+        this.InputBindings.Add(new InputBinding(new RelayCommand(() => AddEntry_Click(null!, null!)), new KeyGesture(Key.N, ModifierKeys.Control)));
         CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ShowGoToLineWindow), new KeyGesture(Key.G, ModifierKeys.Control)));
         CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(GoToDefinition), new KeyGesture(Key.F12)));
     }
@@ -3136,7 +3136,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             return;
         }
 
-        CodeEntry entryToUpdate;
+        CodeEntry? entryToUpdate;
         if (activeTab?.Entry != null)
         {
             entryToUpdate = activeTab.Entry;
@@ -5751,7 +5751,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         var endHeight = to;
 
         // Используем CompositionTarget для синхронизации с частотой обновления экрана
-        EventHandler renderingHandler = null;
+        EventHandler? renderingHandler = null;
         renderingHandler = (sender, e) =>
         {
             var elapsed = DateTime.Now - startTime;
