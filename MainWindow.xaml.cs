@@ -1483,7 +1483,25 @@ public partial class MainWindow : Window
 
         var entry = activeTab.Entry;
         entry.Title = TitleTextBox.Text;
-        entry.Code = entry.Extension.Contains(".html") ? "" : CodeTextBox.Text;
+
+        if (entry.Extension.Contains(".html"))
+        {
+            entry.Code = "";
+            entry.Description = CodeTextBox.Text;
+            if (DescriptionPanel.Visibility == Visibility.Visible)
+            {
+                SetDescriptionHtml(CodeTextBox.Text);
+            }
+        }
+        else if (entry.Extension.Contains(".md"))
+        {
+            entry.Code = CodeTextBox.Text;
+        }
+        else
+        {
+            entry.Code = CodeTextBox.Text;
+        }
+
         entry.Category = _categoryService.NormalizeCategoryPath(CategoryComboBox.Text);
         entry.Tags = TagsTextBox.Text
             .Split(',')
@@ -1596,14 +1614,18 @@ public partial class MainWindow : Window
         }
 
         // Ensure code editor shows HTML content for HTML-only entry tabs
-        if (tab.Entry != null && tab.Entry.Extension.Contains(".html"))
+        if (tab.Entry != null && (tab.Entry.Extension.Contains(".html") || tab.Entry.Extension.Contains(".md")))
         {
-            if (string.IsNullOrEmpty(tab.Entry.Code) && !string.IsNullOrEmpty(tab.Entry.Description))
+            if (tab.Entry.Extension.Contains(".html") && string.IsNullOrEmpty(tab.Entry.Code) && !string.IsNullOrEmpty(tab.Entry.Description))
             {
                 tab.Document.Text = tab.Entry.Description;
+                tab.SyntaxName ??= "HTML";
             }
-            tab.SyntaxName ??= "HTML";
-           
+
+            if (tab.Entry.Extension.Contains(".md"))
+            {
+                tab.SyntaxName ??= "Markdown";
+            }
         }
 
         ToggleDescription_Close();
@@ -1661,13 +1683,13 @@ public partial class MainWindow : Window
                 TagsTextBox.Text = string.Join(", ", tab.Entry.Tags);
                 _currentEntry = tab.Entry;
                 _selectedCategoryPath = _categoryService.NormalizeCategoryPath(tab.Entry.Category);
-                if (!tab.Entry.Extension.Contains(".html"))
+                if (tab.Entry.Extension.Contains(".html") || tab.Entry.Extension.Contains(".md"))
                 {
-                    ToggleDescription_Close();
+                    ToggleDescription_Open();
                 }
                 else
                 {
-                    ToggleDescription_Open();
+                    ToggleDescription_Close();
                 }
 
                 
@@ -2964,7 +2986,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     private void LoadEntryToForm(CodeEntry entry)
     {
         _isUpdatingEditorContent = true;
-        _updateDescription = entry.Extension.Contains(".html");
+        _updateDescription = entry.Extension.Contains(".html") || entry.Extension.Contains(".md");
        
         try
         {
@@ -2991,6 +3013,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                     entryTab.Document.Text = entry.Description;
                     entryTab.SyntaxName = "HTML";
                     SyntaxHighlightingComboBox.SelectedItem = "Стандартная HTML";
+                    ToggleDescription_Open();
+                }
+                else if (entry.Extension.Contains(".md"))
+                {
                     ToggleDescription_Open();
                 }
 
@@ -3162,9 +3188,22 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
 
         entryToUpdate.Title = TitleTextBox.Text;
         var isHtmlEntry = entryToUpdate.Extension.Contains(".html");
-        entryToUpdate.Code = isHtmlEntry ? "" : CodeTextBox.Text;
+        var isMdEntry = entryToUpdate.Extension.Contains(".md") || entryToUpdate.Extension.Contains(".markdown");
+
         if (isHtmlEntry)
+        {
+            entryToUpdate.Code = "";
             entryToUpdate.Description = CodeTextBox.Text;
+        }
+        else if (isMdEntry)
+        {
+            entryToUpdate.Code = CodeTextBox.Text;
+            entryToUpdate.Description = MarkdownConverter.ToHtml(CodeTextBox.Text);
+        }
+        else
+        {
+            entryToUpdate.Code = CodeTextBox.Text;
+        }
         entryToUpdate.Category = _categoryService.NormalizeCategoryPath(CategoryComboBox.Text);
         entryToUpdate.Tags = TagsTextBox.Text
             .Split(',')
@@ -4501,6 +4540,14 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                 var filePath = Path.Combine(folderPath, fileName);
                 await File.WriteAllTextAsync(filePath, entry.Description);
             }
+            else if ((extension.Equals(".md", StringComparison.OrdinalIgnoreCase) ||
+                      extension.Equals(".markdown", StringComparison.OrdinalIgnoreCase)) &&
+                     !string.IsNullOrEmpty(entry.Code))
+            {
+                fileName += extension;
+                var filePath = Path.Combine(folderPath, fileName);
+                await File.WriteAllTextAsync(filePath, entry.Code);
+            }
             else
             {
                 fileName += extension;
@@ -4582,6 +4629,11 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             {
                 entry.Code = "";
                 entry.Description = content;
+            }
+            else if (extension == ".md" || extension == ".markdown")
+            {
+                entry.Code = content;
+                entry.Description = MarkdownConverter.ToHtml(content);
             }
             else
             {
