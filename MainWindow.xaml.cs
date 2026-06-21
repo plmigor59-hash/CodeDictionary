@@ -1631,7 +1631,7 @@ public partial class MainWindow : Window
         ToggleDescription_Close();
         _isSwitchingEditorTab = true;
         _isUpdatingEditorContent = true;
-       
+
         try
         {
             _activeEditorTab = tab;
@@ -1659,7 +1659,7 @@ public partial class MainWindow : Window
 
                 // Update syntax checking services for the new document
                 InitializeSyntaxServices();
-               
+
             }
 
 
@@ -1703,7 +1703,7 @@ public partial class MainWindow : Window
                     ToggleDescription_Close();
                 }
 
-                
+
             }
             else
             {
@@ -1746,7 +1746,7 @@ public partial class MainWindow : Window
                 TagsTextBox.Text = string.Empty;
                 _currentEntry = null;
                 _selectedCategoryPath = string.Empty;
-                
+
             }
 
             try
@@ -1774,7 +1774,7 @@ public partial class MainWindow : Window
             _isSwitchingEditorTab = false;
         }
 
-       
+
     }
 
 
@@ -3023,7 +3023,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     {
         _isUpdatingEditorContent = true;
         _updateDescription = entry.Extension.Contains(".html") || entry.Extension.Contains(".md");
-       
+
         try
         {
             _isDescriptionEditMode = false;
@@ -3061,7 +3061,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                     SyntaxHighlightingComboBox.SelectedItem = entry.Syntax;
                 }
 
-               
+
             }
             else
             {
@@ -3069,7 +3069,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                 _activeEditorTab = null;
                 if (_updateDescription)
 
-                  
+
 
                 {
                     if (_currentTheme == AppTheme.Dark)
@@ -3080,10 +3080,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                 }
                 if (!_isNewRecordDescription)
                 {
-                   
+
                     ToggleDescription_Open();
                 }
-               
+
             }
 
             ClearSearch();
@@ -3095,7 +3095,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         }
 
 
-       
+
     }
 
     private void AddEntry_Click(object sender, RoutedEventArgs e)
@@ -3536,7 +3536,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             else
                 html = null;
 
-        SetDescriptionHtml(html);
+            SetDescriptionHtml(html);
         }
 
         InitializeWebView2();
@@ -4065,17 +4065,72 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
     {
         var dialog = new OpenFolderDialog
         {
-            Title = "Выберите папку для импорта (*.bsl, *.html)",
-            InitialDirectory = @"G:\Dictionary\Dictionary\Test"
+            Title = "Выберите папку для импорта (*.bsl, *.html)"
         };
 
         if (dialog.ShowDialog() == true)
         {
             string selectedPath = dialog.FolderName;
-            await ImportFromFolderAsync(selectedPath);
-            RefreshEntriesList();
-            _snackbar.Show(CodeTextBox, "Импорт из папки завершен", NotificationType.Success, 2.0);
+            try
+            {
+                await ImportFromFolderAsync(selectedPath);
+                RefreshEntriesList();
+                _snackbar.Show(CodeTextBox, "Импорт из папки завершен", NotificationType.Success, 2.0);
+            }
+            catch (Exception ex)
+            {
+                ShowAlert($"Ошибка импорта: {ex.Message}", isError: true);
+            }
         }
+    }
+
+    private static List<string> SafeEnumerateFiles(string rootPath)
+    {
+        var result = new List<string>();
+        var dirs = new Queue<string>();
+        dirs.Enqueue(rootPath);
+
+        while (dirs.Count > 0)
+        {
+            string dir = dirs.Dequeue();
+            string[]? files = null;
+            string[]? subDirs = null;
+
+            try
+            {
+                files = Directory.GetFiles(dir);
+                subDirs = Directory.GetDirectories(dir);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                continue;
+            }
+            catch (DirectoryNotFoundException)
+            {
+                continue;
+            }
+
+            if (files != null)
+            {
+                foreach (var f in files)
+                {
+                    if (!Path.GetFileName(f).StartsWith("_"))
+                        result.Add(f);
+                }
+            }
+
+            if (subDirs != null)
+            {
+                foreach (var sd in subDirs)
+                {
+                    var dirName = Path.GetFileName(sd);
+                    if (!dirName.StartsWith("_"))
+                        dirs.Enqueue(sd);
+                }
+            }
+        }
+
+        return result;
     }
 
     private async Task ImportFromFolderAsync(string rootPath)
@@ -4083,9 +4138,8 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         // Список папок, которые не должны становиться категориями
         var foldersToIgnore = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Ext", "Forms", "Help" };
 
-        var allFiles = Directory.EnumerateFiles(rootPath, "*.*", SearchOption.AllDirectories)
+        var allFiles = SafeEnumerateFiles(rootPath)
             .Where(f => !Path.GetDirectoryName(f)!.Split(Path.DirectorySeparatorChar).Any(p => p.StartsWith("_")))
-            .Where(f => !Path.GetFileName(f).StartsWith("_"))
             .ToList();
 
         var bslFiles = allFiles.Where(f => f.EndsWith(".bsl", StringComparison.OrdinalIgnoreCase)).ToList();
