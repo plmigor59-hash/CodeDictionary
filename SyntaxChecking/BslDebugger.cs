@@ -38,7 +38,11 @@ namespace CodeDictionary.SyntaxChecking
         void IDebugSession.WaitReadyToRun() { }
         bool IDebugSession.IsActive => true;
 
-        void IDisposable.Dispose() { }
+        void IDisposable.Dispose()
+        {
+            _pauseEvent?.Dispose();
+            GC.SuppressFinalize(this);
+        }
 
         public void SetBreakpoints(string module, (int Line, string Condition)[] breakpoints)
         {

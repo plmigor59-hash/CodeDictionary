@@ -152,26 +152,13 @@ namespace CodeDictionary.SyntaxChecking
 
             public string[] GetCommandLineArguments() => args;
         }
-
-        private class StringCodeSource : ICodeSource
-        {
-            public string Location => "memory";
-            private readonly string _code;
-
-            public StringCodeSource(string code)
-            {
-                _code = code;
-            }
-
-            public string GetSourceCode() => _code;
-        }
     }
+}
 
-    public class BslExecutionResult
+public class BslExecutionResult
     {
         public bool Success { get; set; }
         public string Output { get; set; } = string.Empty;
         public string Error { get; set; } = string.Empty;
         public bool HasError => !string.IsNullOrEmpty(Error);
     }
-}

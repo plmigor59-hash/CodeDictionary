@@ -14,9 +14,18 @@ namespace CodeDictionary.SyntaxChecking
         private readonly List<SymbolInfo> _symbols = [];
         private IReadOnlyDictionary<string, string> _variableTypes = new Dictionary<string, string>();
 
-        public IReadOnlyList<CodeSyntaxError> Errors => _errors;
-        public IReadOnlyList<SymbolInfo> Symbols => _symbols;
-        public IReadOnlyDictionary<string, string> VariableTypes => _variableTypes;
+        public IReadOnlyList<CodeSyntaxError> Errors
+        {
+            get { lock (_lock) return _errors.ToList(); }
+        }
+        public IReadOnlyList<SymbolInfo> Symbols
+        {
+            get { lock (_lock) return _symbols.ToList(); }
+        }
+        public IReadOnlyDictionary<string, string> VariableTypes
+        {
+            get { lock (_lock) return new Dictionary<string, string>(_variableTypes); }
+        }
         public bool HasErrors => _errors.Any();
 
         public async Task<AnalysisResult> AnalyzeAsync(string code, CancellationToken cancellationToken = default)
@@ -168,19 +177,6 @@ namespace CodeDictionary.SyntaxChecking
             {
                 return 1;
             }
-        }
-
-        public class StringCodeSource : ICodeSource
-        {
-            public string Location => "memory";
-            private readonly string _code;
-
-            public StringCodeSource(string code)
-            {
-                _code = code;
-            }
-
-            public string GetSourceCode() => _code;
         }
     }
 }

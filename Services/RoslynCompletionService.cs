@@ -15,7 +15,7 @@ namespace CodeDictionary.Services
         public string FullSignature => $"{MethodName}({string.Join(", ", Parameters)})";
     }
 
-    public class RoslynCompletionService
+    public class RoslynCompletionService : IDisposable
     {
         private readonly AdhocWorkspace _workspace;
         private readonly Project _project;
@@ -229,6 +229,12 @@ namespace CodeDictionary.Services
             if (semanticModel == null) return Enumerable.Empty<Diagnostic>();
 
             return semanticModel.GetDiagnostics(cancellationToken: cancellationToken);
+        }
+
+        public void Dispose()
+        {
+            _workspace?.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

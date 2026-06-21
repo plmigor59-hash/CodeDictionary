@@ -38,7 +38,7 @@ namespace CodeDictionary.SyntaxChecking
                     var filteredLines = lines.Select(line => line.TrimStart().StartsWith("#") ? "" : line);
                     var sanitizedCode = string.Join(Environment.NewLine, filteredLines);
 
-                    var source = new CacheStringCodeSource(sanitizedCode);
+                    var source = new StringCodeSource(sanitizedCode);
                     var sourceCode = SourceCodeBuilder.Create().FromSource(source).Build();
                     var iterator = new SourceCodeIterator(sourceCode);
                     var lexer = new DefaultLexer { Iterator = iterator };
@@ -122,14 +122,6 @@ namespace CodeDictionary.SyntaxChecking
             {
                 return (_lastResult, _lastExtractor);
             }
-        }
-
-        private class CacheStringCodeSource : ICodeSource
-        {
-            public string Location => "memory";
-            private readonly string _code;
-            public CacheStringCodeSource(string code) => _code = code;
-            public string GetSourceCode() => _code;
         }
     }
 }

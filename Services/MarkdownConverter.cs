@@ -5,6 +5,22 @@ namespace CodeDictionary.Services;
 
 public static class MarkdownConverter
 {
+    private static readonly Regex HrRegex = new(@"^-{3,}$|^\*{3,}$|^_{3,}$", RegexOptions.Compiled);
+    private static readonly Regex HeaderRegex = new(@"^(#{1,6})\s+(.+)$", RegexOptions.Compiled);
+    private static readonly Regex UnorderedListRegex = new(@"^(\s*)[-*+]\s+(.+)$", RegexOptions.Compiled);
+    private static readonly Regex OrderedListRegex = new(@"^(\s*)\d+\.\s+(.+)$", RegexOptions.Compiled);
+    private static readonly Regex BlockquoteRegex = new(@"^>\s?(.*)$", RegexOptions.Compiled);
+    private static readonly Regex ImageRegex = new(@"!\[([^\]]*)\]\(([^)]+)\)", RegexOptions.Compiled);
+    private static readonly Regex LinkRegex = new(@"\[([^\]]+)\]\(([^)]+)\)", RegexOptions.Compiled);
+    private static readonly Regex InlineCodeRegex = new(@"`([^`]+)`", RegexOptions.Compiled);
+    private static readonly Regex BoldItalicStarRegex = new(@"\*\*\*(.+?)\*\*\*", RegexOptions.Compiled);
+    private static readonly Regex BoldItalicUnderscoreRegex = new(@"___(.+?)___", RegexOptions.Compiled);
+    private static readonly Regex BoldStarRegex = new(@"\*\*(.+?)\*\*", RegexOptions.Compiled);
+    private static readonly Regex BoldUnderscoreRegex = new(@"__(.+?)__", RegexOptions.Compiled);
+    private static readonly Regex ItalicStarRegex = new(@"\*(.+?)\*", RegexOptions.Compiled);
+    private static readonly Regex ItalicUnderscoreRegex = new(@"\b_(.+?)_\b", RegexOptions.Compiled);
+    private static readonly Regex StrikethroughRegex = new(@"~~(.+?)~~", RegexOptions.Compiled);
+
     public static string ToHtml(string markdown)
     {
         if (string.IsNullOrWhiteSpace(markdown))
@@ -63,7 +79,7 @@ public static class MarkdownConverter
             }
 
             // HR
-            if (Regex.IsMatch(line, @"^-{3,}$|^\*{3,}$|^_{3,}$"))
+            if (HrRegex.IsMatch(line))
             {
                 CloseParagraph();
                 CloseList();
@@ -72,7 +88,7 @@ public static class MarkdownConverter
             }
 
             // Headers
-            var headerMatch = Regex.Match(line, @"^(#{1,6})\s+(.+)$");
+            var headerMatch = HeaderRegex.Match(line);
             if (headerMatch.Success)
             {
                 CloseParagraph();
@@ -84,7 +100,7 @@ public static class MarkdownConverter
             }
 
             // Unordered list
-            var listMatch = Regex.Match(line, @"^(\s*)[-*+]\s+(.+)$");
+            var listMatch = UnorderedListRegex.Match(line);
             if (listMatch.Success)
             {
                 CloseParagraph();
@@ -99,7 +115,7 @@ public static class MarkdownConverter
             }
 
             // Ordered list
-            var orderedMatch = Regex.Match(line, @"^(\s*)\d+\.\s+(.+)$");
+            var orderedMatch = OrderedListRegex.Match(line);
             if (orderedMatch.Success)
             {
                 CloseParagraph();
@@ -114,7 +130,7 @@ public static class MarkdownConverter
             }
 
             // Blockquote
-            var quoteMatch = Regex.Match(line, @"^>\s?(.*)$");
+            var quoteMatch = BlockquoteRegex.Match(line);
             if (quoteMatch.Success)
             {
                 CloseParagraph();
@@ -154,28 +170,28 @@ public static class MarkdownConverter
         text = EscapeHtml(text);
 
         // Images: ![alt](url)
-        text = Regex.Replace(text, @"!\[([^\]]*)\]\(([^)]+)\)", "<img src=\"$2\" alt=\"$1\" />");
+        text = ImageRegex.Replace(text, "<img src=\"$2\" alt=\"$1\" />");
 
         // Links: [text](url)
-        text = Regex.Replace(text, @"\[([^\]]+)\]\(([^)]+)\)", "<a href=\"$2\">$1</a>");
+        text = LinkRegex.Replace(text, "<a href=\"$2\">$1</a>");
 
         // Inline code: `code`
-        text = Regex.Replace(text, @"`([^`]+)`", "<code>$1</code>");
+        text = InlineCodeRegex.Replace(text, "<code>$1</code>");
 
         // Bold+Italic: ***text*** or ___text___
-        text = Regex.Replace(text, @"\*\*\*(.+?)\*\*\*", "<strong><em>$1</em></strong>");
-        text = Regex.Replace(text, @"___(.+?)___", "<strong><em>$1</em></strong>");
+        text = BoldItalicStarRegex.Replace(text, "<strong><em>$1</em></strong>");
+        text = BoldItalicUnderscoreRegex.Replace(text, "<strong><em>$1</em></strong>");
 
         // Bold: **text** or __text__
-        text = Regex.Replace(text, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
-        text = Regex.Replace(text, @"__(.+?)__", "<strong>$1</strong>");
+        text = BoldStarRegex.Replace(text, "<strong>$1</strong>");
+        text = BoldUnderscoreRegex.Replace(text, "<strong>$1</strong>");
 
         // Italic: *text* or _text_
-        text = Regex.Replace(text, @"\*(.+?)\*", "<em>$1</em>");
-        text = Regex.Replace(text, @"\b_(.+?)_\b", "<em>$1</em>");
+        text = ItalicStarRegex.Replace(text, "<em>$1</em>");
+        text = ItalicUnderscoreRegex.Replace(text, "<em>$1</em>");
 
         // Strikethrough: ~~text~~
-        text = Regex.Replace(text, @"~~(.+?)~~", "<del>$1</del>");
+        text = StrikethroughRegex.Replace(text, "<del>$1</del>");
 
         return text;
     }

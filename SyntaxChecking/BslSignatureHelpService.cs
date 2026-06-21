@@ -50,7 +50,7 @@ namespace CodeDictionary.SyntaxChecking
 
             try
             {
-                var source = new SignStringCodeSource(code);
+                var source = new StringCodeSource(code);
                 var sourceCode = SourceCodeBuilder.Create().FromSource(source).Build();
                 var iterator = new SourceCodeIterator(sourceCode);
                 var lexer = new DefaultLexer { Iterator = iterator };
@@ -156,14 +156,6 @@ namespace CodeDictionary.SyntaxChecking
             {
                 return null;
             }
-        }
-
-        private class SignStringCodeSource : ICodeSource
-        {
-            public string Location => "memory";
-            private readonly string _code;
-            public SignStringCodeSource(string code) => _code = code;
-            public string GetSourceCode() => _code;
         }
     }
 }

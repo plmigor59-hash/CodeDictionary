@@ -414,6 +414,36 @@ public partial class MainWindow : Window
     }
 
 
+    private CompletionWindow CreateCompletionWindow(int wordStart, int width = 500)
+    {
+        _completionWindow?.Close();
+        _completionWindow = new CompletionWindow(CodeTextBox.TextArea)
+        {
+            WindowStyle = WindowStyle.None,
+            ResizeMode = ResizeMode.NoResize,
+            BorderThickness = new Thickness(1),
+            StartOffset = wordStart,
+            Width = width
+        };
+
+        var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
+        var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
+        var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
+
+        _completionWindow.Background = background;
+        _completionWindow.Foreground = foreground;
+        _completionWindow.BorderBrush = border;
+
+        if (_completionWindow.CompletionList != null)
+        {
+            _completionWindow.CompletionList.Background = background;
+            _completionWindow.CompletionList.Foreground = foreground;
+        }
+
+        _completionWindow.Closed += delegate { _completionWindow = null; };
+        return _completionWindow;
+    }
+
     private void ShowCompletion1C(string enteredText, bool controlSpace)
     {
         var context = BslSyntaxContext.Detect(CodeTextBox.Text, CodeTextBox.CaretOffset);
@@ -479,42 +509,30 @@ public partial class MainWindow : Window
 
         if (filteredList.Any())
         {
-            _completionWindow?.Close();
-            _completionWindow = new CompletionWindow(CodeTextBox.TextArea)
+            int wordStart = 0;
+            if (context.Kind == BslContextKind.MemberAccess)
             {
-                Width = 500,
-                WindowStyle = WindowStyle.None,
-                ResizeMode = ResizeMode.NoResize,
-                BorderThickness = new Thickness(1)
-            };
-
-            var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
-            var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
-            var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
-
-            _completionWindow.Background = background;
-            _completionWindow.Foreground = foreground;
-            _completionWindow.BorderBrush = border;
-
-            if (_completionWindow.CompletionList != null)
+                var dotPos = CodeTextBox.Text.LastIndexOf('.', CodeTextBox.CaretOffset - 1);
+                wordStart = dotPos > 0 ? dotPos + 1 : 0;
+            }
+            else
             {
-                _completionWindow.CompletionList.Background = background;
-                _completionWindow.CompletionList.Foreground = foreground;
+                wordStart = CodeTextBox.CaretOffset;
+                while (wordStart > 0 && (char.IsLetterOrDigit(CodeTextBox.Text[wordStart - 1]) || CodeTextBox.Text[wordStart - 1] == '_'))
+                    wordStart--;
             }
 
-            _completionWindow.Closed += delegate { _completionWindow = null; };
-
-            var data = _completionWindow.CompletionList.CompletionData;
+            var window = CreateCompletionWindow(wordStart);
+            var data = window.CompletionList.CompletionData;
             foreach (var item in filteredList.OrderBy(d => d.Text))
             {
                 data.Add(item);
             }
-
-            _completionWindow.Show();
+            window.Show();
 
             if (!string.IsNullOrEmpty(filterWord))
             {
-                _completionWindow.CompletionList.SelectItem(filterWord);
+                window.CompletionList.SelectItem(filterWord);
             }
         }
         else
@@ -538,49 +556,21 @@ public partial class MainWindow : Window
 
         if (allData.Any())
         {
-            _completionWindow?.Close();
-
-            // Calculate start offset of the word to replace
             int wordStart = position;
             while (wordStart > 0 && (char.IsLetterOrDigit(code[wordStart - 1]) || code[wordStart - 1] == '_'))
                 wordStart--;
 
-            _completionWindow = new CompletionWindow(CodeTextBox.TextArea)
-            {
-                Width = 400,
-                WindowStyle = WindowStyle.None,
-                ResizeMode = ResizeMode.NoResize,
-                BorderThickness = new Thickness(1),
-                StartOffset = wordStart
-            };
-
-            var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
-            var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
-            var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
-
-            _completionWindow.Background = background;
-            _completionWindow.Foreground = foreground;
-            _completionWindow.BorderBrush = border;
-
-            if (_completionWindow.CompletionList != null)
-            {
-                _completionWindow.CompletionList.Background = background;
-                _completionWindow.CompletionList.Foreground = foreground;
-            }
-
-            _completionWindow.Closed += delegate { _completionWindow = null; };
-
-            var data = _completionWindow.CompletionList.CompletionData;
+            var window = CreateCompletionWindow(wordStart, 400);
+            var data = window.CompletionList.CompletionData;
             foreach (var item in allData.OrderBy(d => d.Text))
             {
                 data.Add(item);
             }
-
-            _completionWindow.Show();
+            window.Show();
 
             if (!string.IsNullOrEmpty(filterWord))
             {
-                _completionWindow.CompletionList.SelectItem(filterWord);
+                window.CompletionList.SelectItem(filterWord);
             }
         }
         else
@@ -676,7 +666,10 @@ public partial class MainWindow : Window
         {
             await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(js);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"HtmlPositionDebounceTimer: {ex.Message}");
+        }
     }
 
     private async void BrowserSelectionDebounceTimer_Tick(object? sender, EventArgs e)
@@ -734,7 +727,10 @@ public partial class MainWindow : Window
             CodeTextBox.Select(selStart, selLen);
             CodeTextBox.ScrollToLine(CodeTextBox.Document.GetLineByOffset(selStart).LineNumber);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SyncBrowserSelectionToEditor: {ex.Message}");
+        }
     }
 
     private static (int, int) MapStrippedRangeToOriginal(string originalText, int strippedStart, int strippedEnd)
@@ -780,143 +776,73 @@ public partial class MainWindow : Window
 
     private async void ShowCompletion()
     {
-        _completionCts?.Cancel();
-        _completionCts = new CancellationTokenSource();
-        var token = _completionCts.Token;
-
-        var code = CodeTextBox.Text;
-        var position = CodeTextBox.CaretOffset;
-
-        // Проверяем, не находимся ли мы внутри строки или комментария
-        if (IsCursorInsideStringOrComment(code, position))
-            return;
-
-        _roslynCompletionService.UpdateCode(code);
-
-        if (token.IsCancellationRequested) return;
-
-        IEnumerable<CompletionItem> items;
         try
         {
-            items = await _roslynCompletionService.GetCompletionItemsAsync(position, token);
-        }
-        catch (OperationCanceledException)
-        {
-            return;
-        }
+            _completionCts?.Cancel();
+            _completionCts = new CancellationTokenSource();
+            var token = _completionCts.Token;
 
-        if (token.IsCancellationRequested || !items.Any())
-        {
-            if (!items.Any()) _completionWindow?.Close();
-            return;
-        }
+            var code = CodeTextBox.Text;
+            var position = CodeTextBox.CaretOffset;
 
-        // Вычисляем начало слова и текущий префикс для фильтрации
-        int wordStart = position;
-        while (wordStart > 0 && (char.IsLetterOrDigit(code[wordStart - 1]) || code[wordStart - 1] == '_'))
-            wordStart--;
+            if (IsCursorInsideStringOrComment(code, position))
+                return;
 
-        string currentPrefix = code.Substring(wordStart, position - wordStart);
-        if (!string.IsNullOrEmpty(currentPrefix))
-        {
-            var filteredItems = items.Where(i => i.DisplayText.StartsWith(currentPrefix, StringComparison.OrdinalIgnoreCase)).ToList();
-            if (!filteredItems.Any())
+            _roslynCompletionService.UpdateCode(code);
+
+            if (token.IsCancellationRequested) return;
+
+            IEnumerable<CompletionItem> items;
+            try
             {
-                _completionWindow?.Close();
+                items = await _roslynCompletionService.GetCompletionItemsAsync(position, token);
+            }
+            catch (OperationCanceledException)
+            {
                 return;
             }
-            items = filteredItems;
+
+            if (token.IsCancellationRequested || !items.Any())
+            {
+                if (!items.Any()) _completionWindow?.Close();
+                return;
+            }
+
+            int wordStart = position;
+            while (wordStart > 0 && (char.IsLetterOrDigit(code[wordStart - 1]) || code[wordStart - 1] == '_'))
+                wordStart--;
+
+            string currentPrefix = code.Substring(wordStart, position - wordStart);
+            if (!string.IsNullOrEmpty(currentPrefix))
+            {
+                var filteredItems = items.Where(i => i.DisplayText.StartsWith(currentPrefix, StringComparison.OrdinalIgnoreCase)).ToList();
+                if (!filteredItems.Any())
+                {
+                    _completionWindow?.Close();
+                    return;
+                }
+                items = filteredItems;
+            }
+
+            _completionWindow?.Close();
+
+            var window = CreateCompletionWindow(wordStart);
+            var data = window.CompletionList.CompletionData;
+            foreach (var item in items)
+            {
+                data.Add(new RoslynCompletionData(item, _roslynCompletionService, position));
+            }
+            window.Show();
         }
-
-        // Всегда пересоздаём окно, чтобы StartOffset гарантированно применился
-        _completionWindow?.Close();
-        _completionWindow = new CompletionWindow(CodeTextBox.TextArea)
+        catch (Exception ex)
         {
-            WindowStyle = WindowStyle.None,
-            ResizeMode = ResizeMode.NoResize,
-            BorderThickness = new Thickness(1),
-            StartOffset = wordStart,
-            Width = 500
-        };
-
-        var background = Application.Current.TryFindResource("WindowBackground") as Brush ?? Brushes.White;
-        var foreground = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Black;
-        var border = Application.Current.TryFindResource("BorderBrush") as Brush ?? Brushes.Gray;
-
-        _completionWindow.Background = background;
-        _completionWindow.Foreground = foreground;
-        _completionWindow.BorderBrush = border;
-
-        if (_completionWindow.CompletionList != null)
-        {
-            _completionWindow.CompletionList.Background = background;
-            _completionWindow.CompletionList.Foreground = foreground;
+            System.Diagnostics.Debug.WriteLine($"ShowCompletion: {ex.Message}");
         }
-
-        _completionWindow.Closed += (s, e) => _completionWindow = null;
-
-        var data = _completionWindow.CompletionList.CompletionData;
-        foreach (var item in items)
-        {
-            data.Add(new RoslynCompletionData(item, _roslynCompletionService, position));
-        }
-
-        _completionWindow.Show();
     }
 
     private bool IsCursorInsideStringOrComment(string code, int offset)
     {
-        if (string.IsNullOrEmpty(code) || offset <= 0 || offset > code.Length)
-            return false;
-
-        int adjustedOffset = Math.Min(offset - 1, code.Length - 1);
-
-        bool inSingleComment = false;
-        bool inMultiComment = false;
-        bool inString = false;
-        char stringChar = '"';
-
-        for (int i = 0; i <= adjustedOffset; i++)
-        {
-            char c = code[i];
-
-            if (inSingleComment)
-            {
-                if (c == '\n') inSingleComment = false;
-                continue;
-            }
-
-            if (inMultiComment)
-            {
-                if (c == '*' && i + 1 < code.Length && code[i + 1] == '/')
-                {
-                    inMultiComment = false;
-                    i++;
-                }
-                continue;
-            }
-
-            if (inString)
-            {
-                if (c == '\\') { i++; continue; }
-                if (c == stringChar) inString = false;
-                continue;
-            }
-
-            if (c == '/' && i + 1 < code.Length)
-            {
-                if (code[i + 1] == '/') { inSingleComment = true; i++; continue; }
-                if (code[i + 1] == '*') { inMultiComment = true; i++; continue; }
-            }
-
-            if (c == '"' || c == '\'')
-            {
-                inString = true;
-                stringChar = c;
-            }
-        }
-
-        return inSingleComment || inMultiComment || inString;
+        return Services.CodeStringHelper.IsInsideStringOrComment(code, offset);
     }
 
     private object? GetNeighborData(object item)
@@ -1811,12 +1737,12 @@ public partial class MainWindow : Window
     {
         return Path.GetExtension(filePath).ToLowerInvariant() switch
         {
-            ".cs" => _currentTheme == AppTheme.Dark ? "Темная C#" : "Стандартная C#",
+            ".cs" => CodeDictionary.Services.SyntaxNames.ForCSharp(_currentTheme == AppTheme.Dark),
             ".cpp" or ".cxx" or ".cc" or ".hpp" or ".h" => _currentTheme == AppTheme.Dark ? "Темная C++" : "Стандартная C++",
-            ".bsl" or ".os" => _currentTheme == AppTheme.Dark ? "Темная 1C" : "Стандартная 1C",
-            ".xml" or ".xsd" or ".xaml" => _currentTheme == AppTheme.Dark ? "Темная XML" : "Стандартная XML",
-            ".html" or ".htm" => _currentTheme == AppTheme.Dark ? "Темная HTML" : "Стандартная HTML",
-            ".py" => _currentTheme == AppTheme.Dark ? "Темная Python" : "Стандартная Python",
+            ".bsl" or ".os" => CodeDictionary.Services.SyntaxNames.For1C(_currentTheme == AppTheme.Dark),
+            ".xml" or ".xsd" or ".xaml" => CodeDictionary.Services.SyntaxNames.ForXML(_currentTheme == AppTheme.Dark),
+            ".html" or ".htm" => CodeDictionary.Services.SyntaxNames.ForHTML(_currentTheme == AppTheme.Dark),
+            ".py" => CodeDictionary.Services.SyntaxNames.ForPython(_currentTheme == AppTheme.Dark),
             _ => null
         };
     }
@@ -2459,7 +2385,7 @@ public partial class MainWindow : Window
 
     private void SelectSyntax(string selected)
     {
-        if (selected == "Темная C#")
+        if (selected == CodeDictionary.Services.SyntaxNames.DarkCSharp)
         {
             CodeTextBox.SyntaxHighlighting = _darkCSharpHighlighting ?? HighlightingManager.Instance.GetDefinition("C#");
         }
@@ -2474,7 +2400,7 @@ public partial class MainWindow : Window
             CodeTextBox.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C++");
         }
 
-        else if (selected == "Темная 1C")
+        else if (selected == CodeDictionary.Services.SyntaxNames.Dark1C)
         {
             CodeTextBox.SyntaxHighlighting = _dark1CHigh ?? HighlightingManager.Instance.GetDefinition("1C");
         }
@@ -2633,8 +2559,8 @@ public partial class MainWindow : Window
             SyntaxHighlightingComboBox?.Items.Clear();
             if (theme == AppTheme.Dark)
             {
-                SyntaxHighlightingComboBox?.Items.Add("Темная 1C");
-                SyntaxHighlightingComboBox?.Items.Add("Темная C#");
+                SyntaxHighlightingComboBox?.Items.Add(CodeDictionary.Services.SyntaxNames.Dark1C);
+                SyntaxHighlightingComboBox?.Items.Add(CodeDictionary.Services.SyntaxNames.DarkCSharp);
                 SyntaxHighlightingComboBox?.Items.Add("Темная C++");
                 SyntaxHighlightingComboBox?.Items.Add("Темная XML");
                 SyntaxHighlightingComboBox?.Items.Add("Темная HTML");
@@ -3762,7 +3688,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             DescriptionBrowser.CoreWebView2.WebMessageReceived += OnWebMessageReceived;
             _descriptionWebView2Ready = true;
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"InitializeWebView2: {ex.Message}");
+        }
     }
 
     private async System.Threading.Tasks.Task EnsureWebView2ReadyAsync()
@@ -3813,7 +3742,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                 _browserSelectionDebounceTimer.Start();
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"OnWebMessageReceived: {ex.Message}");
+        }
     }
 
     private async void SetDescriptionHtml(string? html)
@@ -3842,7 +3774,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             DescriptionBrowser.CoreWebView2.NavigationCompleted += OnDescriptionNavigationCompleted;
             DescriptionBrowser.NavigateToString(fullHtml);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SetDescriptionHtml: {ex.Message}");
+        }
     }
 
     private async void OnDescriptionNavigationCompleted(object? sender, object? e)
@@ -3876,7 +3811,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
 ";
             await DescriptionBrowser.CoreWebView2.ExecuteScriptAsync(selJs);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"OnDescriptionNavigationCompleted: {ex.Message}");
+        }
     }
 
     private void EditDescriptionButton_Click(object sender, RoutedEventArgs e)
@@ -4015,7 +3953,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                 html = html?.Trim();
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SaveDescriptionButton: {ex.Message}");
+        }
 
         if (string.IsNullOrEmpty(html)) return;
 
@@ -4194,7 +4135,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
                 Code = code,
                 Category = category,
                 Description = description,
-                Syntax = _currentTheme == AppTheme.Dark ? "Темная 1C" : "Стандартная 1C",
+                Syntax = CodeDictionary.Services.SyntaxNames.For1C(_currentTheme == AppTheme.Dark),
                 Tags = new List<string> { "Imported" }
             };
             _data.Entries.Add(entry);
@@ -5523,7 +5464,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             _terminalProcess.Kill();
             _terminalProcess.WaitForExit(3000);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"StopTerminalProcess: {ex.Message}");
+        }
         _terminalProcess.Dispose();
         _terminalProcess = null;
     }
