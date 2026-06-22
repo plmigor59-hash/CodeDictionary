@@ -125,6 +125,7 @@ public partial class MainWindow : Window
     private readonly PythonExecutionService _pythonExecutionService = new();
     private readonly PythonCompletionService _pythonCompletionService = new();
     private readonly BslSignatureHelpService _bslSignatureHelpService = new();
+    private readonly HotkeyManager _hotkeyManager;
 
     private readonly HashSet<int> _activeBreakpoints = new();
     private readonly DebugLineHighlighter _debugLineHighlighter = new();
@@ -885,6 +886,10 @@ public partial class MainWindow : Window
         // Загружаем кастомную тему подсветки для тёмного и светлого режимов
 
         _dataService = new DataService();
+        var appDataPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "CodeDictionary");
+        _hotkeyManager = new HotkeyManager(appDataPath);
         _categoryService = new CategoryService();
         _formattingService = new FormattingService();
         _appState = _dataService.LoadState();
@@ -991,9 +996,9 @@ public partial class MainWindow : Window
         CodeTextBox.TextArea.TextView.BackgroundRenderers.Add(_debugLineHighlighter);
 
         // F9 toggle breakpoint, F5 continue
-        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ToggleBreakpointAtCaret), new KeyGesture(Key.F9)));
-        this.InputBindings.Add(new InputBinding(new RelayCommand(ContinueDebug), new KeyGesture(Key.F5)));
-        this.InputBindings.Add(new InputBinding(new RelayCommand(DebugStepOver), new KeyGesture(Key.F10)));
+        ApplyHotkey("ToggleBreakpoint", ToggleBreakpointAtCaret, isEditor: true);
+        ApplyHotkey("ContinueDebug", ContinueDebug);
+        ApplyHotkey("DebugStepOver", DebugStepOver);
 
         // Bookmark margin handler
         _bookmarkMargin = new BookmarkMargin(
@@ -1014,19 +1019,70 @@ public partial class MainWindow : Window
         };
 
         // Add hotkeys
-        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ToggleBookmarkAtCaret), new KeyGesture(Key.F2, ModifierKeys.Alt)));
-        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(GoToNextBookmark), new KeyGesture(Key.Down, ModifierKeys.Control | ModifierKeys.Alt)));
-        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(GoToPreviousBookmark), new KeyGesture(Key.Up, ModifierKeys.Control | ModifierKeys.Alt)));
-        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ShowBookmarkList), new KeyGesture(Key.F3)));
+        ApplyHotkey("ToggleBookmark", ToggleBookmarkAtCaret, isEditor: true);
+        ApplyHotkey("NextBookmark", GoToNextBookmark, isEditor: true);
+        ApplyHotkey("PrevBookmark", GoToPreviousBookmark, isEditor: true);
+        ApplyHotkey("ShowBookmarkList", ShowBookmarkList, isEditor: true);
 
         // Help and Global shortcuts
-        this.InputBindings.Add(new InputBinding(new RelayCommand(ToggleHelp), new KeyGesture(Key.F1)));
-        this.InputBindings.Add(new InputBinding(new RelayCommand(CloseHelp), new KeyGesture(Key.Escape)));
-        this.InputBindings.Add(new InputBinding(new RelayCommand(() => SaveFile_Click(null!, null!)), new KeyGesture(Key.S, ModifierKeys.Control)));
-        this.InputBindings.Add(new InputBinding(new RelayCommand(() => OpenFile_Click(null!, null!)), new KeyGesture(Key.O, ModifierKeys.Control)));
-        this.InputBindings.Add(new InputBinding(new RelayCommand(() => AddEntry_Click(null!, null!)), new KeyGesture(Key.N, ModifierKeys.Control)));
-        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(ShowGoToLineWindow), new KeyGesture(Key.G, ModifierKeys.Control)));
-        CodeTextBox.InputBindings.Add(new InputBinding(new RelayCommand(GoToDefinition), new KeyGesture(Key.F12)));
+        ApplyHotkey("ToggleHelp", ToggleHelp);
+        ApplyHotkey("CloseHelp", CloseHelp);
+        ApplyHotkey("SaveFile", () => SaveFile_Click(null!, null!));
+        ApplyHotkey("OpenFile", () => OpenFile_Click(null!, null!));
+        ApplyHotkey("AddEntry", () => AddEntry_Click(null!, null!));
+        ApplyHotkey("GoToLine", ShowGoToLineWindow, isEditor: true);
+        ApplyHotkey("GoToDefinition", GoToDefinition, isEditor: true);
+        ApplyHotkey("SaveEntry", () => SaveEntry_Click(null!, null!));
+        ApplyHotkey("DeleteEntry", () => DeleteEntry_Click(null!, null!));
+        ApplyHotkey("FormatCode", () => FormatCode_Click(null!, null!), isEditor: true);
+        ApplyHotkey("ToggleTerminal", () => TerminalToggleButton_Click(null!, null!));
+        ApplyHotkey("ToggleAnalyze", () => AnalyzeToggle_Click(null!, null!));
+        ApplyHotkey("ToggleDescription", () => ToggleDescriptionButton_Click(null!, null!));
+        ApplyHotkey("RunScript", () => RunScript_Click(null!, null!));
+    }
+
+    private void ApplyHotkey(string id, Action action, bool isEditor = false)
+    {
+        var gesture = _hotkeyManager.GetGesture(id);
+        if (gesture == null) return;
+
+        var target = isEditor ? CodeTextBox.InputBindings : this.InputBindings;
+        target.Add(new InputBinding(new RelayCommand(action), gesture));
+    }
+
+    private void HotkeySettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new HotkeySettingsWindow(_hotkeyManager)
+        {
+            Owner = this
+        };
+        dialog.ShowDialog();
+
+        // Re-apply all hotkeys
+        this.InputBindings.Clear();
+        CodeTextBox.InputBindings.Clear();
+
+        ApplyHotkey("ToggleBreakpoint", ToggleBreakpointAtCaret, isEditor: true);
+        ApplyHotkey("ContinueDebug", ContinueDebug);
+        ApplyHotkey("DebugStepOver", DebugStepOver);
+        ApplyHotkey("ToggleBookmark", ToggleBookmarkAtCaret, isEditor: true);
+        ApplyHotkey("NextBookmark", GoToNextBookmark, isEditor: true);
+        ApplyHotkey("PrevBookmark", GoToPreviousBookmark, isEditor: true);
+        ApplyHotkey("ShowBookmarkList", ShowBookmarkList, isEditor: true);
+        ApplyHotkey("ToggleHelp", ToggleHelp);
+        ApplyHotkey("CloseHelp", CloseHelp);
+        ApplyHotkey("SaveFile", () => SaveFile_Click(null!, null!));
+        ApplyHotkey("OpenFile", () => OpenFile_Click(null!, null!));
+        ApplyHotkey("AddEntry", () => AddEntry_Click(null!, null!));
+        ApplyHotkey("GoToLine", ShowGoToLineWindow, isEditor: true);
+        ApplyHotkey("GoToDefinition", GoToDefinition, isEditor: true);
+        ApplyHotkey("SaveEntry", () => SaveEntry_Click(null!, null!));
+        ApplyHotkey("DeleteEntry", () => DeleteEntry_Click(null!, null!));
+        ApplyHotkey("FormatCode", () => FormatCode_Click(null!, null!), isEditor: true);
+        ApplyHotkey("ToggleTerminal", () => TerminalToggleButton_Click(null!, null!));
+        ApplyHotkey("ToggleAnalyze", () => AnalyzeToggle_Click(null!, null!));
+        ApplyHotkey("ToggleDescription", () => ToggleDescriptionButton_Click(null!, null!));
+        ApplyHotkey("RunScript", () => RunScript_Click(null!, null!));
     }
 
     private void ShowGoToLineWindow()

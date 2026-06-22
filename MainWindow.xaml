@@ -822,6 +822,17 @@
 
                         <Separator Margin="4,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
+                        <Button
+                            x:Name="HotkeySettingsButton"
+                            Click="HotkeySettingsButton_Click"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Настройка горячих клавиш">
+                            <materialIcons:MaterialIcon
+                                Width="18"
+                                Height="18"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Kind="Keyboard" />
+                        </Button>
 
                     </WrapPanel>
                 </Border>
