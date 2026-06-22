@@ -2417,6 +2417,28 @@ public partial class MainWindow : Window
         _data = await _dataService.LoadDataAsync();
         _appState = await _dataService.LoadStateAsync();
 
+        // Автоимпорт из папки lib при первом запуске
+        bool hasLibCategory = _data.Categories != null &&
+            _data.Categories.Any(c => string.Equals(
+                _categoryService.NormalizeCategoryPath(c), "OneScript_Lib", StringComparison.OrdinalIgnoreCase));
+        if (!hasLibCategory)
+        {
+            var libPath = Path.Combine(AppContext.BaseDirectory, "lib");
+            if (Directory.Exists(libPath))
+            {
+                string savedCategory = _selectedCategoryPath;
+                _selectedCategoryPath = "OneScript_Lib";
+                await ImportFromFolderAsync(libPath);
+                _selectedCategoryPath = savedCategory;
+
+                if (_data.Entries.Count > 0)
+                {
+                    _snackbar.Show(CodeTextBox,
+                        "Загружены файлы из папки lib в категорию OneScript_Lib",
+                        NotificationType.Success, 3.0);
+                }
+            }
+        }
 
         DescriptionPanel.Visibility = Visibility.Collapsed;
         DescriptionSplitter.Visibility = Visibility.Collapsed;
@@ -4366,16 +4388,17 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             .Where(f => !Path.GetDirectoryName(f)!.Split(Path.DirectorySeparatorChar).Any(p => p.StartsWith("_")))
             .ToList();
 
-        var bslFiles = allFiles.Where(f => f.EndsWith(".bsl", StringComparison.OrdinalIgnoreCase)).ToList();
+        var sourceFiles = allFiles.Where(f =>
+            f.EndsWith(".bsl", StringComparison.OrdinalIgnoreCase) ||
+            f.EndsWith(".os", StringComparison.OrdinalIgnoreCase)).ToList();
 
         // Базовая категория для импорта - текущая выбранная
         string baseCategory = _categoryService.NormalizeCategoryPath(_selectedCategoryPath);
 
-        foreach (var bslFile in bslFiles)
+        foreach (var srcFile in sourceFiles)
         {
-            string relativePath = Path.GetDirectoryName(Path.GetRelativePath(rootPath, bslFile)) ?? "";
+            string relativePath = Path.GetDirectoryName(Path.GetRelativePath(rootPath, srcFile)) ?? "";
 
-            // Фильтруем части пути: если часть пути в списке исключений, пропускаем ее
             var pathParts = relativePath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
                                         .Where(p => !foldersToIgnore.Contains(p));
 
@@ -4390,11 +4413,10 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             category = _categoryService.NormalizeCategoryPath(category);
             if (string.IsNullOrEmpty(category)) category = UncategorizedCategoryName;
 
-            string title = Path.GetFileNameWithoutExtension(bslFile);
-            string code = await File.ReadAllTextAsync(bslFile);
+            string title = Path.GetFileNameWithoutExtension(srcFile);
+            string code = await File.ReadAllTextAsync(srcFile);
 
-            // Ищем соответствующий html файл для описания
-            string htmlFile = Path.ChangeExtension(bslFile, ".html");
+            string htmlFile = Path.ChangeExtension(srcFile, ".html");
             string description = "";
             if (File.Exists(htmlFile))
             {
@@ -4402,8 +4424,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             }
             else
             {
-                // Если нет файла с таким же именем, ищем index.html в той же папке
-                string indexHtml = Path.Combine(Path.GetDirectoryName(bslFile) ?? "", "index.html");
+                string indexHtml = Path.Combine(Path.GetDirectoryName(srcFile) ?? "", "index.html");
                 if (File.Exists(indexHtml))
                 {
                     description = await File.ReadAllTextAsync(indexHtml);
@@ -4414,7 +4435,7 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             {
                 Id = Guid.NewGuid(),
                 Title = title,
-                Extension = Path.GetExtension(bslFile),
+                Extension = Path.GetExtension(srcFile),
                 Code = code,
                 Category = category,
                 Description = description,
@@ -4424,12 +4445,14 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
             _data.Entries.Add(entry);
         }
 
-        // Также импортируем HTML файлы, для которых нет BSL (как отдельные записи)
+        // Также импортируем HTML файлы, для которых нет BSL/OS (как отдельные записи)
         var htmlFiles = allFiles.Where(f => f.EndsWith(".html", StringComparison.OrdinalIgnoreCase)).ToList();
         foreach (var htmlFile in htmlFiles)
         {
             string bslEquiv = Path.ChangeExtension(htmlFile, ".bsl");
-            if (File.Exists(bslEquiv)) continue; // Уже импортировано с BSL
+            if (File.Exists(bslEquiv)) continue;
+            string osEquiv = Path.ChangeExtension(htmlFile, ".os");
+            if (File.Exists(osEquiv)) continue;
             if (Path.GetFileName(htmlFile).Equals("index.html", StringComparison.OrdinalIgnoreCase)) continue;
 
             string relativePath = Path.GetDirectoryName(Path.GetRelativePath(rootPath, htmlFile)) ?? "";
