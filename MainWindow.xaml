@@ -110,11 +110,11 @@
             BorderThickness="0,0,0,1"
             MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
                 <StackPanel Margin="8,0" Orientation="Horizontal">
                     <TextBlock
@@ -230,12 +230,12 @@
                     x:Name="EntriesTreeView"
                     Grid.Row="1"
                     Margin="8,0"
-                    FontSize="13"
                     AllowDrop="True"
                     Background="Transparent"
                     BorderThickness="0"
                     DragOver="EntriesTreeView_DragOver"
                     Drop="EntriesTreeView_Drop"
+                    FontSize="13"
                     MouseDoubleClick="EntriesTreeView_MouseDoubleClick"
                     PreviewMouseLeftButtonDown="EntriesTreeView_PreviewMouseLeftButtonDown"
                     PreviewMouseMove="EntriesTreeView_PreviewMouseMove"
@@ -447,7 +447,7 @@
                             Margin="0,0,4,0"
                             Click="SaveEntry_Click"
                             Content="Сохранить"
-                             Style="{StaticResource AccentButton}" />
+                            Style="{StaticResource AccentButton}" />
                         <Button
                             Grid.Column="1"
                             Margin="4,0,0,0"
@@ -644,15 +644,15 @@
                             Height="22"
                             Margin="4,0"
                             VerticalContentAlignment="Center"
-                            FontFamily="Cascadia Mono"
-                            FontSize="11"
                             Background="{DynamicResource WindowBackground}"
-                            Foreground="{DynamicResource TextPrimaryBrush}"
                             BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="1"
-                            ToolTip="Аргументы для скрипта (через пробел)"
+                            FontFamily="Cascadia Mono"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
                             Text=""
-                            TextChanged="ScriptArgsTextBox_TextChanged">
+                            TextChanged="ScriptArgsTextBox_TextChanged"
+                            ToolTip="Аргументы для скрипта (через пробел)">
 
                             <TextBox.Style>
                                 <Style TargetType="TextBox">
@@ -763,7 +763,7 @@
                         </Button>
 
 
-                      
+
                         <Button
                             Click="ExportSelectedCategory_Click"
                             Style="{StaticResource IconButton}"
@@ -807,16 +807,14 @@
 
                         <ToggleButton
                             x:Name="AutoCompletionToggle"
-                            IsChecked="True"
                             Click="AutoCompletionToggle_Click"
-                           
+                            IsChecked="True"
                             Style="{StaticResource IconToggleButton}"
                             ToolTip="Автоподбор и подсветка синтаксиса">
                             <materialIcons:MaterialIcon
                                 Width="18"
                                 Height="18"
                                 Foreground="{DynamicResource WarningBrush}"
-                              
                                 Kind="AutoFix" />
                         </ToggleButton>
 
@@ -1256,7 +1254,11 @@
                                 Height="14"
                                 Kind="Close" />
                         </Button>
-                        <StackPanel Grid.Column="0" Margin="10,2" HorizontalAlignment="Left" Orientation="Horizontal">
+                        <StackPanel
+                            Grid.Column="0"
+                            Margin="10,2"
+                            HorizontalAlignment="Left"
+                            Orientation="Horizontal">
                             <materialIcons:MaterialIcon
                                 Width="16"
                                 Height="16"
@@ -1280,10 +1282,10 @@
                         HorizontalAlignment="Stretch"
                         Background="{DynamicResource BorderBrush}"
                         Cursor="SizeNS"
-                        Visibility="Collapsed"
                         MouseLeftButtonDown="OutputSplitter_MouseLeftButtonDown"
+                        MouseLeftButtonUp="OutputSplitter_MouseLeftButtonUp"
                         MouseMove="OutputSplitter_MouseMove"
-                        MouseLeftButtonUp="OutputSplitter_MouseLeftButtonUp" />
+                        Visibility="Collapsed" />
 
                     <!--  Output Panel Content  -->
                     <Border
@@ -1315,9 +1317,9 @@
                                 Grid.Row="1"
                                 Height="28"
                                 Padding="8,2"
+                                Background="{DynamicResource SidePanelBackground}"
                                 BorderBrush="{DynamicResource BorderBrush}"
                                 BorderThickness="0,1,0,0"
-                                Background="{DynamicResource SidePanelBackground}"
                                 Visibility="Collapsed">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -1337,14 +1339,14 @@
                                         Grid.Column="1"
                                         Height="22"
                                         VerticalContentAlignment="Center"
-                                        FontFamily="Cascadia Mono"
-                                        FontSize="11"
                                         Background="{DynamicResource WindowBackground}"
-                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                         BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1"
-                                        ToolTip="Введите имя переменной и нажмите Enter"
-                                        KeyDown="WatchTextBox_KeyDown" />
+                                        FontFamily="Cascadia Mono"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        KeyDown="WatchTextBox_KeyDown"
+                                        ToolTip="Введите имя переменной и нажмите Enter" />
                                     <Button
                                         x:Name="WatchEvalButton"
                                         Grid.Column="2"
@@ -1424,18 +1426,18 @@
                         HorizontalAlignment="Stretch"
                         Background="{DynamicResource BorderBrush}"
                         Cursor="SizeNS"
-                        Visibility="Collapsed"
                         MouseLeftButtonDown="TerminalSplitter_MouseLeftButtonDown"
+                        MouseLeftButtonUp="TerminalSplitter_MouseLeftButtonUp"
                         MouseMove="TerminalSplitter_MouseMove"
-                        MouseLeftButtonUp="TerminalSplitter_MouseLeftButtonUp" />
+                        Visibility="Collapsed" />
 
                     <!--  Terminal Panel Content  -->
                     <Grid
                         x:Name="TerminalPanelContent"
                         Grid.Row="10"
                         Background="{DynamicResource DictCardBackground}"
-                        Visibility="Collapsed"
-                        MouseDown="TerminalPanelContent_MouseDown">
+                        MouseDown="TerminalPanelContent_MouseDown"
+                        Visibility="Collapsed">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
@@ -1475,15 +1477,15 @@
                                     x:Name="TerminalInputTextBox"
                                     Grid.Column="1"
                                     Margin="6,2"
+                                    VerticalContentAlignment="Center"
                                     Background="Transparent"
                                     BorderThickness="0"
+                                    CaretBrush="{DynamicResource AccentBrush}"
                                     FontFamily="Cascadia Mono"
                                     FontSize="16"
-                                    VerticalContentAlignment="Center"
                                     Foreground="{DynamicResource TextPrimaryBrush}"
-                                    CaretBrush="{DynamicResource AccentBrush}"
-                                    ToolTip="Введите команду и нажмите Enter"
-                                    KeyDown="TerminalInputTextBox_KeyDown" />
+                                    KeyDown="TerminalInputTextBox_KeyDown"
+                                    ToolTip="Введите команду и нажмите Enter" />
                             </Grid>
                         </Border>
                     </Grid>
@@ -1699,28 +1701,13 @@
                                 Margin="0,8,0,4"
                                 FontWeight="SemiBold"
                                 Foreground="{DynamicResource WarningBrush}"
-                                Text="Новые возможности" />
+                                Text="Примечание:" />
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="Key" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                    <materialIcons:MaterialIcon
-                                        Width="16"
-                                        Height="16"
-                                        Margin="0,2"
-                                        Foreground="{DynamicResource AccentBrush}"
-                                        Kind="Keyboard" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock
-                                        Margin="0,2"
-                                        VerticalAlignment="Center"
-                                        Foreground="{DynamicResource TextSecondaryBrush}"
-                                        Text="Настройка горячих клавиш" />
-                                </StackPanel>
-                            </Grid>
+                              </Grid>
 
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions>
@@ -1729,34 +1716,34 @@
                                 <StackPanel Grid.Column="0">
                                     <TextBlock
                                         Margin="0,1"
-                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                         FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                         Text="Drag-and-drop файлов" />
                                     <TextBlock
                                         Margin="0,0,0,6"
                                         Foreground="{DynamicResource TextSecondaryBrush}"
-                                        TextWrapping="Wrap"
-                                        Text="Перетащите файлы из проводника в дерево записей. Файлы автоматически импортируются как новые записи в выбранную категорию." />
+                                        Text="Перетащите файлы из проводника в дерево записей. Файлы автоматически импортируются как новые записи в выбранную категорию."
+                                        TextWrapping="Wrap" />
                                     <TextBlock
                                         Margin="0,1"
-                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                         FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                         Text="Автосохранение" />
                                     <TextBlock
                                         Margin="0,0,0,6"
                                         Foreground="{DynamicResource TextSecondaryBrush}"
-                                        TextWrapping="Wrap"
-                                        Text="Изменения автоматически сохраняются через 500 мс после последнего ввода. Закладки с несохранёнными данными помечаются звёздочкой *." />
+                                        Text="Изменения автоматически сохраняются через 500 мс после последнего ввода. Закладки с несохранёнными данными помечаются звёздочкой *."
+                                        TextWrapping="Wrap" />
                                     <TextBlock
                                         Margin="0,1"
-                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                         FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                         Text="Undo / Redo для каждой вкладки" />
                                     <TextBlock
                                         Margin="0,0,0,6"
                                         Foreground="{DynamicResource TextSecondaryBrush}"
-                                        TextWrapping="Wrap"
-                                        Text="Каждая вкладка имеет собственный стек изменений. Undo/Redo восстанавливает полное состояние записи (код, заголовок, категорию, теги, синтаксис)." />
+                                        Text="Каждая вкладка имеет собственный стек изменений. Undo/Redo восстанавливает полное состояние записи (код, заголовок, категорию, теги, синтаксис)."
+                                        TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
 
@@ -1862,6 +1849,13 @@
                                         Margin="0,2"
                                         Foreground="{DynamicResource WarningBrush}"
                                         Kind="FileImportOutline" />
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource AccentBrush}"
+                                        Kind="Keyboard" />
+
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
                                     <TextBlock
@@ -1939,6 +1933,11 @@
                                         VerticalAlignment="Center"
                                         Foreground="{DynamicResource TextSecondaryBrush}"
                                         Text="Импорт из папки (bsl/html)" />
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Настройка горячих клавиш" />
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
