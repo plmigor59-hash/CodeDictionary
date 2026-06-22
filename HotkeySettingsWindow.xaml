@@ -23,6 +23,7 @@
         <ListView x:Name="HotkeyList" 
                   Grid.Row="1"
                   BorderThickness="1"
+                  Foreground="{DynamicResource DictTextPrimary}"
                   BorderBrush="{DynamicResource BorderBrush}"
                   Background="{DynamicResource SurfaceBackground}"
                   SelectionMode="Single"

@@ -1603,6 +1603,14 @@
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource TextPrimaryBrush}"
                                         Text="Ctrl+G" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="Ctrl+N" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="F12" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
                                     <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Показать/скрыть помощь" />
@@ -1614,6 +1622,8 @@
                                     <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Отменить" />
                                     <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Повторить" />
                                     <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Перейти к строке" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Новая запись" />
+                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Перейти к определению" />
                                 </StackPanel>
                             </Grid>
 
@@ -1657,32 +1667,6 @@
                                 Margin="0,8,0,4"
                                 FontWeight="SemiBold"
                                 Foreground="{DynamicResource AccentBrush}"
-                                Text="Интерфейс" />
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Key" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                    <TextBlock
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                        Text="Ctrl+N" />
-                                    <TextBlock
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                        Text="Delete" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Новая запись" />
-                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Удалить выбранное" />
-                                </StackPanel>
-                            </Grid>
-
-                            <TextBlock
-                                Margin="0,8,0,4"
-                                FontWeight="SemiBold"
-                                Foreground="{DynamicResource AccentBrush}"
                                 Text="Отладка (1С)" />
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -1707,6 +1691,72 @@
                                     <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Точка останова" />
                                     <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Продолжить выполнение" />
                                     <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="Шаг с обходом" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!--  Новые возможности  -->
+                            <TextBlock
+                                Margin="0,8,0,4"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource WarningBrush}"
+                                Text="Новые возможности" />
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Key" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <materialIcons:MaterialIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,2"
+                                        Foreground="{DynamicResource AccentBrush}"
+                                        Kind="Keyboard" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock
+                                        Margin="0,2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        Text="Настройка горячих клавиш" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock
+                                        Margin="0,1"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        FontWeight="SemiBold"
+                                        Text="Drag-and-drop файлов" />
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        TextWrapping="Wrap"
+                                        Text="Перетащите файлы из проводника в дерево записей. Файлы автоматически импортируются как новые записи в выбранную категорию." />
+                                    <TextBlock
+                                        Margin="0,1"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        FontWeight="SemiBold"
+                                        Text="Автосохранение" />
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        TextWrapping="Wrap"
+                                        Text="Изменения автоматически сохраняются через 500 мс после последнего ввода. Закладки с несохранёнными данными помечаются звёздочкой *." />
+                                    <TextBlock
+                                        Margin="0,1"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        FontWeight="SemiBold"
+                                        Text="Undo / Redo для каждой вкладки" />
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                        TextWrapping="Wrap"
+                                        Text="Каждая вкладка имеет собственный стек изменений. Undo/Redo восстанавливает полное состояние записи (код, заголовок, категорию, теги, синтаксис)." />
                                 </StackPanel>
                             </Grid>
 
