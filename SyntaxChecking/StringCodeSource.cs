@@ -1,6 +1,4 @@
 using OneScript.Language.Sources;
-using OneScript.Sources;
-using ScriptEngine.Machine;
 
 namespace CodeDictionary.SyntaxChecking
 {

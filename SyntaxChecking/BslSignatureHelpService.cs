@@ -1,6 +1,5 @@
 using CodeDictionary.Analysis;
 using OneScript.Language.LexicalAnalysis;
-using OneScript.Language.Sources;
 using OneScript.Sources;
 
 namespace CodeDictionary.SyntaxChecking

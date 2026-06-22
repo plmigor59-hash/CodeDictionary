@@ -487,12 +487,14 @@
                     CornerRadius="4">
                     <WrapPanel VerticalAlignment="Center" Orientation="Horizontal">
                         <Button
+                            x:Name="UndoButton"
                             Click="UndoMenuItem_Click"
                             Content="↩"
                             Foreground="{DynamicResource TextPrimaryBrush}"
                             Style="{StaticResource IconButton}"
                             ToolTip="Отменить" />
                         <Button
+                            x:Name="RedoButton"
                             Click="RedoMenuItem_Click"
                             Content="↪"
                             Foreground="{DynamicResource TextPrimaryBrush}"

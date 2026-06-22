@@ -15,6 +15,7 @@ using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32;  // Для OpenFileDialog и SaveFileDialog
 using ScriptEngine.Machine;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -108,6 +109,7 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _completionDebounceTimer;
     private readonly DispatcherTimer _htmlPositionDebounceTimer;
     private readonly DispatcherTimer _browserSelectionDebounceTimer;
+    private readonly DispatcherTimer _autoSaveTimer;
     private string _lastBrowserSelectedText = "";
     private CancellationTokenSource? _completionCts;
     private SyntaxErrorColorizer? _colorizer;
@@ -948,6 +950,12 @@ public partial class MainWindow : Window
         };
         _browserSelectionDebounceTimer.Tick += BrowserSelectionDebounceTimer_Tick;
 
+        _autoSaveTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(DebounceTimerMs)
+        };
+        _autoSaveTimer.Tick += AutoSaveTimer_Tick;
+
         CodeTextBox.TextArea.TextView.MouseHover += OnTextViewMouseHover;
         CodeTextBox.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
 
@@ -1405,6 +1413,12 @@ public partial class MainWindow : Window
             return;
         }
 
+        var tab = GetActiveEditorTab();
+        if (tab != null && !tab.IsDirty)
+        {
+            tab.PushUndo();
+        }
+
         SyncActiveEntryTabFromForm();
     }
 
@@ -1569,7 +1583,11 @@ public partial class MainWindow : Window
 
         try
         {
+            if (_activeEditorTab != null)
+                _activeEditorTab.PropertyChanged -= OnTabPropertyChanged;
+
             _activeEditorTab = tab;
+            _activeEditorTab.PropertyChanged += OnTabPropertyChanged;
             _textSegments = tab.Segments;
 
             if (CodeTextBox.Document != tab.Document)
@@ -1702,6 +1720,17 @@ public partial class MainWindow : Window
             }
 
             UpdateFoldings();
+            UpdateUndoRedoButtons();
+
+            if (tab.IsDirty && tab.IsEntryTab)
+            {
+                _autoSaveTimer.Stop();
+                _autoSaveTimer.Start();
+            }
+            else
+            {
+                _autoSaveTimer.Stop();
+            }
         }
         finally
         {
@@ -1760,6 +1789,10 @@ public partial class MainWindow : Window
     {
         if (_activeEditorTab != null)
         {
+            if (!_activeEditorTab.IsDirty)
+            {
+                _activeEditorTab.PushUndo();
+            }
             _activeEditorTab.IsDirty = true;
         }
     }
@@ -2809,6 +2842,14 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
 
     private void EntriesTreeView_DragOver(object sender, DragEventArgs e)
     {
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            e.Effects = DragDropEffects.Copy;
+            e.Handled = true;
+            HandleDragScroll(e);
+            return;
+        }
+
         if (!TryGetDraggedItem(e, out var draggedItem))
         {
             e.Effects = DragDropEffects.None;
@@ -2862,13 +2903,25 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
 
     private async void EntriesTreeView_Drop(object sender, DragEventArgs e)
     {
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            var files = (string[]?)e.Data.GetData(DataFormats.FileDrop);
+            if (files == null || files.Length == 0)
+                return;
+
+            var targetItem = GetItemUnderMouse(e.OriginalSource as DependencyObject);
+            string targetCategory = GetDropTargetCategory(targetItem);
+            await ImportFilesAsEntriesAsync(files, targetCategory);
+            return;
+        }
+
         if (!TryGetDraggedItem(e, out var draggedItem))
         {
             return;
         }
 
-        var targetItem = GetItemUnderMouse(e.OriginalSource as DependencyObject);
-        if (!TryGetDropTarget(targetItem, draggedItem, out var destinationPath))
+        var targetItem2 = GetItemUnderMouse(e.OriginalSource as DependencyObject);
+        if (!TryGetDropTarget(targetItem2, draggedItem, out var destinationPath))
         {
             return;
         }
@@ -2952,6 +3005,74 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
         }
 
         return null;
+    }
+
+    private string GetDropTargetCategory(object? targetItem)
+    {
+        if (targetItem is CategoryNode targetCategory)
+            return targetCategory.FullPath;
+        if (targetItem is CodeEntryViewModel targetEntry)
+            return _categoryService.NormalizeCategoryPath(targetEntry.Entry.Category);
+        return _categoryService.NormalizeCategoryPath(_selectedCategoryPath);
+    }
+
+    private async Task ImportFilesAsEntriesAsync(string[] files, string targetCategory)
+    {
+        int count = 0;
+        foreach (var filePath in files)
+        {
+            try
+            {
+                string content = File.ReadAllText(filePath);
+                string ext = Path.GetExtension(filePath);
+                string title = Path.GetFileNameWithoutExtension(filePath);
+
+                var entry = new CodeEntry
+                {
+                    Title = title,
+                    Category = targetCategory,
+                    Syntax = DetectSyntax(ext),
+                    CreatedAt = DateTime.Now,
+                    ModifiedAt = DateTime.Now
+                };
+
+                bool isHtml = ext.Equals(".html", StringComparison.OrdinalIgnoreCase)
+                           || ext.Equals(".htm", StringComparison.OrdinalIgnoreCase);
+                bool isMd = ext.Equals(".md", StringComparison.OrdinalIgnoreCase)
+                          || ext.Equals(".markdown", StringComparison.OrdinalIgnoreCase);
+
+                if (isHtml)
+                {
+                    entry.Code = "";
+                    entry.Description = content;
+                }
+                else if (isMd)
+                {
+                    entry.Code = content;
+                    entry.Description = MarkdownConverter.ToHtml(content);
+                }
+                else
+                {
+                    entry.Code = content;
+                    entry.Description = "";
+                }
+
+                _data.Entries.Add(entry);
+                count++;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Ошибка импорта файла '{filePath}': {ex.Message}");
+            }
+        }
+
+        if (count > 0)
+        {
+            _categoryService.EnsureCategoryPathExists(targetCategory, _data.Categories);
+            await _dataService.SaveDataAsync(_data);
+            RefreshEntriesList();
+            _snackbar.Show(CodeTextBox, $"Импортировано записей: {count}", NotificationType.Success, 2.0);
+        }
     }
 
     private void LoadEntryToForm(CodeEntry entry)
@@ -3400,12 +3521,109 @@ if(tb){{tb.style.background='{tbBgColor}';tb.style.borderBottom='1px solid {tbBo
 
     private void UndoMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        CodeTextBox.Undo();
+        var tab = GetActiveEditorTab();
+        if (tab == null) return;
+
+        if (tab.CanUndo)
+        {
+            tab.Undo();
+            ReloadUndoableTab(tab);
+        }
+        else
+        {
+            CodeTextBox.Undo();
+        }
+        UpdateUndoRedoButtons();
     }
 
     private void RedoMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        CodeTextBox.Redo();
+        var tab = GetActiveEditorTab();
+        if (tab == null) return;
+
+        if (tab.CanRedo)
+        {
+            tab.Redo();
+            ReloadUndoableTab(tab);
+        }
+        else
+        {
+            CodeTextBox.Redo();
+        }
+        UpdateUndoRedoButtons();
+    }
+
+    private void ReloadUndoableTab(EditorTabModel tab)
+    {
+        if (tab.Entry == null) return;
+        _isUpdatingEditorContent = true;
+        try
+        {
+            TitleTextBox.Text = tab.Title;
+            CodeTextBox.Text = tab.Document.Text;
+            if (!string.IsNullOrEmpty(tab.SyntaxName))
+            {
+                SelectSyntax(tab.SyntaxName);
+            }
+            if (tab.Entry != null)
+            {
+                CategoryComboBox.Text = tab.Entry.Category ?? "";
+                TagsTextBox.Text = tab.Entry.Tags != null ? string.Join(", ", tab.Entry.Tags) : "";
+            }
+        }
+        finally
+        {
+            _isUpdatingEditorContent = false;
+        }
+        UpdateUndoRedoButtons();
+    }
+
+    private void UpdateUndoRedoButtons()
+    {
+        var tab = GetActiveEditorTab();
+        if (tab == null)
+        {
+            UndoButton.IsEnabled = false;
+            RedoButton.IsEnabled = false;
+            return;
+        }
+        UndoButton.IsEnabled = tab.CanUndo || CodeTextBox.CanUndo;
+        RedoButton.IsEnabled = tab.CanRedo || CodeTextBox.CanRedo;
+    }
+
+    private void AutoSaveTimer_Tick(object? sender, EventArgs e)
+    {
+        _autoSaveTimer.Stop();
+        var tab = GetActiveEditorTab();
+        if (tab == null || !tab.IsDirty || tab.Entry == null)
+            return;
+
+        SyncActiveEntryTabFromForm();
+        var entry = tab.Entry;
+        _dataService.SaveDataAsync(_data).ContinueWith(_ =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                tab.MarkSaved();
+                RefreshEntriesList(entry);
+            });
+        });
+    }
+
+    private void OnTabPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(EditorTabModel.IsDirty) && sender is EditorTabModel tab)
+        {
+            if (tab.IsDirty && tab.IsEntryTab && tab == GetActiveEditorTab())
+            {
+                _autoSaveTimer.Stop();
+                _autoSaveTimer.Start();
+            }
+            else
+            {
+                _autoSaveTimer.Stop();
+            }
+        }
     }
 
     private void ToggleDescriptionButton_Click(object sender, RoutedEventArgs e)

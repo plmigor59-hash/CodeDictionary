@@ -1,4 +1,3 @@
-using OneScript.Language.Sources;
 using OneScript.Sources;
 using OneScript.StandardLibrary;
 using ScriptEngine;
@@ -156,9 +155,9 @@ namespace CodeDictionary.SyntaxChecking
 }
 
 public class BslExecutionResult
-    {
-        public bool Success { get; set; }
-        public string Output { get; set; } = string.Empty;
-        public string Error { get; set; } = string.Empty;
-        public bool HasError => !string.IsNullOrEmpty(Error);
-    }
+{
+    public bool Success { get; set; }
+    public string Output { get; set; } = string.Empty;
+    public string Error { get; set; } = string.Empty;
+    public bool HasError => !string.IsNullOrEmpty(Error);
+}
