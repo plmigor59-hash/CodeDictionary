@@ -1,3 +1,6 @@
+
+![HTML5](https://infostart.ru/bitrix/templates/sandbox_empty/assets/tpl/abo/img/logo.svg)
+
 # CodeDictionary
 
 CodeDictionary — это мощное WPF-приложение для систематизированного хранения, организации и редактирования фрагментов кода (сниппетов). Оно разработано для программистов, которые хотят создать личную базу знаний с удобным интерфейсом.
