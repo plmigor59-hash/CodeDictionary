@@ -1,52 +1,141 @@
 <Window x:Class="CodeDictionary.HotkeySettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
         Title="Настройка горячих клавиш"
-        Width="600" Height="450"
+        Width="620" Height="480"
         WindowStartupLocation="CenterOwner"
-        WindowStyle="ToolWindow"
+        WindowStyle="None"
         ResizeMode="CanResizeWithGrip"
+        AllowsTransparency="False"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True"
         Background="{DynamicResource WindowBackground}"
         Foreground="{DynamicResource TextPrimaryBrush}">
-    <Grid Margin="12">
+    <WindowChrome.WindowChrome>
+        <WindowChrome
+            CaptionHeight="0"
+            CornerRadius="0"
+            GlassFrameThickness="0"
+            ResizeBorderThickness="6" />
+    </WindowChrome.WindowChrome>
+    <Window.Style>
+        <Style TargetType="Window">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        </Style>
+    </Window.Style>
+
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="32" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Нажмите на сочетание клавиш, чтобы изменить его" 
-                   Margin="0,0,0,8" 
-                   FontSize="13" 
-                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+        <!--  Custom Title Bar  -->
+        <Border
+            x:Name="TitleBar"
+            Grid.Row="0"
+            Background="{DynamicResource SidePanelBackground}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,0,0,1"
+            MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-        <ListView x:Name="HotkeyList" 
-                  Grid.Row="1"
-                  BorderThickness="1"
-                  Foreground="{DynamicResource DictTextPrimary}"
-                  BorderBrush="{DynamicResource BorderBrush}"
-                  Background="{DynamicResource SurfaceBackground}"
-                  SelectionMode="Single"
-                  MouseDoubleClick="HotkeyList_MouseDoubleClick">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Действие" Width="280" DisplayMemberBinding="{Binding DisplayName}"/>
-                    <GridViewColumn Header="Сочетание" Width="200">
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding CurrentGesture}" 
-                                           FontWeight="Bold"
-                                           VerticalAlignment="Center"/>
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-                </GridView>
-            </ListView.View>
-        </ListView>
+                <StackPanel Margin="8,0" Orientation="Horizontal">
+                    <materialIcons:MaterialIcon
+                        Width="16" Height="16"
+                        Margin="0,0,6,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource WarningBrush}"
+                        Kind="Keyboard" />
+                    <TextBlock
+                        x:Name="WindowTitle"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
+                        Text="Настройка горячих клавиш" />
+                </StackPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button x:Name="ResetButton" 
-                    Content="Сбросить всё" 
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button
+                        x:Name="CloseButton"
+                        Width="32"
+                        Height="32"
+                        Click="CloseButton_Click"
+                        Content="✕"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
+                        Style="{StaticResource IconButton}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!--  Content  -->
+        <Grid Grid.Row="1" Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock
+                x:Name="InfoText"
+                Text="Нажмите на сочетание клавиш, чтобы изменить его"
+                Margin="0,0,0,8"
+                FontSize="13"
+                Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+            <ListView
+                x:Name="HotkeyList"
+                Grid.Row="1"
+                BorderThickness="1"
+                BorderBrush="{DynamicResource BorderBrush}"
+                Background="{DynamicResource SurfaceBackground}"
+                SelectionMode="Single"
+                MouseDoubleClick="HotkeyList_MouseDoubleClick">
+                <ListView.Resources>
+                    <Style TargetType="GridViewColumnHeader">
+                        <Setter Property="Background" Value="{DynamicResource SidePanelBackground}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                    </Style>
+                </ListView.Resources>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Действие" Width="300">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock
+                                        Text="{Binding DisplayName}"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Сочетание" Width="200">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock
+                                        Text="{Binding CurrentGesture}"
+                                        FontWeight="Bold"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource AccentBrush}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                <Button
+                    x:Name="ResetButton"
+                    Content="Сбросить всё"
                     Click="ResetButton_Click"
                     Margin="0,0,8,0"
                     Padding="10,4"
@@ -54,14 +143,16 @@
                     BorderBrush="{DynamicResource BorderBrush}"
                     Foreground="{DynamicResource TextPrimaryBrush}"
                     BorderThickness="1"/>
-            <Button x:Name="CloseButton" 
-                    Content="Закрыть" 
+                <Button
+                    x:Name="CloseContentButton"
+                    Content="Закрыть"
                     Click="CloseButton_Click"
                     Padding="10,4"
                     Background="{DynamicResource SurfaceBackground}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     Foreground="{DynamicResource TextPrimaryBrush}"
                     BorderThickness="1"/>
-        </StackPanel>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

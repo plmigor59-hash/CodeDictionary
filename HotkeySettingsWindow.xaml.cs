@@ -1,6 +1,5 @@
 using CodeDictionary.Services;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace CodeDictionary;
@@ -19,6 +18,11 @@ public partial class HotkeySettingsWindow : Window
         HotkeyList.ItemsSource = _hotkeyManager.Actions;
     }
 
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DragMove();
+    }
+
     private void HotkeyList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (HotkeyList.SelectedItem is HotkeyAction action)
@@ -34,7 +38,8 @@ public partial class HotkeySettingsWindow : Window
         HotkeyList.IsEnabled = false;
         ResetButton.IsEnabled = false;
         CloseButton.IsEnabled = false;
-        Title = $"Настройка горячих клавиш — нажмите новое сочетание для \"{action.DisplayName}\"";
+        CloseContentButton.IsEnabled = false;
+        InfoText.Text = $"Нажмите новое сочетание для \"{action.DisplayName}\" (Esc — отмена)";
     }
 
     private void EndCapture()
@@ -44,7 +49,8 @@ public partial class HotkeySettingsWindow : Window
         HotkeyList.IsEnabled = true;
         ResetButton.IsEnabled = true;
         CloseButton.IsEnabled = true;
-        Title = "Настройка горячих клавиш";
+        CloseContentButton.IsEnabled = true;
+        InfoText.Text = "Нажмите на сочетание клавиш, чтобы изменить его";
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
@@ -73,10 +79,8 @@ public partial class HotkeySettingsWindow : Window
                 ? key.ToString()
                 : $"{modifiers}+{key}";
 
-            // Validate it's not empty
             if (!string.IsNullOrWhiteSpace(gestureStr))
             {
-                // Check for conflicts
                 foreach (var other in _hotkeyManager.Actions)
                 {
                     if (other.Id != _capturingAction.Id &&
@@ -100,7 +104,6 @@ public partial class HotkeySettingsWindow : Window
                 _hotkeyManager.SetGesture(_capturingAction.Id, gestureStr);
                 EndCapture();
 
-                // Refresh list
                 HotkeyList.ItemsSource = null;
                 HotkeyList.ItemsSource = _hotkeyManager.Actions;
             }
